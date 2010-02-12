@@ -1,0 +1,4 @@
+Add the ability to re-prioritize a set of issues
+================================================
+
+Add a mode that changes the priority of a selection of issues.

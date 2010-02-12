@@ -1,0 +1,6 @@
+Add the ability to change an issue's status
+===========================================
+
+The -l/--list options lists issues, add a set of options to reclassify
+an issue from one category to another. The most common is CLOSED, but
+other categories should also be supported.
