@@ -99,7 +99,7 @@ class Project {
     }
 
     public void each(Filter filter = null, Closure c) {
-        def is = filter?.issueSorter ?: { it.id }
+        def is = filter?.issueSorter ?: { it.id.toInteger() }
         def ps = filter?.projectSorter ?: { it.name }
 
         for (issue in issues.values().sort(is)) {
