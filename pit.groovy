@@ -32,14 +32,23 @@ if (opts.c) categories = opts.c.split(/[,\s]/)
 categories = categories.collect { Category.toCategory(it) }
 
 // build issue list
-issuedb = buildDB(new File('.'),
-    'categories': categories,
+issuedb = new Project(new File('.'),
+    new Filter('categories': categories,
     'priority': (opts.p ? opts.p.toInteger() : 9),
-    'projects': (opts.r ? opts.r.toLowerCase().split(/[,\s]/).asType(List.class) : false),
-    'ids': (opts.i ? opts.i.split(/[,\s]/).asType(List.class) : false),
-    'recurse': (opts.s || !opts.S))
+    'projects': (opts.r ? opts.r.toLowerCase().split(/[,\s]/).asType(List.class) : []),
+    'ids': (opts.i ? opts.i.split(/[,\s]/).asType(List.class) : []),
+    'acceptProjects': (opts.s || !opts.S)))
 
-listDB(issuedb, 'verbose': opts.v)
+// list first
+if (opts.l) issuedb.list('verbose': opts.v)
+
+// change priority second
+//else if (opts.cp)
+
+// change category third
+//else if (opts.cc)
+
+// new entry last
 
 enum Category {
     BUG,
@@ -54,70 +63,123 @@ enum Category {
     }
 }
 
-def buildDB(Map options, File dir) {
-    if (!options.priority) options.priority = 9
+class Project {
 
-    def newdb = ['projects':[:], 'issues':[:], 'name': dir.name]
+    String name
+    Map<String, Issue> issues = [:]
+    Map<String, Project> projects = [:]
 
-    dir.eachFile { child ->
+    Project(File dir, Filter filter = null) {
+        dir.eachFile { child ->
 
-        // add sub projects
-        if (child.isDirectory())  {
-            if ( child.name ==~ /\d{4}/ ||  // just an issue folder
-                !options.recurse ||         // we are not looking at subprojects
-                (options.projects &&        // not in the list of sub
-                !options.projects.contains(child.name.toLowerCase())))
+            // add sub projects
+            if (child.isDirectory())  {
+                if ( child.name ==~ /\d{4}/ ||  // just an issue folder
+                    (filter && !filter.accept(child.name)))
+                    return
+
+                // otherwise build and add to list
+                projects[(child.name)] =  new Project(child, filter)
+            } else if (child.isFile()) {
+                def issue
+                
+                // if exception, then not an issue
+                try { issue = new Issue(child) } catch (all) { return }
+
+                if (filter && !filter.accept(issue)) return
+
+                issues[(issue.id)] = issue
+            }
+        }
+    }
+    
+    public void eachIssue(Closure c) {
+        for (i in issues.values()) c.call(i)
+        for (p in projects.values()) p.eachIssue(c)
+    }
+
+    public void each(Filter filter = null, Closure c) {
+        def is = filter?.issueSorter ?: { it.id }
+        def ps = filter?.projectSorter ?: { it.name }
+
+        for (issue in issues.values().sort(is)) {
+            if (filter && !filter.accept(issue))
                 return
 
-            // otherwise build and add to list
-            newdb['projects'][(child.name)] =  buildDB(options, child)
-        } else if (child.isFile()) {
-            def issue = buildIssue(child)
+            c.call(issue)
+        }
 
-            if ( issue == null ||                       // not an issue
-                 issue.priority > options.priority ||   // not above threshold
-                (options.categories &&                  // not in list of cats
-                !options.categories.contains(issue.category)) ||
-                (options.ids &&
-                !options.ids.contains(issue.id)))
+        for (project in projects.values().sort(ps)) {
+            if (filter && !filter.accept(project))
                 return
 
-            newdb['issues'][(issue.id)] = issue
+            c.call(project)
+            project.each(c)
         }
     }
 
-    return newdb
-}
+    public void list(Map options = [:]) {
+        if (!options.offset) options.offset = ""
+        if (!options.verbose) options.verbose = false
 
-def buildIssue(File file) {
-    def issue = [:]
-
-    def matcher = file.name =~ /(\d{4})([bftc])(\d).*/
-    if (!matcher) return null
-
-    issue.id = matcher[0][1]
-    issue.category = Category.toCategory(matcher[0][2])
-    issue.priority = matcher[0][3].toInteger()
-
-    file.withReader { issue.title = it.readLine() }
-    issue.text = file.text
-
-    return issue
-}
-
-def listDB(Map options, def issuedb) {
-    if (!options.offset) options.offset = ""
-    if (!options.verbose) options.verbose = false
-
-    for (i in issuedb.issues.values()) {
-        println "${options.offset}${i.id}(${i.priority}): ${i.category} ${i.title}"
-        if (options.verbose) println "\n${i.text}"
+        each(options.filter) {
+            if (it instanceof Project) {
+                println "\n${options.offset}${it.name}"
+                println "${options.offset}${'-'.multiply(p.name.length())}"
+            } else {
+                println "${options.offset}${it.id}(${it.priority}): " +
+                    "${it.category} ${it.title}"
+                if (options.verbose) println "\n${it.text}"
+            }
+        }
     }
-    for (p in issuedb.projects.values())  {
-        println ""
-        println "${options.offset}${p.name}"
-        println "${options.offset}${'-'.multiply(p.name.length())}"
+}
 
-        listDB(p, 'offset': options.offset + "  ", 'verbose': options.verbose)
+class Issue {
+
+    String id
+    Category category
+    int priority
+    String title
+    String text
+
+    Issue(File file) {
+
+        def matcher = file.name =~ /(\d{4})([bftc])(\d).*/
+        if (!matcher) return null
+
+        id = matcher[0][1]
+        category = Category.toCategory(matcher[0][2])
+        priority = matcher[0][3].toInteger()
+
+        file.withReader { title = it.readLine() }
+        text = file.text
+    }
+}
+
+class Filter {
+
+    List<Category> categories = null
+    List<String> projects = null
+    List<String> ids = null
+    int priority = 9
+    boolean acceptProjects = true
+    Closure projectSorter
+    Closure issueSorter
+
+    public boolean accept(Issue i) {
+        return (i.priority <= priority &&
+                (!categories || categories.contains(i.category)) &&
+                (!ids || ids.contains(i.id)))
+    }
+
+    public boolean accept(Project p) {
+        return (acceptProjects && 
+                (!projects || projects.contains(p.name)))
+    }
+
+    public boolean accept(String name) {
+        return (acceptProjects && 
+                (!projects || projects.contains(name)))
     }
 }
