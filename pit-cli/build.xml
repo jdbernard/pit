@@ -1,17 +1,10 @@
-<project name="Personal Issue Tracker">
+<project name="Personal Issue Tracker CLI">
     <property file="project.properties"/>
 
     <path id="groovy.all.path">
         <fileset dir="${groovy.home}/embeddable">
             <include name="**/*.jar"/>
         </fileset>
-    </path>
-
-    <path id="groovy.cp">
-        <fileset dir="${groovy.home}/lib">
-            <include name="**/*.jar"/>
-        </fileset>
-        <fileset dir="${lib.dir}"/>
     </path>
 
     <taskdef name="groovyc"
@@ -38,18 +31,12 @@
         <jar
             destfile="${build.dir}/jar/${build.jar}"
             basedir="${build.dir}/classes"
-            compress="on">
+            comipress="on">
             <manifest>
                 <attribute name="Main-Class" value="${main.class}"/>
             </manifest>
         </jar>
     </target>
 
-    <target name="build-lib" depends="clean,compile">
-        <mkdir dir="${build.dir}/jar"/>
-        <jar
-            destfile="${build.dir}/jar/${build.lib.jar}"
-            basedir="${build.dir}/classes"
-            compress="on"/>
-    </target>
+
 </project>

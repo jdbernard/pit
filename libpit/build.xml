@@ -1,0 +1,46 @@
+<project name="Personal Issue Tracker">
+    <property file="project.properties"/>
+    <property environment="env"/>
+
+    <target name="init">
+        <fail
+            unless="env.GROOVY_HOME"
+            message="GROOVY_HOME environment variable is not set."/>
+        <echo message="GROOVY_HOME: ${env.GROOVY_HOME}"/>
+    </target>
+
+    <path id="groovy.libs">
+        <fileset dir="${env.GROOVY_HOME}/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <path id="groovy.cp">
+        <path refid="groovy.libs"/>
+        <fileset dir="${lib.dir}"/>
+    </path>
+
+    <taskdef name="groovyc"
+        classname="org.codehaus.groovy.ant.Groovyc"
+        classpathref="groovy.libs"/>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="compile" depends="init">
+        <mkdir dir="${build.dir}/classes"/>
+        <groovyc
+            srcdir="${src.dir}"
+            destdir="${build.dir}/classes"
+            classpath="${groovyc.cp}"/>
+    </target>
+
+    <target name="build" depends="compile">
+        <mkdir dir="${build.dir}/jar"/>
+        <jar
+            destfile="${build.dir}/jar/${build.jar}"
+            basedir="${build.dir}/classes"
+            compress="on"/>
+    </target>
+</project>
