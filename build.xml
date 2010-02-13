@@ -1,0 +1,55 @@
+<project name="Personal Issue Tracker">
+    <property file="project.properties"/>
+
+    <path id="groovy.all.path">
+        <fileset dir="${groovy.home}/embeddable">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <path id="groovy.cp">
+        <fileset dir="${groovy.home}/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+        <fileset dir="${lib.dir}"/>
+    </path>
+
+    <taskdef name="groovyc"
+        classname="org.codehaus.groovy.ant.Groovyc"
+        classpathref="groovy.all.path"/>
+
+    <target name="clean">
+        <delete dir="${build.dir}"/>
+    </target>
+
+    <target name="compile">
+        <mkdir dir="${build.dir}/classes"/>
+        <groovyc
+            srcdir="${src.dir}"
+            destdir="${build.dir}/classes"
+            classpath="${groovyc.cp}"/>
+    </target>
+
+    <target name="build" depends="compile">
+        <mkdir dir="${build.dir}/jar"/>
+        <unjar dest="${build.dir}/classes">
+            <path refid="groovy.cp"/>
+        </unjar>
+        <jar
+            destfile="${build.dir}/jar/${build.jar}"
+            basedir="${build.dir}/classes"
+            compress="on">
+            <manifest>
+                <attribute name="Main-Class" value="${main.class}"/>
+            </manifest>
+        </jar>
+    </target>
+
+    <target name="build-lib" depends="clean,compile">
+        <mkdir dir="${build.dir}/jar"/>
+        <jar
+            destfile="${build.dir}/jar/${build.lib.jar}"
+            basedir="${build.dir}/classes"
+            compress="on"/>
+    </target>
+</project>
