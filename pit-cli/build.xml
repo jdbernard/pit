@@ -1,42 +1,72 @@
 <project name="Personal Issue Tracker CLI">
     <property file="project.properties"/>
+    <property environment="env" />
 
-    <path id="groovy.all.path">
-        <fileset dir="${groovy.home}/embeddable">
+    <path id="groovy.libs">
+        <fileset dir="${env.GROOVY_HOME}/lib">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+    <path id="groovyc.classpath">
+        <path refid="groovy.libs"/>
+        <fileset dir="${lib.dir}">
             <include name="**/*.jar"/>
         </fileset>
     </path>
 
     <taskdef name="groovyc"
         classname="org.codehaus.groovy.ant.Groovyc"
-        classpathref="groovy.all.path"/>
+        classpathref="groovy.libs"/>
+
+    <target name="init">
+        <fail
+            unless="env.GROOVY_HOME"
+            message="GROOVY_HOME environment variable is not set."/>
+        <echo message="GROOVY_HOME: ${env.GROOVY_HOME}"/>
+
+        <fail message="Could not find PIT ${application.version} library.">
+            <condition>
+                <not>
+                    <available
+                        file="${lib.dir}/pit-${application.version}.jar"/>
+                </not>
+            </condition>
+        </fail>
+    </target>
 
     <target name="clean">
         <delete dir="${build.dir}"/>
     </target>
 
-    <target name="compile">
+    <target name="compile" depends="init">
         <mkdir dir="${build.dir}/classes"/>
         <groovyc
             srcdir="${src.dir}"
             destdir="${build.dir}/classes"
-            classpath="${groovyc.cp}"/>
+            classpathref="groovyc.classpath"/>
     </target>
 
     <target name="build" depends="compile">
         <mkdir dir="${build.dir}/jar"/>
         <unjar dest="${build.dir}/classes">
-            <path refid="groovy.cp"/>
+            <path refid="groovy.libs"/>
         </unjar>
         <jar
             destfile="${build.dir}/jar/${build.jar}"
             basedir="${build.dir}/classes"
-            comipress="on">
+            compress="on">
             <manifest>
                 <attribute name="Main-Class" value="${main.class}"/>
             </manifest>
         </jar>
     </target>
 
+    <target name="release" depends="build">
+        <delete dir="${release.dir}"/>
+        <mkdir dir="${release.dir}"/>
+        <copy file="${build.dir}/jar/${build.jar}"
+             todir="${release.dir"/>
+    </target>
 
 </project>

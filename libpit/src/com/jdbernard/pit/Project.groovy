@@ -7,6 +7,8 @@ class Project {
     Map<String, Project> projects = [:]
 
     Project(File dir, Filter filter = null) {
+        this.name = dir.name
+
         dir.eachFile { child ->
 
             // add sub projects
@@ -62,7 +64,7 @@ class Project {
         each(options.filter) {
             if (it instanceof Project) {
                 println "\n${options.offset}${it.name}"
-                println "${options.offset}${'-'.multiply(p.name.length())}"
+                println "${options.offset}${'-'.multiply(it.name.length())}"
             } else {
                 println "${options.offset}${it.id}(${it.priority}): " +
                     "${it.category} ${it.title}"
