@@ -1,4 +1,5 @@
 <project name="Personal Issue Tracker CLI">
+    <property file="../version.properties"/>
     <property file="project.properties"/>
     <property environment="env" />
 
@@ -33,13 +34,42 @@
                 </not>
             </condition>
         </fail>
+        <echo message="PIT library found at ${lib.dir}/pit-${application.version}.jar"/>
+
+        <fail message="The PIT project is at version ${application.version} but pit-cli is versioned as ${expected.application.version}. Ensure that pit-cli is updated tp reflect the changes in libpit and then run the 'upgrade-version' task to sync the pit-vli subproject with the PIT project.">
+            <condition>
+                <not>
+                    <equals
+                        arg1="${application.version}" 
+                        arg2="${expected.application.version}"/>
+                </not>
+            </condition>
+        </fail>
+        <echo message="Application version: ${application.version}"/>
+            
+    </target>
+
+    <target name="upgrade-version">
+        <propertyfile file="project.properties">
+            <entry
+                key="expected.application.version"
+                value="${application.version}"/>
+            <entry key="build.number" value="0"/>
+        </propertyfile>
+        <echo message="pit-cli version upgraded to ${application.version}"/>
+    </target>
+
+    <target name="increment-build-number" depends="init">
+        <propertyfile file="project.properties">
+            <entry key="build.number" operation="+" type="int" default="0"/>
+        </propertyfile>
     </target>
 
     <target name="clean">
         <delete dir="${build.dir}"/>
     </target>
 
-    <target name="compile" depends="init">
+    <target name="compile" depends="init,increment-build-number">
         <mkdir dir="${build.dir}/classes"/>
         <groovyc
             srcdir="${src.dir}"
@@ -66,7 +96,7 @@
         <delete dir="${release.dir}"/>
         <mkdir dir="${release.dir}"/>
         <copy file="${build.dir}/jar/${build.jar}"
-             todir="${release.dir"/>
+            tofile="${release.dir}/${release.jar}"/>
     </target>
 
 </project>
