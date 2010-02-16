@@ -5,8 +5,14 @@ class Project {
     String name
     Map<String, Issue> issues = [:]
     Map<String, Project> projects = [:]
+    File source
 
     Project(File dir, Filter filter = null) {
+        if (!dir.isDirectory())
+            throw new IllegalArgumentException(
+                "${dir.name} is not a directory.")
+
+        this.source = dir
         this.name = dir.name
 
         dir.eachFile { child ->
@@ -31,6 +37,8 @@ class Project {
             }
         }
     }
+
+    public void rename(String newName) { source.renameTo(newName) }
     
     public void eachIssue(Closure c) {
         for (i in issues.values()) c.call(i)
