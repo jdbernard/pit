@@ -80,6 +80,7 @@ class Project {
         if (!options.text) options.text = "Default issue title.\n" +
                                           "====================\n"
         String id = (issues.values().max { it.id.toInteger() }).id
+        id = (id.toInteger() + 1).toString().padLeft(id.length(), '0')
 
         def issueFile = new File(source, Issue.makeFilename(id, options.category, options.priority))
         assert !issueFile.exists()
