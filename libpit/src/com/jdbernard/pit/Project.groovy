@@ -38,16 +38,26 @@ class Project {
         }
     }
 
-    public void rename(String newName) { source.renameTo(newName) }
+    public void rename(String newName) {
+        this.name = newName
+        source.renameTo(new File(source.canonicalFile.parentFile, newName))
+    }
+
+    public void setName(String name) { rename(name) }
     
-    public void eachIssue(Closure c) {
-        for (i in issues.values()) c.call(i)
-        for (p in projects.values()) p.eachIssue(c)
+    public void eachIssue(Filter filter = null, Closure c) {
+        def sorter = filter?.issueSorter ?: Filter.defaultIssueSorter
+        for (i in issues.values().sort(sorter)) c.call(i)
+    }
+
+    public void eachProject(Filter filter = null, Closure c) {
+        def sorter = filter?.projectSorter ?: Filter.defaultProjectSorter
+        for (p in projects.values().sort(sorter)) c.call(p)
     }
 
     public void each(Filter filter = null, Closure c) {
-        def is = filter?.issueSorter ?: { it.id.toInteger() }
-        def ps = filter?.projectSorter ?: { it.name }
+        def is = filter?.issueSorter ?: Filter.defaultIssueSorter
+        def ps = filter?.projectSorter ?: Filter.defaultProjectSorter
 
         for (issue in issues.values().sort(is)) {
             if (filter && !filter.accept(issue))
@@ -61,23 +71,25 @@ class Project {
                 return
 
             c.call(project)
-            project.each(c)
         }
     }
 
-    public void list(Map options = [:]) {
-        if (!options.offset) options.offset = ""
-        if (!options.verbose) options.verbose = false
+    public Issue createNewIssue(Map options) {
+        if (!options.category) options.category = Category.TASK
+        if (!options.priority) options.priority = 5
+        if (!options.text) options.text = "Default issue title.\n" +
+                                          "====================\n"
+        String id = (issues.values().max { it.id.toInteger() }).id
 
-        each(options.filter) {
-            if (it instanceof Project) {
-                println "\n${options.offset}${it.name}"
-                println "${options.offset}${'-'.multiply(it.name.length())}"
-            } else {
-                println "${options.offset}${it.id}(${it.priority}): " +
-                    "${it.category} ${it.title}"
-                if (options.verbose) println "\n${it.text}"
-            }
-        }
+        def issueFile = new File(source, Issue.makeFilename(id, options.category, options.priority))
+        assert !issueFile.exists()
+        issueFile.createNewFile()
+        issueFile.write(options.text)
+
+        return new Issue(issueFile)
     }
+
+    @Override
+    String toString() { return name }
+
 }

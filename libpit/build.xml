@@ -14,6 +14,12 @@
         <fileset dir="${lib.dir}">
             <include name="**/*.jar"/>
         </fileset>
+        <pathelement path="${build.dir}/classes"/>
+    </path>
+
+    <path id="test.classpath">
+        <path refid="groovyc.classpath"/>
+        <pathelement path="${build.dir}/tests"/>
     </path>
 
     <taskdef name="groovyc"
@@ -68,7 +74,27 @@
             classpathref="groovyc.classpath"/>
     </target>
 
-    <target name="build" depends="compile">
+    <target name="compile-tests" depends="init,compile">
+        <mkdir dir="${build.dir}/tests"/>
+        <groovyc
+            srcdir="${test.dir}"
+            destdir="${build.dir}/tests"
+            classpathref="groovyc.classpath"/>
+    </target>
+
+    <target name="run-tests" depends="compile-tests">
+        <junit fork="yes" haltonfailure="yes">
+            <classpath refid="test.classpath"/>
+            <formatter type="brief" usefile="false" />
+            <batchtest>
+                <fileset dir="${build.dir}/tests">
+                    <include name="**/*.class"/>
+                </fileset>
+            </batchtest>
+        </junit>
+    </target>
+
+    <target name="build" depends="compile,run-tests">
         <mkdir dir="${build.dir}/jar"/>
         <jar
             destfile="${build.dir}/jar/pit-${application.version}.${build.number.final}.jar"

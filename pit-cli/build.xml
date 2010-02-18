@@ -9,11 +9,27 @@
         </fileset>
     </path>
 
-    <path id="groovyc.classpath">
-        <path refid="groovy.libs"/>
+    <path id="groovy.embeddable">
+        <fileset dir="${env.GROOVY_HOME}/embeddable">
+            <include name="**/*.jar"/>
+        </fileset>
+    </path>
+
+
+    <path id="project.libs">
         <fileset dir="${lib.dir}">
             <include name="**/*.jar"/>
         </fileset>
+    </path>
+
+    <path id="groovyc.classpath">
+        <path refid="groovy.libs"/>
+        <path refid="project.libs"/>
+    </path>
+
+    <path id="package.jars">
+        <path refid="groovy.embeddable"/>
+        <path refid="project.libs"/>
     </path>
 
     <taskdef name="groovyc"
@@ -80,7 +96,7 @@
     <target name="build" depends="compile">
         <mkdir dir="${build.dir}/jar"/>
         <unjar dest="${build.dir}/classes">
-            <path refid="groovy.libs"/>
+            <path refid="package.jars"/>
         </unjar>
         <jar
             destfile="${build.dir}/jar/${build.jar}"

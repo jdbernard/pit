@@ -26,16 +26,22 @@ public class Issue {
 
     void setCategory(Category c) {
         this.category = c
-        source.renameTo(getFilename())
+        source.renameTo(new File(source.canonicalFile.parentFile, getFilename()))
     }
 
     void setPriority(int p) {
         if (p < 0) priority = 0
         else if (p > 9) priority = 9
         else priority = p
-        source.renameTo(getFilename())
+        source.renameTo(new File(source.canonicalFile.parentFile, getFilename()))
     }
 
-    String getFilename() { return id + category.symbol + priority + ".rst"; }
+    String getFilename() { return makeFilename(id, category, priority) }
 
+    static String makeFilename(String id, Category category, int priority) {
+        return id + category.symbol + priority + ".rst";
+    }
+
+    @Override
+    String toString() { return "${id}(${priority}): ${category} ${title}" }
 }

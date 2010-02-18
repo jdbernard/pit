@@ -11,4 +11,6 @@ public enum Category {
             if (c.toString().startsWith(s.toUpperCase())) return c
         throw new IllegalArgumentException("No category matches ${s}.")
     }   
+
+    public String getSymbol() { toString()[0].toLowerCase() }
 }

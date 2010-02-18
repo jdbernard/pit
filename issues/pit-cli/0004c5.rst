@@ -1,0 +1,2 @@
+Add the ability to change an Issue's category.
+==============================================
