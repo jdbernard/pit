@@ -40,13 +40,15 @@ if (opts.c) categories = opts.c.split(/[,\s]/)
 categories = categories.collect { Category.toCategory(it) }
 
 // build issue list
-issuedb = new Project(new File('.'),
-    new Filter('categories': categories,
+issuedb = new FileProject(new File('.'))
+
+// build filter from options
+def filter = new Filter('categories': categories,
     'priority': (opts.p ? opts.p.toInteger() : 9),
     'projects': (opts.r ? opts.r.toLowerCase().split(/[,\s]/).asType(List.class) : []),
     'ids': (opts.i ? opts.i.split(/[,\s]/).asType(List.class) : []),
-    'acceptProjects': (opts.s || !opts.S)))
-
+    'acceptProjects': (opts.s || !opts.S))
+ 
 // list first
 if (opts.l) {
     def issuePrinter = { issue, offset ->
@@ -62,12 +64,12 @@ if (opts.l) {
     projectPrinter = { project, offset ->
         println "\n${offset}${project.name}"
         println "${offset}${'-'.multiply(project.name.length())}"
-        project.eachIssue { issuePrinter.call(it, offset) }
-        project.eachProject { projectPrinter.call(it, offset + "  ") }
+        project.eachIssue(filter) { issuePrinter.call(it, offset) }
+        project.eachProject(filter) { projectPrinter.call(it, offset + "  ") }
     }
 
     issuedb.eachIssue { issuePrinter.call(it, "") }
-    issuedb.eachProject { projectPrinter.call(it, "") }
+    issuedb.eachProject(filter) { projectPrinter.call(it, "") }
         
 }
 
@@ -77,7 +79,7 @@ else if (opts.P) {
     try { priority = max(0, min(9, opts.P.toInteger())) }
     catch (e) { println "Invalid priority: ${opts.P}"; return 1 }
 
-    walkProject(issuedb) { it.priority = priority }
+    walkProject(issuedb, filter) { it.priority = priority }
 }
 // change category third
 else if (opts.C) {
@@ -85,7 +87,7 @@ else if (opts.C) {
     try { cat = Category.toCategory(opts.C) }
     catch (e) { println "Invalid category: ${opts.C}"; return 1 }
 
-    walkProject(issuedb) { it.category = cat }
+    walkProject(issued, filterb) { it.category = cat }
 }
 // new entry last
 else if (opts.n) {
@@ -131,7 +133,7 @@ else if (opts.n) {
     println issue
 }
 
-def walkProject(Project p, Closure c) {
-    p.eachIssue(c)
-    p.eachProject { walkProject(it, c) }
+def walkProject(Project p, Filter filter, Closure c) {
+    p.eachIssue(filter, c)
+    p.eachProject(filter) { walkProject(it, filter, c) }
 }
