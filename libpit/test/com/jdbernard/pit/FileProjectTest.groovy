@@ -136,6 +136,7 @@ class FileProjectTest {
         assertEquals newIssue.text, 'A newly made bug report.\n'+
                                     '========================\n\n' +
                                     'Testing the Project.createNewIssue() method.'
+        assertEquals rootProj.issues[(newIssue.id)], newIssue
 
         //test defaults and creation of issue in an empty project
         newIssue = rootProj.projects.emptyproj.createNewIssue()
@@ -144,6 +145,9 @@ class FileProjectTest {
         assertEquals newIssue.priority, 5
         assertEquals newIssue.text,     'Default issue title.\n' +
                                         '====================\n'
+
+        assertEquals rootProj.projects.emptyproj.issues[(newIssue.id)],
+            newIssue
 
     }
 

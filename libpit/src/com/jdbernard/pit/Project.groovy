@@ -2,7 +2,7 @@ package com.jdbernard.pit
 
 public abstract class Project {
 
-    String name
+    protected String name
     Map<String, Issue> issues = [:]
     Map<String, Project> projects = [:]
 
@@ -21,6 +21,10 @@ public abstract class Project {
             if (!filter || filter.accept(p))
                 c.call(p)
     }
+
+    public void setName(String name) { this.name = name }
+
+    public String getName() { return name }
 
     @Override
     String toString() { return name }

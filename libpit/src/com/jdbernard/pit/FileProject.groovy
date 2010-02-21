@@ -2,9 +2,9 @@ package com.jdbernard.pit
 
 class FileProject extends Project {
 
-    File source
+    protected File source
 
-    FileProject(File dir) {
+    public FileProject(File dir) {
         super(dir.name)
 
         if (!dir.isDirectory())
@@ -32,10 +32,6 @@ class FileProject extends Project {
         }
     }
 
-    public void rename(String newName) {
-        this.name = newName
-    }
-
     public void setName(String name) {
         super.setName(name)
         source.renameTo(new File(source.canonicalFile.parentFile, name))
@@ -54,15 +50,21 @@ class FileProject extends Project {
             id = (id.toInteger() + 1).toString().padLeft(id.length(), '0')
         }
 
-        def issueFile = new File(source, FileIssue.makeFilename(id, options.category, options.priority))
+        def issueFile = new File(source, FileIssue.makeFilename(id,
+            options.category, options.priority))
+
         assert !issueFile.exists()
+
         issueFile.createNewFile()
         issueFile.write(options.text)
 
-        return new FileIssue(issueFile)
+        def issue = new FileIssue(issueFile)
+        issues[(issue.id)] = issue
+
+        return issue
     }
 
     @Override
-    String toString() { return name }
+    public String toString() { return name }
 
 }

@@ -94,4 +94,12 @@ class FilterTest {
 
     }
 
+    @Test void testAcceptsProjectsFilter() {
+
+    }
+
+    @Test void testCompositeFilter() {
+
+    }
+
 }

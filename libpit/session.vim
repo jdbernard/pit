@@ -33,15 +33,19 @@ if expand('%') == '' && !&modified && line('$') <= 1 && getline(1) == ''
 endif
 set shortmess=aoO
 badd +1 build.xml
-badd +0 project.properties
+badd +1 project.properties
 badd +1 src/com/jdbernard/pit/Category.groovy
-badd +0 test/com/jdbernard/pit/CategoryTest.groovy
+badd +1 test/com/jdbernard/pit/CategoryTest.groovy
 badd +1 src/com/jdbernard/pit/Filter.groovy
-badd +0 test/com/jdbernard/pit/FilterTest.groovy
+badd +1 test/com/jdbernard/pit/FilterTest.groovy
 badd +1 src/com/jdbernard/pit/Issue.groovy
-badd +0 test/com/jdbernard/pit/IssueTest.groovy
-badd +1 src/com/jdbernard/pit/Project.groovy
-badd +0 test/com/jdbernard/pit/ProjectTest.groovy
+badd +1 test/com/jdbernard/pit/IssueTest.groovy
+badd +6 src/com/jdbernard/pit/Project.groovy
+badd +1 test/com/jdbernard/pit/ProjectTest.groovy
+badd +1 src/com/jdbernard/pit/FileIssue.groovy
+badd +0 test/com/jdbernard/pit/FileIssueTest.groovy
+badd +1 src/com/jdbernard/pit/FileProject.groovy
+badd +0 test/com/jdbernard/pit/FileProjectTest.groovy
 args build.xml
 edit build.xml
 set splitbelow splitright
@@ -151,7 +155,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 28) / 57)
+let s:l = 1 - ((0 * winheight(0) + 39) / 78)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -255,14 +259,13 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 28) / 57)
+let s:l = 1 - ((0 * winheight(0) + 39) / 78)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 1
 normal! 0
 wincmd w
-2wincmd w
 exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
 exe 'vert 2resize ' . ((&columns * 90 + 91) / 182)
 tabedit src/com/jdbernard/pit/Category.groovy
@@ -373,7 +376,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 28) / 57)
+let s:l = 1 - ((0 * winheight(0) + 39) / 78)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -477,14 +480,13 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 28) / 57)
+let s:l = 1 - ((0 * winheight(0) + 39) / 78)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 1
 normal! 0
 wincmd w
-2wincmd w
 exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
 exe 'vert 2resize ' . ((&columns * 90 + 91) / 182)
 tabedit src/com/jdbernard/pit/Filter.groovy
@@ -595,7 +597,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 28) / 57)
+let s:l = 1 - ((0 * winheight(0) + 39) / 78)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -699,14 +701,13 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 28) / 57)
+let s:l = 103 - ((26 * winheight(0) + 39) / 78)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
-normal! 0
+103
+normal! 04l
 wincmd w
-2wincmd w
 exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
 exe 'vert 2resize ' . ((&columns * 90 + 91) / 182)
 tabedit src/com/jdbernard/pit/Issue.groovy
@@ -817,7 +818,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 28) / 57)
+let s:l = 1 - ((0 * winheight(0) + 39) / 78)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -825,7 +826,7 @@ normal! zt
 normal! 0
 wincmd w
 argglobal
-edit test/com/jdbernard/pit/IssueTest.groovy
+edit src/com/jdbernard/pit/Project.groovy
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
@@ -921,17 +922,16 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 28) / 57)
+let s:l = 1 - ((0 * winheight(0) + 39) / 78)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 1
 normal! 0
 wincmd w
-2wincmd w
 exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
 exe 'vert 2resize ' . ((&columns * 90 + 91) / 182)
-tabedit src/com/jdbernard/pit/Project.groovy
+tabedit src/com/jdbernard/pit/FileIssue.groovy
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -1039,15 +1039,15 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 28) / 57)
+let s:l = 9 - ((8 * winheight(0) + 39) / 78)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
-normal! 0
+9
+normal! 010l
 wincmd w
 argglobal
-edit test/com/jdbernard/pit/ProjectTest.groovy
+edit test/com/jdbernard/pit/FileIssueTest.groovy
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
@@ -1143,17 +1143,238 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 28) / 57)
+let s:l = 1 - ((0 * winheight(0) + 39) / 78)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 1
 normal! 0
 wincmd w
+exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
+exe 'vert 2resize ' . ((&columns * 90 + 91) / 182)
+tabedit src/com/jdbernard/pit/FileProject.groovy
+set splitbelow splitright
+wincmd _ | wincmd |
+vsplit
+1wincmd h
+wincmd w
+set nosplitbelow
+set nosplitright
+wincmd t
+set winheight=1 winwidth=1
+exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
+exe 'vert 2resize ' . ((&columns * 90 + 91) / 182)
+argglobal
+setlocal keymap=
+setlocal noarabic
+setlocal autoindent
+setlocal balloonexpr=
+setlocal nobinary
+setlocal bufhidden=
+setlocal buflisted
+setlocal buftype=
+setlocal nocindent
+setlocal cinkeys=0{,0},0),:,0#,!^F,o,O,e
+setlocal cinoptions=
+setlocal cinwords=if,else,while,do,for,switch
+setlocal comments=s1:/*,mb:*,ex:*/,://,b:#,:%,:XCOMM,n:>,fb:-
+setlocal commentstring=/*%s*/
+setlocal complete=.,w,b,u,t,i
+setlocal completefunc=
+setlocal nocopyindent
+setlocal nocursorcolumn
+setlocal nocursorline
+setlocal define=
+setlocal dictionary=
+setlocal nodiff
+setlocal equalprg=
+setlocal errorformat=
+setlocal expandtab
+if &filetype != 'groovy'
+setlocal filetype=groovy
+endif
+setlocal foldcolumn=0
+setlocal foldenable
+setlocal foldexpr=0
+setlocal foldignore=#
+setlocal foldlevel=0
+setlocal foldmarker={{{,}}}
+setlocal foldmethod=manual
+setlocal foldminlines=1
+setlocal foldnestmax=20
+setlocal foldtext=foldtext()
+setlocal formatexpr=
+setlocal formatoptions=tcq
+setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
+setlocal grepprg=
+setlocal iminsert=2
+setlocal imsearch=2
+setlocal include=
+setlocal includeexpr=
+setlocal indentexpr=
+setlocal indentkeys=0{,0},:,0#,!^F,o,O,e
+setlocal noinfercase
+setlocal iskeyword=@,48-57,_,192-255
+setlocal keywordprg=
+setlocal nolinebreak
+setlocal nolisp
+setlocal nolist
+setlocal makeprg=
+setlocal matchpairs=(:),{:},[:]
+setlocal nomodeline
+setlocal modifiable
+setlocal nrformats=octal,hex
+set number
+setlocal number
+setlocal numberwidth=4
+setlocal omnifunc=
+setlocal path=
+setlocal nopreserveindent
+setlocal nopreviewwindow
+setlocal quoteescape=\\
+setlocal noreadonly
+setlocal norightleft
+setlocal rightleftcmd=search
+setlocal noscrollbind
+setlocal shiftwidth=4
+setlocal noshortname
+setlocal nosmartindent
+setlocal softtabstop=0
+setlocal nospell
+setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
+setlocal spellfile=
+setlocal spelllang=en
+setlocal statusline=
+setlocal suffixesadd=
+setlocal swapfile
+setlocal synmaxcol=3000
+if &syntax != 'groovy'
+setlocal syntax=groovy
+endif
+setlocal tabstop=4
+setlocal tags=
+setlocal textwidth=0
+setlocal thesaurus=
+setlocal nowinfixheight
+setlocal nowinfixwidth
+setlocal wrap
+setlocal wrapmargin=0
+silent! normal! zE
+let s:l = 40 - ((39 * winheight(0) + 39) / 78)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+40
+normal! 029l
+wincmd w
+argglobal
+edit test/com/jdbernard/pit/FileProjectTest.groovy
+setlocal keymap=
+setlocal noarabic
+setlocal autoindent
+setlocal balloonexpr=
+setlocal nobinary
+setlocal bufhidden=
+setlocal buflisted
+setlocal buftype=
+setlocal nocindent
+setlocal cinkeys=0{,0},0),:,0#,!^F,o,O,e
+setlocal cinoptions=
+setlocal cinwords=if,else,while,do,for,switch
+setlocal comments=s1:/*,mb:*,ex:*/,://,b:#,:%,:XCOMM,n:>,fb:-
+setlocal commentstring=/*%s*/
+setlocal complete=.,w,b,u,t,i
+setlocal completefunc=
+setlocal nocopyindent
+setlocal nocursorcolumn
+setlocal nocursorline
+setlocal define=
+setlocal dictionary=
+setlocal nodiff
+setlocal equalprg=
+setlocal errorformat=
+setlocal expandtab
+if &filetype != 'groovy'
+setlocal filetype=groovy
+endif
+setlocal foldcolumn=0
+setlocal foldenable
+setlocal foldexpr=0
+setlocal foldignore=#
+setlocal foldlevel=0
+setlocal foldmarker={{{,}}}
+setlocal foldmethod=manual
+setlocal foldminlines=1
+setlocal foldnestmax=20
+setlocal foldtext=foldtext()
+setlocal formatexpr=
+setlocal formatoptions=tcq
+setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
+setlocal grepprg=
+setlocal iminsert=2
+setlocal imsearch=2
+setlocal include=
+setlocal includeexpr=
+setlocal indentexpr=
+setlocal indentkeys=0{,0},:,0#,!^F,o,O,e
+setlocal noinfercase
+setlocal iskeyword=@,48-57,_,192-255
+setlocal keywordprg=
+setlocal nolinebreak
+setlocal nolisp
+setlocal nolist
+setlocal makeprg=
+setlocal matchpairs=(:),{:},[:]
+setlocal nomodeline
+setlocal modifiable
+setlocal nrformats=octal,hex
+set number
+setlocal number
+setlocal numberwidth=4
+setlocal omnifunc=
+setlocal path=
+setlocal nopreserveindent
+setlocal nopreviewwindow
+setlocal quoteescape=\\
+setlocal noreadonly
+setlocal norightleft
+setlocal rightleftcmd=search
+setlocal noscrollbind
+setlocal shiftwidth=4
+setlocal noshortname
+setlocal nosmartindent
+setlocal softtabstop=0
+setlocal nospell
+setlocal spellcapcheck=[.?!]\\_[\\])'\"\	\ ]\\+
+setlocal spellfile=
+setlocal spelllang=en
+setlocal statusline=
+setlocal suffixesadd=
+setlocal swapfile
+setlocal synmaxcol=3000
+if &syntax != 'groovy'
+setlocal syntax=groovy
+endif
+setlocal tabstop=4
+setlocal tags=
+setlocal textwidth=0
+setlocal thesaurus=
+setlocal nowinfixheight
+setlocal nowinfixwidth
+setlocal wrap
+setlocal wrapmargin=0
+silent! normal! zE
+let s:l = 154 - ((77 * winheight(0) + 39) / 78)
+if s:l < 1 | let s:l = 1 | endif
+exe s:l
+normal! zt
+154
+normal! 0
+wincmd w
 2wincmd w
 exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
 exe 'vert 2resize ' . ((&columns * 90 + 91) / 182)
-tabnext 1
+tabnext 6
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf
 endif
