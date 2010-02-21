@@ -5,7 +5,7 @@ import static org.junit.Assert.assertTrue
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertEquals
 
-class IssueTest {
+class FileIssueTest {
 
     def issues
     File testDir
@@ -22,7 +22,7 @@ class IssueTest {
             "Add the killer feature to the killer app.\n" +
             "=========================================\n\n" +
             "Make our killer app shine!.")
-        issues << new Issue(issueFile)
+        issues << new FileIssue(issueFile)
 
         issueFile = new File(testDir, '0002t5.rst')
         issueFile.write(
@@ -30,7 +30,7 @@ class IssueTest {
             "==============\n\n" +
             "The office is seriously lacking in sugary donuts.\n\n" +
             "We must rectify this at once!")
-        issues << new Issue(issueFile)
+        issues << new FileIssue(issueFile)
     }
 
     @After void deleteIssueFiles() {
@@ -73,7 +73,7 @@ class IssueTest {
 
     @Test void testConstruction() {
         File issueFile = new File(testDir, '0001f1.rst')
-        Issue issue = new Issue(issueFile)
+        Issue issue = new FileIssue(issueFile)
 
         assertEquals issue.id        , "0001"
         assertEquals issue.category  , Category.FEATURE
@@ -86,20 +86,20 @@ class IssueTest {
     }
 
     @Test void testMakeFilename() {
-        assertEquals Issue.makeFilename('0001', Category.BUG, 5)    , '0001b5.rst'
-        assertEquals Issue.makeFilename('0010', Category.FEATURE, 1), '0010f1.rst'
-        assertEquals Issue.makeFilename('0002', Category.CLOSED, 3) , '0002c3.rst'
-        assertEquals Issue.makeFilename('0001', Category.BUG, -2)   , '0001b0.rst'
-        assertEquals Issue.makeFilename('0001', Category.TASK, 10)  , '0001t9.rst'
-        assertEquals Issue.makeFilename('00101', Category.BUG, 5)   , '00101b5.rst'
+        assertEquals FileIssue.makeFilename('0001', Category.BUG, 5)    , '0001b5.rst'
+        assertEquals FileIssue.makeFilename('0010', Category.FEATURE, 1), '0010f1.rst'
+        assertEquals FileIssue.makeFilename('0002', Category.CLOSED, 3) , '0002c3.rst'
+        assertEquals FileIssue.makeFilename('0001', Category.BUG, -2)   , '0001b0.rst'
+        assertEquals FileIssue.makeFilename('0001', Category.TASK, 10)  , '0001t9.rst'
+        assertEquals FileIssue.makeFilename('00101', Category.BUG, 5)   , '00101b5.rst'
 
         try {
-            Issue.makeFilename('badid', Category.BUG, 5)
+            FileIssue.makeFilename('badid', Category.BUG, 5)
             assertTrue 'Issue.makeFilename() succeeded with bad id input.', false
         } catch (IllegalArgumentException iae) {}
 
         try {
-            Issue.makeFilename('0002', null, 5)
+            FileIssue.makeFilename('0002', null, 5)
             assertTrue 'Issue.makeFilename() succeeded given no Category.', false
         } catch (IllegalArgumentException iae) {}
     }

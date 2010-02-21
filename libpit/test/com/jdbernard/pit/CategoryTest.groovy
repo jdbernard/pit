@@ -1,4 +1,4 @@
-public package com.jdbernard.pit
+package com.jdbernard.pit
 
 import org.junit.Test
 import static org.junit.Assert.assertEquals
@@ -7,7 +7,7 @@ import static com.jdbernard.pit.Category.toCategory
 
 class CategoryTest {
 
-    @Test testToCategory() {
+    @Test void testToCategory() {
 
         assertEquals toCategory("BUG"), Category.BUG
         assertEquals toCategory("FEATURE"), Category.FEATURE
@@ -16,21 +16,21 @@ class CategoryTest {
 
         assertEquals toCategory("bug"), Category.BUG
         assertEquals toCategory("feature"), Category.FEATURE
-        assertEquals toCategory("task"), Category.TASk
+        assertEquals toCategory("task"), Category.TASK
         assertEquals toCategory("closed"), Category.CLOSED
 
         assertEquals toCategory("b"), Category.BUG
         assertEquals toCategory("f"), Category.FEATURE
-        assertEquals toCategory("t"), Category.TASk
+        assertEquals toCategory("t"), Category.TASK
         assertEquals toCategory("c"), Category.CLOSED
 
     }
 
-    @Test testGetSymbol() {
+    @Test void testGetSymbol() {
 
         assertEquals Category.BUG.symbol,       "b"
-        assertEquals Category.CLOSED.symbol     "c"
-        assertEquals Category.FEATURE.symbol    "f"
-        assertEquals Category.TASK.symbol       "t"
+        assertEquals Category.CLOSED.symbol,    "c"
+        assertEquals Category.FEATURE.symbol,   "f"
+        assertEquals Category.TASK.symbol,      "t"
     }
 }

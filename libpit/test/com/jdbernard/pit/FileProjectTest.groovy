@@ -8,7 +8,7 @@ import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertTrue
 
-class ProjectTest {
+class FileProjectTest {
 
     File testDir
     Project rootProj
@@ -69,7 +69,7 @@ class ProjectTest {
         subDir = new File(testDir, 'emptyproj')
         subDir.mkdirs()
 
-        rootProj = new Project(testDir)
+        rootProj = new FileProject(testDir)
     }
 
     @After void deleteTestProjects() {
@@ -80,11 +80,11 @@ class ProjectTest {
     }
 
     @Test void testConstruction() {
-         Project proj = new Project(testDir)
+         Project proj = new FileProject(testDir)
 
         assertEquals proj.name,             'testdir'
         assertEquals proj.issues.size(),    3
-        assertEquals proj.projects.size(),  1
+        assertEquals proj.projects.size(),  2
 
         // Issue construction in general is under test in IssueTest
         // just check that the issues actually exists
@@ -110,13 +110,14 @@ class ProjectTest {
             'Zippners are not zippning.'
 
         assertNotNull proj.projects.emptyproj
-        assertEquals proj.projects.emptyproj.size(), 0
+        assertEquals proj.projects.emptyproj.issues.size(), 0
+        assertEquals proj.projects.emptyproj.projects.size(), 0
     }
 
     @Test void testRename() {
         assert rootProj.name == 'testdir'
 
-        rootProj.rename('renamedTestDir')
+        rootProj.name = 'renamedTestDir'
 
         assertEquals rootProj.name, 'renamedTestDir'
         assertTrue new File('renamedTestDir').exists()
@@ -145,24 +146,5 @@ class ProjectTest {
                                         '====================\n'
 
     }
-
-    /*@Test void testEachIssue() {
-        def expectedList = [rootProj.issues['0001'],
-            rootProj.issues['0002'], rootProj.issues['0003']]
-
-        // sort using default ordering (ids ascending)
-        def actualList = []
-        rootProj.eachIssue { actualList << it }
-
-        assertArrayEquals expectedList, actualList
-
-        // sort using reverse ordering (ids descending)
-        expectedList = expectedList.reverse()
-        actualList = []
-
-        rootProj.eachIssue(
-            new Filter(issueSorter: { -(it.id.toInteger()) }))
-            { actualList << it }
-    }*/
 
 }

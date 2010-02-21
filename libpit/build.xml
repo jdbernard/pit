@@ -88,7 +88,7 @@
             <formatter type="brief" usefile="false" />
             <batchtest>
                 <fileset dir="${build.dir}/tests">
-                    <include name="**/*.class"/>
+                    <include name="**/*Test.class"/>
                 </fileset>
             </batchtest>
         </junit>
