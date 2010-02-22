@@ -1,4 +1,9 @@
-application(title:'pit-swing',
+package com.jdbernard.pit.swing
+
+import net.miginfocom.swing.MigLayout
+
+frame = application(title:'Personal Issue Tracker',
+  locationRelativeTo: null,
   //size:[320,480],
   pack:true,
   //location:[50,50],
@@ -8,6 +13,8 @@ application(title:'pit-swing',
                imageIcon('/griffon-icon-32x32.png').image,
                imageIcon('/griffon-icon-16x16.png').image]
 ) {
-    // add content here
-    label('Content Goes Here') // deleteme
+    // MENU GOES HERE
+    panel(layout: new MigLayout('insets 5 5 5 5')) {
+        scrollPane()
+    }
 }

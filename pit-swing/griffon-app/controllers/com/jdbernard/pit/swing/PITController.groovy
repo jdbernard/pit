@@ -1,4 +1,6 @@
-class PitSwingController {
+package com.jdbernard.pit.swing
+
+class PITController {
     // these will be injected by Griffon
     def model
     def view
