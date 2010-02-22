@@ -39,6 +39,8 @@ def categories = ['bug','feature','task']
 if (opts.c) categories = opts.c.split(/[,\s]/)
 categories = categories.collect { Category.toCategory(it) }
 
+def EOL = System.getProperty('line.separator')
+
 // build issue list
 issuedb = new FileProject(new File('.'))
 
@@ -51,7 +53,8 @@ def filter = new Filter('categories': categories,
  
 // list first
 if (opts.l) {
-    def issuePrinter = { issue, offset ->
+
+    def printIssue = { issue, offset ->
         println "${offset}${issue}"
         if (opts.v) {
             println ""
@@ -60,17 +63,15 @@ if (opts.l) {
         }
     }
 
-    def projectPrinter
-    projectPrinter = { project, offset ->
+    def printProject
+    printProject = { project, offset ->
         println "\n${offset}${project.name}"
         println "${offset}${'-'.multiply(project.name.length())}"
-        project.eachIssue(filter) { issuePrinter.call(it, offset) }
-        project.eachProject(filter) { projectPrinter.call(it, offset + "  ") }
+        project.eachIssue(filter) { printIssue(it, offset) }
+        project.eachProject(filter) { printProject(it, offset + "  ") }
     }
-
-    issuedb.eachIssue { issuePrinter.call(it, "") }
-    issuedb.eachProject(filter) { projectPrinter.call(it, "") }
-        
+    issuedb.eachIssue(filter) { printIssue(it, "") }
+    issuedb.eachProject(filter) { printProject(it, "") }
 }
 
 // change priority second
@@ -87,7 +88,7 @@ else if (opts.C) {
     try { cat = Category.toCategory(opts.C) }
     catch (e) { println "Invalid category: ${opts.C}"; return 1 }
 
-    walkProject(issued, filterb) { it.category = cat }
+    walkProject(issuedb, filterb) { it.category = cat }
 }
 // new entry last
 else if (opts.n) {
@@ -119,17 +120,14 @@ else if (opts.n) {
     println "Enter issue (use EOF of ^D to end): "
     try {
         sin.eachLine { line ->
-            println ">>${line}"
             def m = line =~ /(.*)EOF.*/
             if (m) {
-                text += m[0][1]
+                text += m[0][1] + EOL
                 sin.close()
-            } else text += line
+            } else text += line + EOL
         }
     } catch (e) {}
 
-    println text
-    println "------------------------"
 
     issue = issuedb.createNewIssue(category: cat, priority: priority, text: text)
     
@@ -140,4 +138,7 @@ else if (opts.n) {
 def walkProject(Project p, Filter filter, Closure c) {
     p.eachIssue(filter, c)
     p.eachProject(filter) { walkProject(it, filter, c) }
+}
+
+def printProject(Project project, String offset, Filter filter, boolean verbose = false) {
 }
