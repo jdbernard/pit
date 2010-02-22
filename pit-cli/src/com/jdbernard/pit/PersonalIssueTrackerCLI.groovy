@@ -93,7 +93,7 @@ else if (opts.C) {
 else if (opts.n) {
     def cat, priority
     String text = ""
-    Issue ussie
+    Issue issue
     def sin = System.in.newReader()
 
     while(true) {
@@ -119,13 +119,17 @@ else if (opts.n) {
     println "Enter issue (use EOF of ^D to end): "
     try {
         sin.eachLine { line ->
+            println ">>${line}"
             def m = line =~ /(.*)EOF.*/
             if (m) {
-                text << m[0][1]
+                text += m[0][1]
                 sin.close()
-            } else text << line
+            } else text += line
         }
     } catch (e) {}
+
+    println text
+    println "------------------------"
 
     issue = issuedb.createNewIssue(category: cat, priority: priority, text: text)
     

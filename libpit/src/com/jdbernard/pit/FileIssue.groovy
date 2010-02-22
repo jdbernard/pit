@@ -11,7 +11,9 @@ public class FileIssue extends Issue {
         super('REPLACE_ME')
 
         def matcher = file.name =~ /(\d{4})([bftc])(\d).*/
-        if (!matcher) return null
+        if (!matcher)
+            throw new IllegalArgumentException("${file} " +
+                "is not a valid Issue file.")
 
         super.@id = matcher[0][1]
         super.@category = Category.toCategory(matcher[0][2])

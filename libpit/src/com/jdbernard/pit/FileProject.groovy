@@ -21,7 +21,8 @@ class FileProject extends Project {
 
                 // otherwise build and add to list
                 projects[(child.name)] =  new FileProject(child)
-            } else if (child.isFile()) {
+            } else if (child.isFile() &&
+                       FileIssue.isValidFilename(child.name)) {
                 def issue
                 
                 // if exception, then not an issue
