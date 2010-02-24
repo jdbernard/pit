@@ -1,12 +1,14 @@
 package com.jdbernard.pit.swing
 
+import com.jdbernard.pit.FileProject
+
 class PITController {
     // these will be injected by Griffon
     def model
     def view
 
     void mvcGroupInit(Map args) {
-        // this method is called after model and view are injected
+        model.rootProject = new FileProject(new File('.'))
     }
 
     /*
