@@ -10,7 +10,7 @@
         <ant dir="libpit" target="release" inheritAll="false"/>
     </target>
 
-    <target name="pit-cli" depends="lib-pit">
+    <target name="pit-cli" depends="libpit">
         <copy file="${libpit.jar}" todir="pit-cli/lib"/>
         <ant dir="pit-cli" target="release" inheritAll="false"/>
     </target>
