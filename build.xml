@@ -1,0 +1,30 @@
+<project name="Personal Issue Tracker" default="package">
+    <property file="version.properties"/>
+    <property environment="env"/>
+
+    <property
+        name="libpit.jar"
+        value="libpit/release/libpit-${application.version}"/>
+
+    <target name="libpit">
+        <ant dir="libpit" target="release" inheritAll="false"/>
+    </target>
+
+    <target name="pit-cli" depends="lib-pit">
+        <copy file="${libpit.jar}" todir="pit-cli/lib"/>
+        <ant dir="pit-cli" target="release" inheritAll="false"/>
+    </target>
+
+    <target name="pit-swing" depends="libpit">
+        <copy file="${libpit.jar}" todir="pit-swing/lib"/>
+        <exec
+            executable="${env.GRIFFON_HOME}/bin/griffon"
+            dir="pit-swing"
+            os="Linux">
+            <arg value="package"/>
+        </exec>
+    </target>
+
+    <target name="package" depends="libpit,pit-cli,pit-swing">
+    </target>
+</project>
