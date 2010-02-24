@@ -36,6 +36,11 @@ public class FileIssue extends Issue {
 
     public String getFilename() { return makeFilename(id, category, priority) }
 
+    public void setText(String text) {
+        super.setText(text)
+        source.write(text)
+    }
+
     public static boolean isValidFilename(String name) {
         return name ==~ /(\d+)([bcft])(\d).*/
     }

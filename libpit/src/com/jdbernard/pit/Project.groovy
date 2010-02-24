@@ -30,4 +30,8 @@ public abstract class Project {
     String toString() { return name }
 
     public abstract Issue createNewIssue(Map options)
+
+    public abstract Project createNewProject(String name)
+
+    public abstract boolean delete()
 }

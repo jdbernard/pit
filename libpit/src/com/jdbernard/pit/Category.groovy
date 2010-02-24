@@ -8,9 +8,11 @@ public enum Category {
 
     public static Category toCategory(String s) {
         for(c in Category.values())
-            if (c.toString().startsWith(s.toUpperCase())) return c
+            if (c.name().startsWith(s.toUpperCase())) return c
         throw new IllegalArgumentException("No category matches ${s}.")
     }   
 
     public String getSymbol() { toString()[0].toLowerCase() }
+
+    public String toString() { return "${name()[0]}${name()[1..-1].toLowerCase()}" }
 }

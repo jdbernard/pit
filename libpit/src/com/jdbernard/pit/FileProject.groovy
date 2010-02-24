@@ -5,7 +5,7 @@ class FileProject extends Project {
     protected File source
 
     public FileProject(File dir) {
-        super(dir.name)
+        super(dir.canonicalFile.name)
 
         if (!dir.isDirectory())
             throw new IllegalArgumentException(
@@ -64,6 +64,15 @@ class FileProject extends Project {
 
         return issue
     }
+
+    public FileProject createNewProject(String name) {
+        def newDir = new File(source, name)
+        newDir.mkdirs()
+
+        return new FileProject(newDir)
+    }
+
+    public boolean delete() { return source.delete() }
 
     @Override
     public String toString() { return name }

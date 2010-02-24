@@ -7,4 +7,10 @@ class MockProject extends Project {
     public Issue createNewIssue(Map options) {
         throw new UnsupportedOperationException()
     }
+
+    public Project createNewProject(String name) {
+        throw new UnsupportedOperationException()
+    }
+
+    public boolean delete() { return true }
 }

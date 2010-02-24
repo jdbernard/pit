@@ -43,9 +43,9 @@ badd +1 test/com/jdbernard/pit/IssueTest.groovy
 badd +6 src/com/jdbernard/pit/Project.groovy
 badd +1 test/com/jdbernard/pit/ProjectTest.groovy
 badd +1 src/com/jdbernard/pit/FileIssue.groovy
-badd +0 test/com/jdbernard/pit/FileIssueTest.groovy
+badd +1 test/com/jdbernard/pit/FileIssueTest.groovy
 badd +1 src/com/jdbernard/pit/FileProject.groovy
-badd +0 test/com/jdbernard/pit/FileProjectTest.groovy
+badd +1 test/com/jdbernard/pit/FileProjectTest.groovy
 args build.xml
 edit build.xml
 set splitbelow splitright
@@ -701,12 +701,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 103 - ((26 * winheight(0) + 39) / 78)
+let s:l = 1 - ((0 * winheight(0) + 39) / 78)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-103
-normal! 04l
+1
+normal! 0
 wincmd w
 exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
 exe 'vert 2resize ' . ((&columns * 90 + 91) / 182)
@@ -1260,12 +1260,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 40 - ((39 * winheight(0) + 39) / 78)
+let s:l = 1 - ((0 * winheight(0) + 39) / 78)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-40
-normal! 029l
+1
+normal! 0
 wincmd w
 argglobal
 edit test/com/jdbernard/pit/FileProjectTest.groovy
@@ -1364,17 +1364,16 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 154 - ((77 * winheight(0) + 39) / 78)
+let s:l = 1 - ((0 * winheight(0) + 39) / 78)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-154
+1
 normal! 0
 wincmd w
-2wincmd w
 exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
 exe 'vert 2resize ' . ((&columns * 90 + 91) / 182)
-tabnext 6
+tabnext 1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf
 endif
