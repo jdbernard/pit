@@ -41,6 +41,8 @@ public class FileIssue extends Issue {
         source.write(text)
     }
 
+    public boolean delete() { return source.delete() }
+
     public static boolean isValidFilename(String name) {
         return name ==~ /(\d+)([bcft])(\d).*/
     }

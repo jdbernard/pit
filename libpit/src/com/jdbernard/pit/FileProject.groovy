@@ -72,7 +72,7 @@ class FileProject extends Project {
         return new FileProject(newDir)
     }
 
-    public boolean delete() { return source.delete() }
+    public boolean delete() { return source.deleteDir() }
 
     @Override
     public String toString() { return name }

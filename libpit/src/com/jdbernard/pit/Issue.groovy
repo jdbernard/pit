@@ -2,7 +2,7 @@ package com.jdbernard.pit
 
 import java.lang.IllegalArgumentException as IAE
 
-public class Issue {
+public abstract class Issue {
 
     protected String id
     protected Category category
@@ -38,4 +38,6 @@ public class Issue {
 
     @Override
     public String toString() { return "${id}(${priority}): ${category} ${title}" }
+
+    public abstract boolean delete()
 }

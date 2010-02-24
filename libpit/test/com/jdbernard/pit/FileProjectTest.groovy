@@ -121,6 +121,8 @@ class FileProjectTest {
 
         assertEquals rootProj.name, 'renamedTestDir'
         assertTrue new File('renamedTestDir').exists()
+
+        assert rootProj.source.deleteDir()
     }
 
     @Test void testCreateNewIssue() {

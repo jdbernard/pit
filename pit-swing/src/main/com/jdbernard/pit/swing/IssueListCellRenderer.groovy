@@ -15,6 +15,8 @@ public class IssueListCellRenderer extends DefaultListCellRenderer {
             selected, hasFocus)
         if (issueIcons[(value.category)])
             component.setIcon(issueIcons[(value.category)])
+        component.text = "<html><tt>${value.id} (${value.priority}): </tt>" +
+            "${value.title}</html>"
         return component
     }
 }

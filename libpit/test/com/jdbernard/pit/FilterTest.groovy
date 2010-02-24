@@ -15,16 +15,16 @@ class FilterTest {
 
         proj = new MockProject('proj1')
 
-        def issue = new Issue( '0000', Category.TASK, 5)
+        def issue = new MockIssue( '0000', Category.TASK, 5)
         proj.issues['0000'] = issue
 
-        issue = new Issue('0001', Category.BUG, 3)
+        issue = new MockIssue('0001', Category.BUG, 3)
         proj.issues['0001'] = issue
 
-        issue = new Issue('0002', Category.CLOSED, 9)
+        issue = new MockIssue('0002', Category.CLOSED, 9)
         proj.issues['0002'] = issue
 
-        issue = new Issue('0003', Category.FEATURE, 0)
+        issue = new MockIssue('0003', Category.FEATURE, 0)
         proj.issues['0003'] = issue
 
         def subProj = new MockProject('subproj1')

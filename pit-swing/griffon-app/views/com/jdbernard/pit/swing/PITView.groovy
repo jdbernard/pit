@@ -6,6 +6,7 @@ import com.jdbernard.pit.Issue
 import com.jdbernard.pit.Project
 import com.jdbernard.pit.FileProject
 import groovy.beans.Bindable
+import java.awt.Point
 import java.awt.event.MouseEvent
 import javax.swing.DefaultListModel
 import javax.swing.JFileChooser
@@ -31,7 +32,9 @@ categoryIcons = [:]
 // filter for projects and issues
 filter = new Filter(categories: [])
 
-@Bindable def popupProject = null
+popupProject = null
+
+popupIssue = null
 
 // initialize category-related view data
 Category.values().each {
@@ -71,10 +74,19 @@ showProjectPopup = { project, x, y ->
     projectPopupMenu.show(projectTree, x, y)
 }
 
+showIssuePopup = { issue, x, y ->
+    popupIssue = issue
+    issuePopupMenu.eachWithIndex { menuItem, idx ->
+        if (idx != 0) menuItem.enabled = issue != null }
+    issuePopupMenu.show(issueList, x, y)
+}
+
 /* ****************
  *  GUI components
  * ****************/
 openDialog = fileChooser(fileSelectionMode: JFileChooser.DIRECTORIES_ONLY)
+
+//newIssueDialog = dialog()
 
 projectPopupMenu = popupMenu() {
     menuItem('New Project...',
@@ -85,15 +97,64 @@ projectPopupMenu = popupMenu() {
             if (!popupProject) popupProject = model.rootProject
             def newProject = popupProject.createNewProject(name)
 
+            popupProject.projects[(newProject.name)] = newProject
             projectTree.model = new DefaultTreeModel(
                 makeNodes(model.rootProject))
         })
     menuItem('Delete Project',
-        actionPerformed: { popupProject.delete() })
+        actionPerformed: { 
+            if (!popupProject) return
+            popupProject.delete()
+            // do not like, tied to Project implementation
+            model.rootProject = new FileProject(model.rootProject.source)
+        })
+}
+
+issuePopupMenu = popupMenu() {
+    menuItem('New Issue...',
+        actionPerformed: { })
+
+    menuItem('Delete Issue',
+        actionPerformed: {
+            if (!popupIssue) return
+            popupIssue.delete()
+
+        })
+
+    separator()
+
+    menu('Change Category') {
+        Category.values().each { category ->
+            menuItem(category.toString(),
+                icon: categoryIcons[(category)],
+                actionPerformed: {
+                    if (!popupIssue) return
+                    popupIssue.category = category
+                    issueList.invalidate()
+                })
+        }
+    }
+
+    menuItem('Change Priority...',
+        actionPerformed: {
+            if (!popupIssue) return
+            def newPriority = JOptionPane.showInputDialog(frame,
+                'New priority (0-9)', 'Change Priority...',
+                JOptionPane.QUESTION_MESSAGE)
+            try { popupIssue.priority = newPriority.toInteger() }
+            catch (exception) {
+                JOptionPane.showMessage(frame, 'The priority value must ' +
+                    'be an integer in [0-9].', 'Change Priority...',
+                    JOptionPane.ERROR_MESSAGE)
+                return
+            }
+            issueList.invalidate()
+        })
 }
 
 frame = application(title:'Personal Issue Tracker',
   locationRelativeTo: null,
+  minimumSize: [600, 400],
   //size:[320,480],
   pack:true,
   //location:[50,50],
@@ -186,7 +247,16 @@ frame = application(title:'Personal Issue Tracker',
                     cellRenderer: new IssueListCellRenderer(
                         issueIcons: categoryIcons),
                     selectionMode: ListSelectionModel.SINGLE_SELECTION,
-                    valueChanged: { displayIssue(issueList.selectedValue) })
+                    valueChanged: { displayIssue(issueList.selectedValue) },
+                    mouseClicked: { evt ->
+                        if (evt.button == MouseEvent.BUTTON3) {
+                            issueList.selectedIndex = issueList.locationToIndex(
+                                [evt.x, evt.y] as Point)
+
+                            showIssuePopup(issueList.selectedValue,
+                                evt.x, evt.y)
+                        }
+                    })
             }
             scrollPane(constraints: "bottom") {
                 issueTextArea = textArea()
