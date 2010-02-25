@@ -6,12 +6,16 @@ import com.jdbernard.pit.Issue
 import com.jdbernard.pit.Project
 import com.jdbernard.pit.FileProject
 import groovy.beans.Bindable
+import java.awt.GridBagConstraints as GBC
 import java.awt.Point
 import java.awt.event.MouseEvent
+import javax.swing.DefaultComboBoxModel
 import javax.swing.DefaultListModel
+import javax.swing.JDialog
 import javax.swing.JFileChooser
 import javax.swing.JOptionPane
 import javax.swing.JSplitPane
+import javax.swing.JTextField
 import javax.swing.ListSelectionModel
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
@@ -86,7 +90,52 @@ showIssuePopup = { issue, x, y ->
  * ****************/
 openDialog = fileChooser(fileSelectionMode: JFileChooser.DIRECTORIES_ONLY)
 
-//newIssueDialog = dialog()
+newIssueDialog = dialog(title: 'New Task...', modal: true, pack: true,//size: [300,200],
+    locationRelativeTo: null) {
+
+    gridBagLayout()
+
+    label('Title/Summary:',
+        constraints: gbc(gridx: 0, gridy: 0, gridwidth: 3,
+            insets: [5, 5, 0, 5], fill: GBC.HORIZONTAL))
+    titleTextField = textField(
+        constraints: gbc(gridx: 0, gridy: 1, gridwidth: 3,
+            insets: [0, 10, 0, 5], fill: GBC.HORIZONTAL))
+
+    label('Category:', 
+        constraints: gbc(gridx: 0, gridy: 2, insets: [5, 5, 0, 0],
+            fill: GBC.HORIZONTAL))
+    categoryComboBox = comboBox(
+        constraints: gbc(gridx: 1, gridy: 2, insets: [5, 5, 0, 5],
+            fill: GBC.HORIZONTAL),
+        model: new DefaultComboBoxModel(Category.values()))
+
+    label('Priority (0-9, 0 is highest priority):',
+        constraints: gbc(gridx: 0, gridy: 3, insets: [5, 5, 0, 0],
+            fill: GBC.HORIZONTAL))
+    prioritySpinner = spinner(
+        constraints: gbc( gridx: 1, gridy: 3, insets: [5, 5, 0, 5],
+            fill: GBC.HORIZONTAL),
+        model: spinnerNumberModel(maximum: 9, minimum: 0))
+
+    button('Cancel', actionPerformed: { newIssueDialog.visible = false },
+        constraints: gbc(gridx: 0, gridy: 4, insets: [5, 5, 5, 5],
+            anchor: GBC.EAST))
+    button('Create Issue',
+        constraints: gbc(gridx: 1, gridy: 4, insets: [5, 5, 5, 5],
+            anchor: GBC.WEST),
+        actionPerformed: {
+            def project = projectTree.leadSelectionPath
+                .lastPathComponent.userObject
+            def issue = project.createNewIssue(
+                category: categoryComboBox.selectedItem,
+                priority: prioritySpinner.value,
+                text: titleTextField.text)
+            projectListModels[(project.name)] = null
+            displayProject(project)
+            newIssueDialog.visible = false
+        })
+}
 
 projectPopupMenu = popupMenu() {
     menuItem('New Project...',
@@ -112,7 +161,7 @@ projectPopupMenu = popupMenu() {
 
 issuePopupMenu = popupMenu() {
     menuItem('New Issue...',
-        actionPerformed: { })
+        actionPerformed: { newIssueDialog.visible = true })
 
     menuItem('Delete Issue',
         actionPerformed: {
@@ -158,7 +207,6 @@ frame = application(title:'Personal Issue Tracker',
   //size:[320,480],
   pack:true,
   //location:[50,50],
-  locationByPlatform:true,
   iconImage: imageIcon('/griffon-icon-48x48.png').image,
   iconImages: [imageIcon('/griffon-icon-48x48.png').image,
                imageIcon('/griffon-icon-32x32.png').image,
