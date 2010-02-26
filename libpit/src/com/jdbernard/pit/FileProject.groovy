@@ -17,7 +17,7 @@ class FileProject extends Project {
 
             // add sub projects
             if (child.isDirectory())  {
-                if ( child.name ==~ /\d{4}/)  return // just an issue folder
+                if ( child.name ==~ /\d+/)  return // just an issue folder
 
                 // otherwise build and add to list
                 projects[(child.name)] =  new FileProject(child)
@@ -41,6 +41,7 @@ class FileProject extends Project {
     public FileIssue createNewIssue(Map options) {
         if (!options) options = [:]
         if (!options.category) options.category = Category.TASK
+        if (!options.status)   options.status   = Status.NEW
         if (!options.priority) options.priority = 5
         if (!options.text) options.text = "Default issue title.\n" +
                                           "====================\n"
@@ -52,7 +53,7 @@ class FileProject extends Project {
         }
 
         def issueFile = new File(source, FileIssue.makeFilename(id,
-            options.category, options.priority))
+            options.category, options.status, options.priority))
 
         issueFile.createNewFile()
         issueFile.write(options.text)

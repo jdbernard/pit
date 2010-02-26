@@ -1,0 +1,5 @@
+Add Apache Ivy to the build process.
+====================================
+
+Add the neccesary structure to leverage an existing Ivy repository and to
+generate artifacts for a local repository.

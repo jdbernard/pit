@@ -3,6 +3,7 @@ package com.jdbernard.pit
 class Filter {
 
     List<Category> categories = null
+    List<Status> status = null
     List<String> projects = null
     List<String> ids = null
     int priority = 9
@@ -16,6 +17,7 @@ class Filter {
     public boolean accept(Issue i) {
         return (i.priority <= priority &&
                 (!categories || categories.contains(i.category)) &&
+                (!status || status.contains(i.status)) &&
                 (!ids || ids.contains(i.id)))
     }
 

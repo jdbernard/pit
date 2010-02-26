@@ -8,7 +8,6 @@ class PITController {
     def view
 
     void mvcGroupInit(Map args) {
-        model.rootProject = new FileProject(new File('.'))
     }
 
     /*

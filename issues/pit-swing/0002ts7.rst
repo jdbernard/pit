@@ -1,0 +1,2 @@
+Clear the 'New Task...' dialog when hidden.
+===========================================

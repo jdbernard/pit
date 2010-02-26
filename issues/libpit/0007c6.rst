@@ -1,4 +1,0 @@
-Add unit tests for the CATEGORIES filter
-========================================
-
-Add unit tests covering the categories filter criteria.

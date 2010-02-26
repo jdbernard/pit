@@ -1,4 +1,0 @@
-Add unit tests for changing an issue's category.
-================================================
-
-Test defined in test/com/jdbernard/pit/IssueTest.groovy

@@ -1,0 +1,33 @@
+Divorce opened/closed status and classification.
+================================================
+
+We need to track open/closed status and classification independantly.
+
+Classification is one category, status should be another. Possible values for
+status:
+
+* new
+* resolved
+* awaiting validation
+* rejected
+* reassigned
+
+For the file-based issue implementation, the file format changes from
+``nnnnsp`` to ``nnnncsp`` where:
+
+    * ``nnnn`` still represents the bug number (no change)
+    * ``c`` represents the *category* (used to be ``s`` the status):
+
+        * ``b``: Bug
+        * ``f``: Feature
+        * ``t``: Task
+
+    * ``s`` represents *status*, a new field:
+
+        * ``a``: Reassigned
+        * ``j``: Rejected
+        * ``n``: New
+        * ``s``: Resolved
+        * ``v``: Awaiting Validation
+    * ``p`` still represents priority, ``0`` being the highest and ``9`` the
+      lowest.

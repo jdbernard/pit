@@ -33,19 +33,19 @@ class FileProjectTest {
 
         */
 
-        def issueFile = new File(testDir, '0001t5.rst')
+        def issueFile = new File(testDir, '0001tn5.rst')
         issueFile.createNewFile()
         issueFile.write('Test Issue 1\n' +
                         '============\n\n' +
                         'This is the first test issue.')
 
-        issueFile = new File(testDir, '0002b5.rst')
+        issueFile = new File(testDir, '0002ba5.rst')
         issueFile.createNewFile()
         issueFile.write('Test Bug\n' +
                         '========\n\n' +
                         'Yeah, it is a test bug.')
 
-        issueFile = new File(testDir, '0003c2.rst')
+        issueFile = new File(testDir, '0003fs2.rst')
         issueFile.createNewFile()
         issueFile.write('Important Feature Request\n' +
                         '=========================\n\n' +
@@ -54,13 +54,13 @@ class FileProjectTest {
         def subDir = new File(testDir, 'subproj1')
         subDir.mkdirs()
 
-        issueFile = new File(subDir, '0001f3.rst')
+        issueFile = new File(subDir, '0001fv3.rst')
         issueFile.createNewFile()
         issueFile.write('First feature in subproject\n' +
                         '===========================\n\n' +
                         'Please make the grubblers grobble.')
 
-        issueFile = new File(subDir, '0002b4.rst')
+        issueFile = new File(subDir, '0002bj4.rst')
         issueFile.createNewFile()
         issueFile.write('Zippners are not zippning.\n' +
                         '==========================\n\n' +
@@ -129,11 +129,14 @@ class FileProjectTest {
 
         // test correct increment of id, application of values
         def newIssue = rootProj.createNewIssue(category: Category.BUG,
-            priority: 4, text: 'A newly made bug report.\n'+
-                               '========================\n\n' +
-                               'Testing the Project.createNewIssue() method.')
+            status: Status.REASSIGNED, priority: 4,
+            text: 'A newly made bug report.\n'+
+                  '========================\n\n' +
+                  'Testing the Project.createNewIssue() method.')
 
         assertEquals newIssue.id,       '0004'
+        assertEquals newIssue.category, Category.BUG
+        assertEquals newIssue.status,   Status.REASSIGNED
         assertEquals newIssue.priority, 4
         assertEquals newIssue.text, 'A newly made bug report.\n'+
                                     '========================\n\n' +
@@ -145,6 +148,8 @@ class FileProjectTest {
 
         assertEquals newIssue.id,       '0000'
         assertEquals newIssue.priority, 5
+        assertEquals newIssue.category, Category.TASK
+        assertEquals newIssue.status,   Status.NEW
         assertEquals newIssue.text,     'Default issue title.\n' +
                                         '====================\n'
 

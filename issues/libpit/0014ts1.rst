@@ -1,0 +1,4 @@
+Add unit tests covering Issue construction.
+===========================================
+
+Test defined in test/com/jdbernard/pit/IssueTest.groovy

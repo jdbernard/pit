@@ -1,0 +1,8 @@
+New Issue ID is off by one.
+===========================
+
+Problem
+-------
+
+When creating a new issue with the --new-issue option, the created issue has
+the same id as the most recent issue, as opposed to one more than.

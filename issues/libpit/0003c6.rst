@@ -1,2 +1,0 @@
-Add the ability to re-prioritize an issue.
-==========================================

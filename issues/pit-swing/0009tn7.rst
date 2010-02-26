@@ -1,0 +1,2 @@
+Make 'New' the default new issue status.
+========================================

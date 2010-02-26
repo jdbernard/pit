@@ -1,0 +1,4 @@
+Show full issue text with -v, --verbose
+=======================================
+
+Print the full issue when passed the verbose option.

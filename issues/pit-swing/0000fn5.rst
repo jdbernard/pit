@@ -1,0 +1,5 @@
+Remember last opened directory.
+===============================
+
+This affects the JFileChooser, not the model.rootProject.
+

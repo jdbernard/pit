@@ -1,0 +1,2 @@
+De-select the 'CLOSED' category by default.
+===========================================

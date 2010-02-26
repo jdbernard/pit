@@ -1,2 +1,0 @@
-Add the ability to create a new issue.
-======================================

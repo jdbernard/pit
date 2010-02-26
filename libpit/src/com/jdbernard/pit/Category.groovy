@@ -3,8 +3,7 @@ package com.jdbernard.pit
 public enum Category {
     BUG,
     FEATURE,
-    TASK,
-    CLOSED
+    TASK
 
     public static Category toCategory(String s) {
         for(c in Category.values())

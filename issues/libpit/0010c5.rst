@@ -1,4 +1,0 @@
-Add unit tests for the VERBOSE option
-=====================================
-
-Add unit tests covering the verbose option

@@ -1,4 +1,0 @@
-Add unit tests for the RECURSE filter
-=====================================
-
-Add unit tests covering the subprojects filter criteria.

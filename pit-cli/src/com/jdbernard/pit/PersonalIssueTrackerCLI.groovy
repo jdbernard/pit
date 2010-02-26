@@ -11,8 +11,11 @@ cli.l(longOpt: 'list', 'List issues. Unless otherwise specified it lists all '
 cli.i(argName: 'id', longOpt: 'id', args: 1,
     'Filter issues by id. Accepts a comma-delimited list.')
 cli.c(argName: 'category', longOpt: 'category', args: 1,
-    'Filter issues by category (bug, feature, task, closed). Accepts a '
+    'Filter issues by category (bug, feature, task). Accepts a '
     + 'comma-delimited list.')
+cli.t(argName: 'status', longOpt: 'status', args: 1,
+    'Filter issues by status (new, reassigned, rejected, resolved, ' +
+    'validation_required)')
 cli.p(argName: 'priority', longOpt: 'priority', args: 1,
     'Filter issues by priority. This acts as a threshhold, listing all issues '
     + 'greater than or equal to the given priority.')
@@ -26,6 +29,8 @@ cli.P(argName: 'new-priority', longOpt: 'set-priority', args: 1,
     required: false, 'Modify the priority of the selected issues.')
 cli.C(argName: 'new-category', longOpt: 'set-category', args: 1,
     required: false, 'Modify the category of the selected issues.')
+cli.T(argName: 'new-status', longOpt: 'set-status', args: 1,
+    required: false, 'Modify the status of the selected issues.')
 cli.n(longOpt: 'new-issue', 'Create a new issue.')
 
 def opts = cli.parse(args)
@@ -39,6 +44,10 @@ def categories = ['bug','feature','task']
 if (opts.c) categories = opts.c.split(/[,\s]/)
 categories = categories.collect { Category.toCategory(it) }
 
+def statusList = ['new', 'validation_required']
+if (opts.t) statusList = opts.t.split(/[,\s]/)
+statusList = statusList.collect { Status.toStatus(it) }
+
 def EOL = System.getProperty('line.separator')
 
 // build issue list
@@ -46,6 +55,7 @@ issuedb = new FileProject(new File('.'))
 
 // build filter from options
 def filter = new Filter('categories': categories,
+    'status': statusList,
     'priority': (opts.p ? opts.p.toInteger() : 9),
     'projects': (opts.r ? opts.r.toLowerCase().split(/[,\s]/).asType(List.class) : []),
     'ids': (opts.i ? opts.i.split(/[,\s]/).asType(List.class) : []),
@@ -88,7 +98,15 @@ else if (opts.C) {
     try { cat = Category.toCategory(opts.C) }
     catch (e) { println "Invalid category: ${opts.C}"; return 1 }
 
-    walkProject(issuedb, filterb) { it.category = cat }
+    walkProject(issuedb, filter) { it.category = cat }
+}
+// change status fourth
+else if (opts.T) {
+    def status
+    try { status = Status.toStatus(opts.T) }
+    catch (e) { println "Invalid status: ${opts.T}"; return 1 }
+
+    walkProject(issuedb, filter) { it.status = status }
 }
 // new entry last
 else if (opts.n) {

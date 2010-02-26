@@ -1,12 +1,14 @@
 package com.jdbernard.pit.swing
 
 import com.jdbernard.pit.Category
+import com.jdbernard.pit.Status
 import com.jdbernard.pit.Filter
 import com.jdbernard.pit.Issue
 import com.jdbernard.pit.Project
 import com.jdbernard.pit.FileProject
 import groovy.beans.Bindable
 import java.awt.GridBagConstraints as GBC
+import java.awt.Font
 import java.awt.Point
 import java.awt.event.MouseEvent
 import javax.swing.DefaultComboBoxModel
@@ -33,8 +35,11 @@ projectListModels = [:]
 // map of category -> list icon
 categoryIcons = [:]
 
+statusIcons = [:]
+
 // filter for projects and issues
-filter = new Filter(categories: [])
+filter = new Filter(categories: [],
+    status: [Status.NEW, Status.VALIDATION_REQUIRED])
 
 popupProject = null
 selectedProject = model.rootProject
@@ -45,6 +50,10 @@ popupIssue = null
 Category.values().each {
     categoryIcons[(it)] = imageIcon("/${it.name().toLowerCase()}.png")
     filter.categories.add(it)
+}
+
+Status.values().each {
+    statusIcons[(it)] = imageIcon("/${it.name().toLowerCase()}.png")
 }
 
 /* ***************
@@ -111,23 +120,32 @@ newIssueDialog = dialog(title: 'New Task...', modal: true, pack: true,//size: [3
             fill: GBC.HORIZONTAL),
         model: new DefaultComboBoxModel(Category.values()))
 
-    label('Priority (0-9, 0 is highest priority):',
+    label('Status:',
         constraints: gbc(gridx: 0, gridy: 3, insets: [5, 5, 0, 0],
             fill: GBC.HORIZONTAL))
+    statusComboBox = comboBox(
+        constraints: gbc(gridx: 1, gridy: 3, insets: [5, 5, 0, 5],
+            fill: GBC.HORIZONTAL),
+        model: new DefaultComboBoxModel(Status.values()))
+
+    label('Priority (0-9, 0 is highest priority):',
+        constraints: gbc(gridx: 0, gridy: 4, insets: [5, 5, 0, 0],
+            fill: GBC.HORIZONTAL))
     prioritySpinner = spinner(
-        constraints: gbc( gridx: 1, gridy: 3, insets: [5, 5, 0, 5],
+        constraints: gbc( gridx: 1, gridy: 4, insets: [5, 5, 0, 5],
             fill: GBC.HORIZONTAL),
         model: spinnerNumberModel(maximum: 9, minimum: 0))
 
     button('Cancel', actionPerformed: { newIssueDialog.visible = false },
-        constraints: gbc(gridx: 0, gridy: 4, insets: [5, 5, 5, 5],
+        constraints: gbc(gridx: 0, gridy: 5, insets: [5, 5, 5, 5],
             anchor: GBC.EAST))
     button('Create Issue',
-        constraints: gbc(gridx: 1, gridy: 4, insets: [5, 5, 5, 5],
+        constraints: gbc(gridx: 1, gridy: 5, insets: [5, 5, 5, 5],
             anchor: GBC.WEST),
         actionPerformed: {
             def issue = selectedProject.createNewIssue(
                 category: categoryComboBox.selectedItem,
+                status: statusComboBox.selectedItem,
                 priority: prioritySpinner.value,
                 text: titleTextField.text)
             projectListModels[(selectedProject.name)] = null
@@ -160,7 +178,13 @@ projectPopupMenu = popupMenu() {
 
 issuePopupMenu = popupMenu() {
     menuItem('New Issue...',
-        actionPerformed: { newIssueDialog.visible = true })
+        actionPerformed: { 
+            titleTextField.text = ""
+            categoryComboBox.selectedIndex = 0
+            statusComboBox.selectedIndex = 0
+            prioritySpinner.setValue(5)
+            newIssueDialog.visible = true
+        })
 
     menuItem('Delete Issue',
         actionPerformed: {
@@ -180,6 +204,20 @@ issuePopupMenu = popupMenu() {
                     if (!popupIssue) return
                     popupIssue.category = category
                     issueList.invalidate()
+                    issueList.repaint()
+                })
+        }
+    }
+
+    menu('Change Status') {
+        Status.values().each { status ->
+            menuItem(status.toString(),
+                icon: statusIcons[(status)],
+                actionPerformed: {
+                    if (!popupIssue) return
+                    popupIssue.status = status
+                    issueList.invalidate()
+                    issueList.repaint()
                 })
         }
     }
@@ -198,12 +236,13 @@ issuePopupMenu = popupMenu() {
                 return
             }
             issueList.invalidate()
+            issueList.repaint()
         })
 }
 
 frame = application(title:'Personal Issue Tracker',
   locationRelativeTo: null,
-  minimumSize: [600, 400],
+  minimumSize: [800, 500],
   //size:[320,480],
   pack:true,
   //location:[50,50],
@@ -231,21 +270,42 @@ frame = application(title:'Personal Issue Tracker',
         }
 
         menu('View') {
-            Category.values().each {
-                checkBoxMenuItem(it.toString(),
-                    selected: filter.categories.contains(it),
-                    actionPerformed: { evt ->
-                        def cat = Category.toCategory(evt.source.text)
-                        if (filter.categories.contains(cat)) {
-                            filter.categories.remove(cat)
-                            evt.source.selected = false
-                        } else {
-                            filter.categories.add(cat)
-                            evt.source.selected = true
-                        }
-                        projectListModels.clear()
-                        displayProject(selectedProject)
-                    })
+            menu('Category') {
+                Category.values().each {
+                    checkBoxMenuItem(it.toString(),
+                        selected: filter.categories.contains(it),
+                        actionPerformed: { evt ->
+                            def cat = Category.toCategory(evt.source.text)
+                            if (filter.categories.contains(cat)) {
+                                filter.categories.remove(cat)
+                                evt.source.selected = false
+                            } else {
+                                filter.categories.add(cat)
+                                evt.source.selected = true
+                            }
+                            projectListModels.clear()
+                            displayProject(selectedProject)
+                        })
+                }
+            }
+
+            menu('Status') {
+                Status.values().each {
+                    checkBoxMenuItem(it.toString(),
+                        selected: filter.status.contains(it),
+                        actionPerformed: { evt ->
+                            def st = Status.toStatus(evt.source.text[0..5])
+                            if (filter.status.contains(st)) {
+                                filter.status.remove(st)
+                                evt.source.selected = false
+                            } else {
+                                filter.status.add(st)
+                                evt.source.selected = true
+                            }
+                            projectListModels.clear()
+                            displayProject(selectedProject)
+                        })
+                }
             }
 
         }
@@ -266,7 +326,10 @@ frame = application(title:'Personal Issue Tracker',
                         if (model.rootProject) {
                             projectTree.rootVisible = model.rootProject.issues.size()
                             new DefaultTreeModel(makeNodes(model.rootProject))
-                        } else new DefaultTreeModel()
+                        } else {
+                            projectTree.rootVisible = false
+                            new DefaultTreeModel(new DefaultMutableTreeNode())
+                        }
                     }),
                 valueChanged: { evt ->
                     selectedProject = evt?.newLeadSelectionPath?.lastPathComponent?.userObject ?: model.rootProject
@@ -280,6 +343,8 @@ frame = application(title:'Personal Issue Tracker',
                             evt.x, evt.y)
                     }
                 })
+            projectTree.model = new DefaultTreeModel(new DefaultMutableTreeNode())
+            projectTree.rootVisible = false
     
             projectTree.selectionModel.selectionMode =
                 TreeSelectionModel.SINGLE_TREE_SELECTION
@@ -292,7 +357,8 @@ frame = application(title:'Personal Issue Tracker',
             scrollPane(constraints: "top") {
                 issueList = list(
                     cellRenderer: new IssueListCellRenderer(
-                        issueIcons: categoryIcons),
+                        categoryIcons: categoryIcons,
+                        statusIcons: statusIcons),
                     selectionMode: ListSelectionModel.SINGLE_SELECTION,
                     valueChanged: { displayIssue(issueList.selectedValue) },
                     mouseClicked: { evt ->
@@ -306,7 +372,19 @@ frame = application(title:'Personal Issue Tracker',
                     })
             }
             scrollPane(constraints: "bottom") {
-                issueTextArea = textArea()
+                issueTextArea = textArea(
+                    font: new Font(Font.MONOSPACED, Font.PLAIN, 12),
+                    focusGained: {},
+                    focusLost: {
+                        if (!issueList?.selectedValue) return
+                        if (issueTextArea.text != issueList.selectedValue.text)
+                            issueList.selectedValue.text = issueTextArea.text
+                    },
+                    mouseExited: {
+                        if (!issueList?.selectedValue) return
+                        if (issueTextArea.text != issueList.selectedValue.text)
+                            issueList.selectedValue.text = issueTextArea.text
+                    })
             }
         }
     }

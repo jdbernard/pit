@@ -6,12 +6,15 @@ public abstract class Issue {
 
     protected String id
     protected Category category
+    protected Status status
     protected int priority
     protected String text
 
-    Issue(String id, Category c = Category.TASK, int p = 9) {
+    Issue(String id, Category c = Category.TASK, Status s = Status.NEW,
+    int p = 9) {
         this.id = id
         this.category = c
+        this.status = s
         this.priority = p
     }
 
@@ -26,6 +29,15 @@ public abstract class Issue {
         this.category = c
     }
 
+    public Status getStatus() { return status }
+
+    public void setStatus(Status s) {
+        if (s == null)
+            throw new IAE("Status cannot be null.")
+
+        this.status = s
+    }
+
     public int getPriority() { return priority }
 
     public void setPriority(int p) { priority = Math.min(9, Math.max(0, p)) }
@@ -37,7 +49,7 @@ public abstract class Issue {
     public void setText(String t) { text = t }
 
     @Override
-    public String toString() { return "${id}(${priority}): ${category} ${title}" }
+    public String toString() { return "${id}(${priority}-${status}): ${category} ${title}" }
 
     public abstract boolean delete()
 }
