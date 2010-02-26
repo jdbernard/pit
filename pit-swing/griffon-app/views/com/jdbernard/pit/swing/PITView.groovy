@@ -37,6 +37,7 @@ categoryIcons = [:]
 filter = new Filter(categories: [])
 
 popupProject = null
+selectedProject = model.rootProject
 
 popupIssue = null
 
@@ -125,14 +126,12 @@ newIssueDialog = dialog(title: 'New Task...', modal: true, pack: true,//size: [3
         constraints: gbc(gridx: 1, gridy: 4, insets: [5, 5, 5, 5],
             anchor: GBC.WEST),
         actionPerformed: {
-            def project = projectTree.leadSelectionPath
-                .lastPathComponent.userObject
-            def issue = project.createNewIssue(
+            def issue = selectedProject.createNewIssue(
                 category: categoryComboBox.selectedItem,
                 priority: prioritySpinner.value,
                 text: titleTextField.text)
-            projectListModels[(project.name)] = null
-            displayProject(project)
+            projectListModels[(selectedProject.name)] = null
+            displayProject(selectedProject)
             newIssueDialog.visible = false
         })
 }
@@ -166,8 +165,9 @@ issuePopupMenu = popupMenu() {
     menuItem('Delete Issue',
         actionPerformed: {
             if (!popupIssue) return
+            selectedProject.issues.remove(popupIssue.id)
+            projectListModels[(selectedProject.name)].removeElement(popupIssue)
             popupIssue.delete()
-
         })
 
     separator()
@@ -207,10 +207,10 @@ frame = application(title:'Personal Issue Tracker',
   //size:[320,480],
   pack:true,
   //location:[50,50],
-  iconImage: imageIcon('/griffon-icon-48x48.png').image,
-  iconImages: [imageIcon('/griffon-icon-48x48.png').image,
-               imageIcon('/griffon-icon-32x32.png').image,
-               imageIcon('/griffon-icon-16x16.png').image]
+  iconImage: imageIcon('/icon64x64.png').image,
+  iconImages: [imageIcon('/icon64x64.png').image,
+               imageIcon('/icon32x32.png').image,
+               imageIcon('/icon16x16.png').image]
 ) {
 
     borderLayout()
@@ -244,8 +244,7 @@ frame = application(title:'Personal Issue Tracker',
                             evt.source.selected = true
                         }
                         projectListModels.clear()
-                        displayProject(projectTree.leadSelectionPath
-                            ?.lastPathComponent?.userObject)
+                        displayProject(selectedProject)
                     })
             }
 
@@ -270,8 +269,8 @@ frame = application(title:'Personal Issue Tracker',
                         } else new DefaultTreeModel()
                     }),
                 valueChanged: { evt ->
-                    displayProject(evt?.newLeadSelectionPath
-                        ?.lastPathComponent?.userObject)
+                    selectedProject = evt?.newLeadSelectionPath?.lastPathComponent?.userObject ?: model.rootProject
+                    displayProject(selectedProject)
                 },
                 mouseClicked: { evt ->
                     if (evt.button == MouseEvent.BUTTON3) {

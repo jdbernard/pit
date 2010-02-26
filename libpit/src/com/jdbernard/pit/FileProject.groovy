@@ -54,8 +54,6 @@ class FileProject extends Project {
         def issueFile = new File(source, FileIssue.makeFilename(id,
             options.category, options.priority))
 
-        assert !issueFile.exists()
-
         issueFile.createNewFile()
         issueFile.write(options.text)
 
