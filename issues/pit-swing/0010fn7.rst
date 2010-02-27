@@ -1,2 +1,0 @@
-Add the ability to sort issues based on priority, id, category, or status.
-==========================================================================

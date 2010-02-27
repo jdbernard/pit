@@ -254,8 +254,6 @@ frame = application(title:'Personal Issue Tracker',
                imageIcon('/icon16x16.png').image]
 ) {
 
-    borderLayout()
-
     // main menu
     menuBar() {
         menu("File") {
@@ -311,11 +309,54 @@ frame = application(title:'Personal Issue Tracker',
             }
 
         }
+
+        menu('Sort') {
+            sortMenuButtonGroup = buttonGroup()
+            checkBoxMenuItem('By ID', 
+                buttonGroup: sortMenuButtonGroup,
+                actionPerformed: {
+                    filter.issueSorter = { it.id }
+                    projectListModels.clear()
+                    displayProject(selectedProject)
+                })
+            checkBoxMenuItem('By Category',
+                buttonGroup: sortMenuButtonGroup,
+                actionPerformed: {
+                    filter.issueSorter = { it.category }
+                    projectListModels.clear()
+                    displayProject(selectedProject)
+                })
+            checkBoxMenuItem('By Status',
+                buttonGroup: sortMenuButtonGroup,
+                actionPerformed: {
+                    filter.issueSorter = { it.status }
+                    projectListModels.clear()
+                    displayProject(selectedProject)
+                })
+            checkBoxMenuItem('By Priority',
+                buttonGroup: sortMenuButtonGroup,
+                actionPerformed: {
+                    filter.issueSorter = { it.priority }
+                    projectListModels.clear()
+                    displayProject(selectedProject)
+                })
+            checkBoxMenuItem('By Title',
+                buttonGroup: sortMenuButtonGroup,
+                actionPerformed: {
+                    filter.issueSorter = { it.title }
+                    projectListModels.clear()
+                    displayProject(selectedProject)
+                })
+        }
     }
+
+    gridBagLayout()
 
     // main split view
     splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
-        dividerLocation: 280) {
+        dividerLocation: 280,
+        constraints: gbc(fill: GBC.BOTH, insets: [10,10,10,10],
+            weightx: 2, weighty: 2)) {
 
         // left side (projects tree and buttons)
         panel(constraints: "left") {
@@ -422,7 +463,8 @@ frame = application(title:'Personal Issue Tracker',
 
                 wordWrapCheckBox = checkBox('Word wrap',
                     constraints: gbc(gridx: 0, gridy: 1, weightx: 2,
-                        anchor: GBC.WEST), selected: true)
+                        anchor: GBC.WEST),
+                    selected: true)
                 button('New Issue',
                     constraints: gbc(gridx: 1, gridy: 1, anchor: GBC.EAST),
                     icon: imageIcon("/add.png"), actionPerformed: newIssue)

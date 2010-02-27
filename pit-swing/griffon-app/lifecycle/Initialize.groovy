@@ -21,4 +21,4 @@ import groovy.swing.SwingBuilder
 import griffon.util.GriffonPlatformHelper
 
 GriffonPlatformHelper.tweakForNativePlatform(app)
-SwingBuilder.lookAndFeel('mac', 'nimbus', 'gtk', ['metal', [boldFonts: false]])
+SwingBuilder.lookAndFeel('gtk', 'mac', 'org.pushingpixels.substance.api.skin.SubstanceCremeCoffeeLookAndFeel', 'nimbus', ['metal', [boldFonts: false]])
