@@ -7,6 +7,7 @@ import com.jdbernard.pit.Issue
 import com.jdbernard.pit.Project
 import com.jdbernard.pit.FileProject
 import groovy.beans.Bindable
+import java.awt.BorderLayout as BL
 import java.awt.GridBagConstraints as GBC
 import java.awt.Font
 import java.awt.Point
@@ -25,6 +26,7 @@ import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreeSelectionModel
 import net.miginfocom.swing.MigLayout
 
+import java.awt.Color
 /* ********************
  *  VIEW-Specific data
  * ********************/
@@ -95,12 +97,20 @@ showIssuePopup = { issue, x, y ->
     issuePopupMenu.show(issueList, x, y)
 }
 
+newIssue = { evt = null ->
+    titleTextField.text = ""
+    categoryComboBox.selectedItem = Category.BUG
+    statusComboBox.selectedItem = Status.NEW
+    prioritySpinner.setValue(5)
+    newIssueDialog.visible = true
+}
+
 /* ****************
  *  GUI components
  * ****************/
 openDialog = fileChooser(fileSelectionMode: JFileChooser.DIRECTORIES_ONLY)
 
-newIssueDialog = dialog(title: 'New Task...', modal: true, pack: true,//size: [300,200],
+newIssueDialog = dialog(title: 'New Task...', modal: true, pack: true,
     locationRelativeTo: null) {
 
     gridBagLayout()
@@ -155,7 +165,7 @@ newIssueDialog = dialog(title: 'New Task...', modal: true, pack: true,//size: [3
 }
 
 projectPopupMenu = popupMenu() {
-    menuItem('New Project...',
+    menuItem('New Project...', icon: imageIcon("/add.png"),
         actionPerformed: {
             def name = JOptionPane.showInputDialog(frame, 'Project name:',
                 'New Project...', JOptionPane.QUESTION_MESSAGE)
@@ -167,7 +177,7 @@ projectPopupMenu = popupMenu() {
             projectTree.model = new DefaultTreeModel(
                 makeNodes(model.rootProject))
         })
-    menuItem('Delete Project',
+    menuItem('Delete Project', icon: imageIcon("/delete.png"),
         actionPerformed: { 
             if (!popupProject) return
             popupProject.delete()
@@ -177,16 +187,10 @@ projectPopupMenu = popupMenu() {
 }
 
 issuePopupMenu = popupMenu() {
-    menuItem('New Issue...',
-        actionPerformed: { 
-            titleTextField.text = ""
-            categoryComboBox.selectedIndex = 0
-            statusComboBox.selectedIndex = 0
-            prioritySpinner.setValue(5)
-            newIssueDialog.visible = true
-        })
+    menuItem('New Issue...', icon: imageIcon("/add.png"),
+        actionPerformed: newIssue)
 
-    menuItem('Delete Issue',
+    menuItem('Delete Issue', icon: imageIcon("/delete.png"),
         actionPerformed: {
             if (!popupIssue) return
             selectedProject.issues.remove(popupIssue.id)
@@ -241,11 +245,9 @@ issuePopupMenu = popupMenu() {
 }
 
 frame = application(title:'Personal Issue Tracker',
-  locationRelativeTo: null,
   minimumSize: [800, 500],
-  //size:[320,480],
   pack:true,
-  //location:[50,50],
+  locationRelativeTo: null,
   iconImage: imageIcon('/icon64x64.png').image,
   iconImages: [imageIcon('/icon64x64.png').image,
                imageIcon('/icon32x32.png').image,
@@ -313,67 +315,138 @@ frame = application(title:'Personal Issue Tracker',
 
     // main split view
     splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
-        dividerLocation: 200) {
+        dividerLocation: 280) {
 
-        // tree view of projects
-        scrollPane(constraints: "left") {
-            treeCellRenderer = new DefaultTreeCellRenderer()
-            treeCellRenderer.leafIcon = treeCellRenderer.closedIcon
+        // left side (projects tree and buttons)
+        panel(constraints: "left") {
+            gridBagLayout()
 
-            projectTree = tree(cellRenderer: treeCellRenderer,
-                model: bind(source: model, sourceProperty: 'rootProject',
-                    sourceValue: { 
-                        if (model.rootProject) {
-                            projectTree.rootVisible = model.rootProject.issues.size()
-                            new DefaultTreeModel(makeNodes(model.rootProject))
-                        } else {
-                            projectTree.rootVisible = false
-                            new DefaultTreeModel(new DefaultMutableTreeNode())
+            // tree view of projects
+            scrollPane(constraints: gbc(fill: GBC.BOTH, gridx: 0, gridy:0,
+                gridwidth: 2, weightx: 2, weighty: 2)) {
+                treeCellRenderer = new DefaultTreeCellRenderer()
+                treeCellRenderer.leafIcon = treeCellRenderer.closedIcon
+
+                projectTree = tree(cellRenderer: treeCellRenderer,
+                    model: bind(source: model, sourceProperty: 'rootProject',
+                        sourceValue: { 
+                            if (model.rootProject) {
+                                projectTree.rootVisible =
+                                    model.rootProject.issues.size()
+                                new DefaultTreeModel(makeNodes(model.rootProject))
+                            } else {
+                                projectTree.rootVisible = false
+                                new DefaultTreeModel(new DefaultMutableTreeNode())
+                            }
+                        }),
+                    valueChanged: { evt ->
+                        selectedProject = evt?.newLeadSelectionPath?.
+                            lastPathComponent?.userObject ?: model.rootProject
+                        displayProject(selectedProject)
+                        //deleteProjectButton.enabled = selectedProject != null
+                    },
+                    mouseClicked: { evt ->
+                        if (evt.button == MouseEvent.BUTTON3) {
+                            showProjectPopup(
+                                projectTree.getPathForLocation(evt.x, evt.y)
+                                    ?.lastPathComponent?.userObject,
+                                evt.x, evt.y)
                         }
-                    }),
-                valueChanged: { evt ->
-                    selectedProject = evt?.newLeadSelectionPath?.lastPathComponent?.userObject ?: model.rootProject
-                    displayProject(selectedProject)
-                },
-                mouseClicked: { evt ->
-                    if (evt.button == MouseEvent.BUTTON3) {
-                        showProjectPopup(
-                            projectTree.getPathForLocation(evt.x, evt.y)
-                                ?.lastPathComponent?.userObject,
-                            evt.x, evt.y)
-                    }
+                    })
+                projectTree.model = new DefaultTreeModel(
+                    new DefaultMutableTreeNode())
+                projectTree.rootVisible = false
+        
+                projectTree.selectionModel.selectionMode =
+                    TreeSelectionModel.SINGLE_TREE_SELECTION
+            }
+
+            // project buttons
+            button('New Project', icon: imageIcon("/add.png"),
+                constraints: gbc(fill: GBC.NONE, gridx: 0, gridy: 1,
+                    anchor: GBC.WEST),
+                actionPerformed: {
+                    def name = JOptionPane.showInputDialog(frame,
+                        'Project name:', 'New Project...',
+                        JOptionPane.QUESTION_MESSAGE)
+
+                    if (!selectedProject) selectedProject = model.rootProject
+                    def newProject = selectedProject.createNewProject(name)
+
+                    selectedProject.projects[(newProject.name)] = newProject
+                    projectTree.model = new DefaultTreeModel(
+                        makeNodes(model.rootProject))
+
                 })
-            projectTree.model = new DefaultTreeModel(new DefaultMutableTreeNode())
-            projectTree.rootVisible = false
-    
-            projectTree.selectionModel.selectionMode =
-                TreeSelectionModel.SINGLE_TREE_SELECTION
+            deleteProjectButton = button('Delete Project',
+                icon: imageIcon("/delete.png"),
+                constraints: gbc(fill: GBC.NONE, gridx: 1, gridy: 1,
+                    anchor: GBC.WEST),
+                enabled: bind(source: projectTree, sourceEvent: 'valueChanged',
+                    sourceValue: { projectTree?.lastSelectedPathComponent != null}),
+                actionPerformed: {
+                    if (!selectedProject) return
+                    selectedProject.delete()
+                    // do not like, tied to Project implementation
+                    model.rootProject = new FileProject(
+                        model.rootProject.source)
+                })
         }
 
         // split between issue list and issue details
         splitPane(orientation: JSplitPane.VERTICAL_SPLIT,
-            dividerLocation: 200, constraints: "") {
+            dividerLocation: 200, constraints: "right") {
 
-            scrollPane(constraints: "top") {
-                issueList = list(
-                    cellRenderer: new IssueListCellRenderer(
-                        categoryIcons: categoryIcons,
-                        statusIcons: statusIcons),
-                    selectionMode: ListSelectionModel.SINGLE_SELECTION,
-                    valueChanged: { displayIssue(issueList.selectedValue) },
-                    mouseClicked: { evt ->
-                        if (evt.button == MouseEvent.BUTTON3) {
-                            issueList.selectedIndex = issueList.locationToIndex(
-                                [evt.x, evt.y] as Point)
+            panel(constraints: "top") {
+                gridBagLayout()
 
-                            showIssuePopup(issueList.selectedValue,
-                                evt.x, evt.y)
-                        }
+                scrollPane(constraints: gbc(fill: GBC.BOTH, weightx: 2,
+                        weighty: 2, gridx: 0, gridy: 0, gridwidth: 3)) {
+
+                    issueList = list(
+                        cellRenderer: new IssueListCellRenderer(
+                            categoryIcons: categoryIcons,
+                            statusIcons: statusIcons),
+                        selectionMode: ListSelectionModel.SINGLE_SELECTION,
+                        valueChanged: { displayIssue(issueList.selectedValue) },
+                        mouseClicked: { evt ->
+                            if (evt.button == MouseEvent.BUTTON3) {
+                                issueList.selectedIndex = issueList.locationToIndex(
+                                    [evt.x, evt.y] as Point)
+
+                                showIssuePopup(issueList.selectedValue,
+                                    evt.x, evt.y)
+                            }
+                        })
+                }
+
+                wordWrapCheckBox = checkBox('Word wrap',
+                    constraints: gbc(gridx: 0, gridy: 1, weightx: 2,
+                        anchor: GBC.WEST), selected: true)
+                button('New Issue',
+                    constraints: gbc(gridx: 1, gridy: 1, anchor: GBC.EAST),
+                    icon: imageIcon("/add.png"), actionPerformed: newIssue)
+
+                deleteIssueButton = button('Delete Issue',
+                    constraints: gbc(gridx: 2, gridy: 1, anchor: GBC.EAST),
+                    enabled: bind(source: issueList, sourceEvent: 'valueChanged',
+                        sourceValue: { issueList.selectedValue != null }),
+                    icon: imageIcon("/delete.png"),
+                    actionPerformed: {
+                        if (!issueList?.selectedIssue) return
+                        selectedProject.issues.remove(issueList.selectedValue)
+                        projectListModels[(selectedProject.name)]
+                            .removeElement(issueList.selectedValue)
+                        issueList.selectedIssue.delete()
                     })
+                        
             }
             scrollPane(constraints: "bottom") {
                 issueTextArea = textArea(
-                    font: new Font(Font.MONOSPACED, Font.PLAIN, 12),
+                    wrapStyleWord: true,
+                    lineWrap: bind(source: wordWrapCheckBox,
+                        sourceProperty: 'selected'),
+                    font: new Font(Font.MONOSPACED, Font.PLAIN, 10),
                     focusGained: {},
                     focusLost: {
                         if (!issueList?.selectedValue) return

@@ -1,1 +1,0 @@
-Add an optional word-wrap at 80 characters for the Issue display

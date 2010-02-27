@@ -17,7 +17,8 @@ class FileProject extends Project {
 
             // add sub projects
             if (child.isDirectory())  {
-                if ( child.name ==~ /\d+/)  return // just an issue folder
+                if (child.name ==~ /\d+/ ||
+                    child.isHidden())  return // just an issue folder
 
                 // otherwise build and add to list
                 projects[(child.name)] =  new FileProject(child)
