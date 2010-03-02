@@ -9,6 +9,8 @@ public abstract class Issue {
     protected Status status
     protected int priority
     protected String text
+    protected Date deliveryDate
+    protected Date creationDate
 
     Issue(String id, Category c = Category.TASK, Status s = Status.NEW,
     int p = 9) {
@@ -16,6 +18,8 @@ public abstract class Issue {
         this.category = c
         this.status = s
         this.priority = p
+        this.creationDate = new Date()
+        this.deliveryDate = null
     }
 
     public String getId() { return id; }
@@ -47,6 +51,14 @@ public abstract class Issue {
     public String getText() { return text }
 
     public void setText(String t) { text = t }
+
+    public boolean hasDelivery() { return deliveryDate == null }
+
+    public Date getCreationDate() { return creationDate }
+
+    public Date getDeliveryDate() { return deliveryDate }
+
+    public void setDeliveryDate(Date dd) { deliveryDate = dd }
 
     @Override
     public String toString() { return "${id}(${priority}-${status}): ${category} ${title}" }

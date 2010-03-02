@@ -27,87 +27,77 @@ import javax.swing.tree.TreeSelectionModel
 import net.miginfocom.swing.MigLayout
 
 import java.awt.Color
-/* ********************
- *  VIEW-Specific data
- * ********************/
 
-// cache the ListModels
-projectListModels = [:]
+actions {
+    action (
+        id: 'newIssue',
+        name: 'New Issue',
+        icon: imageIcon("/add.png"),
+        accelerator: shortcut('N'),
+        closure: controller.newIssue,
+        enabled: bind { model.selectedProject != null }
+    )
 
-// map of category -> list icon
+    action (
+        id: 'createIssue',
+        name: 'Create Issue',
+        closure: controller.createIssue
+    )
+
+    action (
+        id: 'newProject',
+        name: 'New Project...',
+        icon: imageIcon("/add.png"),
+        closure: controller.newProject
+    )
+
+    action (
+        id: 'deleteProject',
+        name: 'Delete Project',
+        closure: controller.deleteProject,
+        enabled: bind {model.selectedProject != null }
+    )
+
+    action (
+        id: 'deleteProjectPop',
+        name: 'Delete Project',
+        icon: imageIcon("/delete.png"),
+        closure: controller.deleteProject,
+        enabled: bind { model.popupProject != null }
+    )
+    action (
+        id: 'deleteIssue',
+        name: 'Delete Issue',
+        icon: imageIcon("/delete.png"),
+        closure: controller.deleteIssue,
+    )
+
+    action (
+        id: 'deleteIssuePop',
+        name: 'Delete Issue',
+        icon: imageIcon("/delete.png"),
+        closure: controller.deleteIssue,
+        enabled: bind { model.popupIssue != null }
+    )
+}
+
+/* ****************
+ *  GUI components
+ * ****************/
 categoryIcons = [:]
-
 statusIcons = [:]
-
-// filter for projects and issues
-filter = new Filter(categories: [],
-    status: [Status.NEW, Status.VALIDATION_REQUIRED])
-
-popupProject = null
-selectedProject = model.rootProject
-
-popupIssue = null
 
 // initialize category-related view data
 Category.values().each {
     categoryIcons[(it)] = imageIcon("/${it.name().toLowerCase()}.png")
-    filter.categories.add(it)
+    model.filter.categories.add(it)
 }
 
 Status.values().each {
     statusIcons[(it)] = imageIcon("/${it.name().toLowerCase()}.png")
 }
 
-/* ***************
- *  event methods
- * ***************/
 
-/** 
- * displayProject
- * @param project Project to display.
- * 
- */
-displayProject = { project = null -> 
-    issueTextArea.text = ""
-    if (!project) return
-
-    if (!projectListModels[(project.name)]) {
-        def model = new DefaultListModel()
-        project.eachIssue(filter) { model.addElement(it) }
-        projectListModels[(project.name)] = model
-    }
-
-    issueList.setModel(projectListModels[(project.name)])
-}
-
-displayIssue = { issue = null ->
-    if (issue) issueTextArea.text = issue.text
-}
-
-showProjectPopup = { project, x, y ->
-    popupProject = project
-    projectPopupMenu[1].enabled = project != null
-    projectPopupMenu.show(projectTree, x, y)
-}
-
-showIssuePopup = { issue, x, y ->
-    popupIssue = issue
-    issuePopupMenu.eachWithIndex { menuItem, idx ->
-        if (idx != 0) menuItem.enabled = issue != null }
-    issuePopupMenu.show(issueList, x, y)
-}
-
-newIssue = { evt = null ->
-    titleTextField.text = ""
-    categoryComboBox.selectedItem = Category.BUG
-    statusComboBox.selectedItem = Status.NEW
-    prioritySpinner.setValue(5)
-    newIssueDialog.visible = true
-}
-
-/* ****************
- *  GUI components
- * ****************/
 openDialog = fileChooser(fileSelectionMode: JFileChooser.DIRECTORIES_ONLY)
 
 newIssueDialog = dialog(title: 'New Task...', modal: true, pack: true,
@@ -149,64 +139,28 @@ newIssueDialog = dialog(title: 'New Task...', modal: true, pack: true,
     button('Cancel', actionPerformed: { newIssueDialog.visible = false },
         constraints: gbc(gridx: 0, gridy: 5, insets: [5, 5, 5, 5],
             anchor: GBC.EAST))
-    button('Create Issue',
+    button(createIssue,
         constraints: gbc(gridx: 1, gridy: 5, insets: [5, 5, 5, 5],
-            anchor: GBC.WEST),
-        actionPerformed: {
-            def issue = selectedProject.createNewIssue(
-                category: categoryComboBox.selectedItem,
-                status: statusComboBox.selectedItem,
-                priority: prioritySpinner.value,
-                text: titleTextField.text)
-            projectListModels[(selectedProject.name)] = null
-            displayProject(selectedProject)
-            newIssueDialog.visible = false
-        })
+            anchor: GBC.WEST))
 }
 
 projectPopupMenu = popupMenu() {
-    menuItem('New Project...', icon: imageIcon("/add.png"),
-        actionPerformed: {
-            def name = JOptionPane.showInputDialog(frame, 'Project name:',
-                'New Project...', JOptionPane.QUESTION_MESSAGE)
-
-            if (!popupProject) popupProject = model.rootProject
-            def newProject = popupProject.createNewProject(name)
-
-            popupProject.projects[(newProject.name)] = newProject
-            projectTree.model = new DefaultTreeModel(
-                makeNodes(model.rootProject))
-        })
-    menuItem('Delete Project', icon: imageIcon("/delete.png"),
-        actionPerformed: { 
-            if (!popupProject) return
-            popupProject.delete()
-            // do not like, tied to Project implementation
-            model.rootProject = new FileProject(model.rootProject.source)
-        })
+    menuItem(newProject)
+    menuItem(deleteProjectPop)
 }
 
 issuePopupMenu = popupMenu() {
-    menuItem('New Issue...', icon: imageIcon("/add.png"),
-        actionPerformed: newIssue)
-
-    menuItem('Delete Issue', icon: imageIcon("/delete.png"),
-        actionPerformed: {
-            if (!popupIssue) return
-            selectedProject.issues.remove(popupIssue.id)
-            projectListModels[(selectedProject.name)].removeElement(popupIssue)
-            popupIssue.delete()
-        })
-
+    menuItem(newIssue)
+    menuItem(deleteIssuePop)
     separator()
 
     menu('Change Category') {
         Category.values().each { category ->
             menuItem(category.toString(),
                 icon: categoryIcons[(category)],
+                enabled: bind { model.popupIssue != null },
                 actionPerformed: {
-                    if (!popupIssue) return
-                    popupIssue.category = category
+                    model.popupIssue.category = category
                     issueList.invalidate()
                     issueList.repaint()
                 })
@@ -217,9 +171,9 @@ issuePopupMenu = popupMenu() {
         Status.values().each { status ->
             menuItem(status.toString(),
                 icon: statusIcons[(status)],
+                enabled: bind { model.popupIssue != null },
                 actionPerformed: {
-                    if (!popupIssue) return
-                    popupIssue.status = status
+                    model.popupIssue.status = status
                     issueList.invalidate()
                     issueList.repaint()
                 })
@@ -227,12 +181,12 @@ issuePopupMenu = popupMenu() {
     }
 
     menuItem('Change Priority...',
+        enabled: bind { model.popupIssue != null },
         actionPerformed: {
-            if (!popupIssue) return
             def newPriority = JOptionPane.showInputDialog(frame,
                 'New priority (0-9)', 'Change Priority...',
                 JOptionPane.QUESTION_MESSAGE)
-            try { popupIssue.priority = newPriority.toInteger() }
+            try { model.popupIssue.priority = newPriority.toInteger() }
             catch (exception) {
                 JOptionPane.showMessage(frame, 'The priority value must ' +
                     'be an integer in [0-9].', 'Change Priority...',
@@ -271,39 +225,37 @@ frame = application(title:'Personal Issue Tracker',
 
         menu('View') {
             menu('Category') {
-                Category.values().each {
-                    checkBoxMenuItem(it.toString(),
-                        selected: filter.categories.contains(it),
+                Category.values().each { cat ->
+                    checkBoxMenuItem(cat.toString(),
+                        selected: model.filter.categories.contains(cat),
                         actionPerformed: { evt ->
-                            def cat = Category.toCategory(evt.source.text)
-                            if (filter.categories.contains(cat)) {
-                                filter.categories.remove(cat)
+                            if (model.filter.categories.contains(cat)) {
+                                model.filter.categories.remove(cat)
                                 evt.source.selected = false
                             } else {
-                                filter.categories.add(cat)
+                                model.filter.categories.add(cat)
                                 evt.source.selected = true
                             }
-                            projectListModels.clear()
-                            displayProject(selectedProject)
+                            model.projectListModels.clear()
+                            controller.displayProject(model.selectedProject)
                         })
                 }
             }
 
             menu('Status') {
-                Status.values().each {
-                    checkBoxMenuItem(it.toString(),
-                        selected: filter.status.contains(it),
+                Status.values().each { st ->
+                    checkBoxMenuItem(st.toString(),
+                        selected: model.filter.status.contains(st),
                         actionPerformed: { evt ->
-                            def st = Status.toStatus(evt.source.text[0..5])
-                            if (filter.status.contains(st)) {
-                                filter.status.remove(st)
+                            if (model.filter.status.contains(st)) {
+                                model.filter.status.remove(st)
                                 evt.source.selected = false
                             } else {
-                                filter.status.add(st)
+                                model.filter.status.add(st)
                                 evt.source.selected = true
                             }
-                            projectListModels.clear()
-                            displayProject(selectedProject)
+                            model.projectListModels.clear()
+                            controller.displayProject(model.selectedProject)
                         })
                 }
             }
@@ -315,37 +267,37 @@ frame = application(title:'Personal Issue Tracker',
             checkBoxMenuItem('By ID', 
                 buttonGroup: sortMenuButtonGroup,
                 actionPerformed: {
-                    filter.issueSorter = { it.id }
-                    projectListModels.clear()
-                    displayProject(selectedProject)
+                    model.filter.issueSorter = { it.id }
+                    model.projectListModels.clear()
+                    controller.displayProject(selectedProject)
                 })
             checkBoxMenuItem('By Category',
                 buttonGroup: sortMenuButtonGroup,
                 actionPerformed: {
-                    filter.issueSorter = { it.category }
-                    projectListModels.clear()
-                    displayProject(selectedProject)
+                    model.filter.issueSorter = { it.category }
+                    model.projectListModels.clear()
+                    controller.displayProject(selectedProject)
                 })
             checkBoxMenuItem('By Status',
                 buttonGroup: sortMenuButtonGroup,
                 actionPerformed: {
-                    filter.issueSorter = { it.status }
-                    projectListModels.clear()
-                    displayProject(selectedProject)
+                    model.filter.issueSorter = { it.status }
+                    model.projectListModels.clear()
+                    controller.displayProject(selectedProject)
                 })
             checkBoxMenuItem('By Priority',
                 buttonGroup: sortMenuButtonGroup,
                 actionPerformed: {
-                    filter.issueSorter = { it.priority }
-                    projectListModels.clear()
-                    displayProject(selectedProject)
+                    model.filter.issueSorter = { it.priority }
+                    model.projectListModels.clear()
+                    controller.displayProject(selectedProject)
                 })
             checkBoxMenuItem('By Title',
                 buttonGroup: sortMenuButtonGroup,
                 actionPerformed: {
-                    filter.issueSorter = { it.title }
-                    projectListModels.clear()
-                    displayProject(selectedProject)
+                    model.filter.issueSorter = { it.title }
+                    model.projectListModels.clear()
+                    controller.displayProject(selectedProject)
                 })
         }
     }
@@ -374,21 +326,21 @@ frame = application(title:'Personal Issue Tracker',
                             if (model.rootProject) {
                                 projectTree.rootVisible =
                                     model.rootProject.issues.size()
-                                new DefaultTreeModel(makeNodes(model.rootProject))
+                                new DefaultTreeModel(controller.makeNodes(
+                                    model.rootProject))
                             } else {
                                 projectTree.rootVisible = false
                                 new DefaultTreeModel(new DefaultMutableTreeNode())
                             }
                         }),
                     valueChanged: { evt ->
-                        selectedProject = evt?.newLeadSelectionPath?.
+                        model.selectedProject = evt?.newLeadSelectionPath?.
                             lastPathComponent?.userObject ?: model.rootProject
-                        displayProject(selectedProject)
-                        //deleteProjectButton.enabled = selectedProject != null
+                        controller.displayProject(model.selectedProject)
                     },
                     mouseClicked: { evt ->
                         if (evt.button == MouseEvent.BUTTON3) {
-                            showProjectPopup(
+                            controller.showProjectPopup(
                                 projectTree.getPathForLocation(evt.x, evt.y)
                                     ?.lastPathComponent?.userObject,
                                 evt.x, evt.y)
@@ -403,35 +355,12 @@ frame = application(title:'Personal Issue Tracker',
             }
 
             // project buttons
-            button('New Project', icon: imageIcon("/add.png"),
+            newProjectButton = button(newProject,
                 constraints: gbc(fill: GBC.NONE, gridx: 0, gridy: 1,
-                    anchor: GBC.WEST),
-                actionPerformed: {
-                    def name = JOptionPane.showInputDialog(frame,
-                        'Project name:', 'New Project...',
-                        JOptionPane.QUESTION_MESSAGE)
-
-                    if (!selectedProject) selectedProject = model.rootProject
-                    def newProject = selectedProject.createNewProject(name)
-
-                    selectedProject.projects[(newProject.name)] = newProject
-                    projectTree.model = new DefaultTreeModel(
-                        makeNodes(model.rootProject))
-
-                })
-            deleteProjectButton = button('Delete Project',
-                icon: imageIcon("/delete.png"),
+                    anchor: GBC.WEST))
+            deleteProjectButton = button(deleteProject,
                 constraints: gbc(fill: GBC.NONE, gridx: 1, gridy: 1,
-                    anchor: GBC.WEST),
-                enabled: bind(source: projectTree, sourceEvent: 'valueChanged',
-                    sourceValue: { projectTree?.lastSelectedPathComponent != null}),
-                actionPerformed: {
-                    if (!selectedProject) return
-                    selectedProject.delete()
-                    // do not like, tied to Project implementation
-                    model.rootProject = new FileProject(
-                        model.rootProject.source)
-                })
+                    anchor: GBC.WEST))
         }
 
         // split between issue list and issue details
@@ -445,42 +374,33 @@ frame = application(title:'Personal Issue Tracker',
                         weighty: 2, gridx: 0, gridy: 0, gridwidth: 3)) {
 
                     issueList = list(
-                        cellRenderer: new IssueListCellRenderer(
-                            categoryIcons: categoryIcons,
-                            statusIcons: statusIcons),
+                        cellRenderer: bind(source: model,
+                            sourceProperty: 'issueListRenderer'),
                         selectionMode: ListSelectionModel.SINGLE_SELECTION,
-                        valueChanged: { displayIssue(issueList.selectedValue) },
+                        valueChanged: { evt ->
+                            controller.displayIssue(issueList.selectedValue)
+                        },
                         mouseClicked: { evt ->
                             if (evt.button == MouseEvent.BUTTON3) {
                                 issueList.selectedIndex = issueList.locationToIndex(
                                     [evt.x, evt.y] as Point)
 
-                                showIssuePopup(issueList.selectedValue,
-                                    evt.x, evt.y)
+                                controller.showIssuePopup(
+                                    issueList.selectedValue, evt.x, evt.y)
                             }
                         })
                 }
 
                 wordWrapCheckBox = checkBox('Word wrap',
                     constraints: gbc(gridx: 0, gridy: 1, weightx: 2,
-                        anchor: GBC.WEST),
-                    selected: true)
-                button('New Issue',
-                    constraints: gbc(gridx: 1, gridy: 1, anchor: GBC.EAST),
-                    icon: imageIcon("/add.png"), actionPerformed: newIssue)
+                        anchor: GBC.WEST), selected: true)
+                button(newIssue,
+                    constraints: gbc(gridx: 1, gridy: 1, anchor: GBC.EAST))
 
-                deleteIssueButton = button('Delete Issue',
+                deleteIssueButton = button(deleteIssue,
                     constraints: gbc(gridx: 2, gridy: 1, anchor: GBC.EAST),
                     enabled: bind(source: issueList, sourceEvent: 'valueChanged',
-                        sourceValue: { issueList.selectedValue != null }),
-                    icon: imageIcon("/delete.png"),
-                    actionPerformed: {
-                        if (!issueList?.selectedIssue) return
-                        selectedProject.issues.remove(issueList.selectedValue)
-                        projectListModels[(selectedProject.name)]
-                            .removeElement(issueList.selectedValue)
-                        issueList.selectedIssue.delete()
-                    })
+                        sourceValue: { issueList.selectedValue != null }))
                         
             }
             scrollPane(constraints: "bottom") {
@@ -488,6 +408,8 @@ frame = application(title:'Personal Issue Tracker',
                     wrapStyleWord: true,
                     lineWrap: bind(source: wordWrapCheckBox,
                         sourceProperty: 'selected'),
+                    editable: bind( source: issueList, sourceEvent: 'valueChanged',
+                        sourceValue: { issueList.selectedValue != null }),
                     font: new Font(Font.MONOSPACED, Font.PLAIN, 10),
                     focusGained: {},
                     focusLost: {
@@ -503,13 +425,4 @@ frame = application(title:'Personal Issue Tracker',
             }
         }
     }
-}
-
-/* ******************
- *  Auxilary methods
- * ******************/
-def makeNodes(Project project) {
-    def rootNode = new DefaultMutableTreeNode(project)
-    project.eachProject(filter) { rootNode.add(makeNodes(it)) }
-    return rootNode
 }

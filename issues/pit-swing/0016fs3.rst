@@ -1,0 +1,2 @@
+Add templates for new issues.
+=============================
