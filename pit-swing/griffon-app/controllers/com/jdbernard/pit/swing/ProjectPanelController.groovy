@@ -16,7 +16,9 @@ class ProjectPanelController {
     def view
 
     void mvcGroupInit(Map args) {
-        view.projectTree.model = new DefaultTreeModel(makeNodes(model.rootProject))
+        //model.rootProject = args.rootProject
+        view.projectTree.model = new DefaultTreeModel(
+            makeNodes(model.rootProject))
     }
 
     /** 
@@ -91,13 +93,13 @@ class ProjectPanelController {
     }
 
     def newIssue = { evt = null ->
-        newIssueDialogMVC.controller.show()
-        if (newIssueDialogMVC.model.accept) {
-            def nidmodel = newIssueDialodMVC.model
-            def issueText = ""
+        model.newIssueDialogMVC.controller.show()
+        if (model.newIssueDialogMVC.model.accept) {
+            def nidModel = model.newIssueDialogMVC.model
+            def issueText = nidModel.text
 
-            if (model.templates[(nidModel.category)]) {
-                issueText = model.templates[(nidModel.category)]
+            if (model.mainMVC.model.templates[(nidModel.category)]) {
+                issueText = model.mainMVC.model.templates[(nidModel.category)]
                 issueText = issueText.replaceFirst(/TITLE/,
                     nidModel.text)
             }

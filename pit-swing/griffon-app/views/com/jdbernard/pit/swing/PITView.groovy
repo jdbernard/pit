@@ -27,6 +27,13 @@ actions {
     )
 
     action(
+        id: 'closeProject',
+        name: 'Close',
+        enabled: bind { projectPanelMVCs.size() > 0 },
+        closure: controller.closeProject
+    )
+
+    action(
         id: 'shutdown',
         name: 'Exit',
         icon: imageIcon('/shutdown.png'),
@@ -62,6 +69,8 @@ frame = application(title:'Personal Issue Tracker',
     menuBar() {
         menu("File") {
             menuItem(openProject)
+            menuItem(closeProject)
+            separator()
             menuItem(shutdown)
         }
 

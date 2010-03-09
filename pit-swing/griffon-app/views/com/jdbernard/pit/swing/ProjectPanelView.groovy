@@ -37,7 +37,7 @@ actions {
         id: 'deleteProject',
         name: 'Delete Project',
         closure: controller.deleteProject,
-        enabled: bind {model.selectedProject != null }
+        enabled: bind { model.selectedProject != null }
     )
 
     action (
@@ -47,6 +47,7 @@ actions {
         closure: controller.deleteProject,
         enabled: bind { model.popupProject != null }
     )
+
     action (
         id: 'deleteIssue',
         name: 'Delete Issue',
@@ -75,7 +76,7 @@ issuePopupMenu = popupMenu() {
     menuItem(deleteIssuePop)
     separator()
 
-    menu('Change Category') {
+    menu('Change Category', enabled: bind { model.popupIssue != null }) { 
         Category.values().each { category ->
             menuItem(category.toString(),
                 icon: model.mainMVC.model.categoryIcons[(category)],
@@ -88,7 +89,7 @@ issuePopupMenu = popupMenu() {
         }
     }
 
-    menu('Change Status') {
+    menu('Change Status', enabled: bind { model.popupIssue != null }) {
         Status.values().each { status ->
             menuItem(status.toString(),
                 icon: model.mainMVC.model.statusIcons[(status)],
@@ -122,6 +123,7 @@ issuePopupMenu = popupMenu() {
 // main split view
 panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
     // dividerLocation: bind(source: model.mainModel, property: dividerLocation),
+    oneTouchExpandable: true,
     constraints: gbc(fill: GBC.BOTH, insets: [10,10,10,10],
         weightx: 2, weighty: 2)) {
 
@@ -161,9 +163,6 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                             evt.x, evt.y)
                     }
                 })
-            projectTree.model = new DefaultTreeModel(
-                new DefaultMutableTreeNode())
-            projectTree.rootVisible = false
     
             projectTree.selectionModel.selectionMode =
                 TreeSelectionModel.SINGLE_TREE_SELECTION
@@ -217,6 +216,7 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                     sourceValue: { issueList.selectedValue != null }))
                     
         }
+
         scrollPane(constraints: "bottom") {
             issueTextArea = textArea(
                 wrapStyleWord: true,

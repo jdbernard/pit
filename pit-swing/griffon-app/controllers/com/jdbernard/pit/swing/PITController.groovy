@@ -66,23 +66,28 @@ class PITController {
             newMVC.model.id = projectDir.canonicalPath
 
             // still not unique?
-            if (projectPanelMVC[(newMVC.model.id)]) {
+            if (model.projectPanelMVCs[(newMVC.model.id)]) {
                 
                 // first time this has happened?
-                if (!projectIdMap[(newMVC.model.id)]) 
-                    projectIdMap[(newMVC.model.id)] = 0
+                if (!model.projectIdMap[(newMVC.model.id)]) 
+                    model.projectIdMap[(newMVC.model.id)] = 0
                 // no? increment
-                else projectIdMap[(newMVC.model.id)] = 
-                    projectIdMap[(newMVC.model.id)] + 1
+                else model.projectIdMap[(newMVC.model.id)] = 
+                    model.projectIdMap[(newMVC.model.id)] + 1
 
                 // use our new, unique id
-                newMVC.model.id = projectDir.name +
-                    projectIdMap[(newMVC.model.id)] 
+                newMVC.model.id += "-" + model.projectIdMap[(newMVC.model.id)] 
             }
         }
 
         model.projectPanelMVCs[newMVC.model.id] = newMVC
         view.mainTabbedPane.addTab(newMVC.model.id, newMVC.view.panel)
+    }
+
+    def closeProject = { evt = null ->
+        model.projectPanelMVCs.remove(view.mainTabbedPane.getTitleAt(
+            view.mainTabbedPane.selectedIndex))
+        view.mainTabbedPane.remove(view.mainTabbedPane.selectedComponent)
     }
 
     def shutdown = { evt = null ->

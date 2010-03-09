@@ -6,25 +6,22 @@ import com.jdbernard.pit.Project
 import groovy.beans.Bindable
 
 class ProjectPanelModel {
-    def mainMVC
 
+    // other GUI components
+    def mainMVC
+    def newIssueDialogMVC
+
+    // data owned by this panel
+    String id
     @Bindable Project rootProject
+    @Bindable Project popupProject = null
+    @Bindable Project selectedProject = null
+    @Bindable Issue popupIssue = null
 
     // cache the ListModels
     def projectListModels = [:]
-
-    @Bindable Project popupProject = null
-
-    @Bindable Project selectedProject = null
-
-    @Bindable Issue popupIssue = null
-
-    // filter for projects and issues
-    Filter filter
-
-    def newIssueDialogMVC
-
-    String id
-
     def issueCellRenderer
+
+    // local filter for projects and issues
+    Filter filter
 }

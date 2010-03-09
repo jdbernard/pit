@@ -1,5 +1,8 @@
 package com.jdbernard.pit.swing
 
+import com.jdbernard.pit.Category
+import com.jdbernard.pit.Status
+
 class NewIssueDialogController {
     // these will be injected by Griffon
     def model

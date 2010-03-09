@@ -15,8 +15,7 @@ dialog = dialog(title: 'New Task...', modal: true, pack: true,
             insets: [5, 5, 0, 5], fill: GBC.HORIZONTAL))
     titleTextField = textField(
         constraints: gbc(gridx: 0, gridy: 1, gridwidth: 3,
-            insets: [0, 10, 0, 5], fill: GBC.HORIZONTAL),
-        keyTyped: { model.text = titleTextField.text })
+            insets: [0, 10, 0, 5], fill: GBC.HORIZONTAL))
 
     label('Category:', 
         constraints: gbc(gridx: 0, gridy: 2, insets: [5, 5, 0, 0],
@@ -26,7 +25,7 @@ dialog = dialog(title: 'New Task...', modal: true, pack: true,
             fill: GBC.HORIZONTAL),
         model: new DefaultComboBoxModel(Category.values()),
         editable: false,
-        itemStateChanged: { model.category = categoryComboBox.selectedValue })
+        itemStateChanged: { model.category = categoryComboBox.selectedItem })
 
     label('Status:',
         constraints: gbc(gridx: 0, gridy: 3, insets: [5, 5, 0, 0],
@@ -36,7 +35,7 @@ dialog = dialog(title: 'New Task...', modal: true, pack: true,
             fill: GBC.HORIZONTAL),
         model: new DefaultComboBoxModel(Status.values()),
         editable: false,
-        itemStateChanged: { model.status = statusComboBox.selectedValue })
+        itemStateChanged: { model.status = statusComboBox.selectedItem })
 
     label('Priority (0-9, 0 is highest priority):',
         constraints: gbc(gridx: 0, gridy: 4, insets: [5, 5, 0, 0],
@@ -56,6 +55,7 @@ dialog = dialog(title: 'New Task...', modal: true, pack: true,
             anchor: GBC.EAST))
     button('Create Issue',
         actionPerformed: {
+            model.text = titleTextField.text
             model.accept = true
             dialog.visible = false
         },
