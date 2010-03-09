@@ -87,8 +87,7 @@ frame = application(title:'Personal Issue Tracker',
                                 model.filter.categories.add(cat)
                                 evt.source.selected = true
                             }
-                            model.projectListModels.clear()
-                            controller.displayProject(model.selectedProject)
+                            controller.refreshIssues()
                         })
                 }
             }
@@ -105,8 +104,7 @@ frame = application(title:'Personal Issue Tracker',
                                 model.filter.status.add(st)
                                 evt.source.selected = true
                             }
-                            model.projectListModels.clear()
-                            controller.displayProject(model.selectedProject)
+                            controller.refreshIssues()
                         })
                 }
             }
@@ -119,36 +117,31 @@ frame = application(title:'Personal Issue Tracker',
                 buttonGroup: sortMenuButtonGroup,
                 actionPerformed: {
                     model.filter.issueSorter = { it.id }
-                    model.projectListModels.clear()
-                    controller.displayProject(selectedProject)
+                    controller.refreshIssues()
                 })
             checkBoxMenuItem('By Category',
                 buttonGroup: sortMenuButtonGroup,
                 actionPerformed: {
                     model.filter.issueSorter = { it.category }
-                    model.projectListModels.clear()
-                    controller.displayProject(selectedProject)
+                    controller.refreshIssues()
                 })
             checkBoxMenuItem('By Status',
                 buttonGroup: sortMenuButtonGroup,
                 actionPerformed: {
                     model.filter.issueSorter = { it.status }
-                    model.projectListModels.clear()
-                    controller.displayProject(selectedProject)
+                    controller.refreshIssues()
                 })
             checkBoxMenuItem('By Priority',
                 buttonGroup: sortMenuButtonGroup,
                 actionPerformed: {
                     model.filter.issueSorter = { it.priority }
-                    model.projectListModels.clear()
-                    controller.displayProject(selectedProject)
+                    controller.refreshIssues()
                 })
             checkBoxMenuItem('By Title',
                 buttonGroup: sortMenuButtonGroup,
                 actionPerformed: {
                     model.filter.issueSorter = { it.title }
-                    model.projectListModels.clear()
-                    controller.displayProject(selectedProject)
+                    controller.refreshIssues()
                 })
         }
     }

@@ -44,6 +44,12 @@ class PITController {
         model.newIssueDialogMVC = buildMVCGroup('NewIssueDialog')
     }
 
+    void refreshIssues() {
+        model.projectPanelMVCs.each { title, mvc ->
+            mvc.controller.refreshIssues()
+        }
+    }
+
     def openProject = { evt = null -> 
         def projectDir
         def newMVC

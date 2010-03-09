@@ -16,9 +16,7 @@ class ProjectPanelController {
     def view
 
     void mvcGroupInit(Map args) {
-        //model.rootProject = args.rootProject
-        view.projectTree.model = new DefaultTreeModel(
-            makeNodes(model.rootProject))
+        refreshProject()
     }
 
     /** 
@@ -56,6 +54,22 @@ class ProjectPanelController {
         view.issuePopupMenu.show(view.issueList, x, y)
     }
 
+    void refreshProject() {
+        if (model.rootProject) {
+            view.projectTree.rootVisible = model.rootProject.issues.size()
+            view.projectTree.model = new DefaultTreeModel(
+                makeNodes(model.rootProject))
+        } else {
+            projectTree.rootVisible = false
+            view.projectTree.model = new DefaultTreeModel(
+                new DefaultMutableTreeNode())
+        }
+    }
+
+    void refreshIssues() {
+        model.projectListModels.clear()
+        displayProject(model.selectedProject)
+    }
 
     def makeNodes(Project project) {
         def rootNode = new DefaultMutableTreeNode(project)
