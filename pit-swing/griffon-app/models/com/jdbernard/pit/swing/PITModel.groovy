@@ -8,27 +8,20 @@ import com.jdbernard.pit.Status
 import groovy.beans.Bindable
 
 class PITModel {
-    @Bindable Project rootProject
-
-    // cache the ListModels
-    def projectListModels = [:]
-
     // filter for projects and issues
     Filter filter = new Filter(categories: [],
         status: [Status.NEW, Status.VALIDATION_REQUIRED])
 
-    @Bindable Project popupProject = null
-
-    @Bindable Project selectedProject = null
-
-    @Bindable Issue popupIssue = null
-
-    // configurable exntension points
-    // ==============================
-
-    @Bindable def issueListRenderer
+    def issueListRenderer
 
     // map of category -> issue template
     def templates = [:]
 
+    def categoryIcons = [:]
+    def statusIcons = [:]
+
+    def newIssueDialogMVC
+    def projectPanelMVCs = [:]
+
+    def projectIdMap = [:]
 }

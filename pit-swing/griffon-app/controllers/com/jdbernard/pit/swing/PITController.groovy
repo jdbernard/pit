@@ -1,15 +1,8 @@
 package com.jdbernard.pit.swing
 
-import com.jdbernard.pit.Category
 import com.jdbernard.pit.FileProject
-import com.jdbernard.pit.Issue
-import com.jdbernard.pit.Project
-import com.jdbernard.pit.Status
-import javax.swing.DefaultListModel
-import javax.swing.JOptionPane
+import javax.swing.JFileChooser
 import javax.swing.SwingUtilities
-import javax.swing.tree.DefaultMutableTreeNode
-import javax.swing.tree.DefaultTreeModel
 
 class PITController {
 
@@ -21,8 +14,8 @@ class PITController {
 
         SwingUtilities.invokeAndWait {
             model.issueListRenderer = new IssueListCellRenderer()
-            model.issueListRenderer.categoryIcons = view.categoryIcons
-            model.issueListRenderer.statusIcons = view.statusIcons
+            model.issueListRenderer.categoryIcons = model.categoryIcons
+            model.issueListRenderer.statusIcons = model.statusIcons
 
             def config = new File(System.getProperty('user.home'), '.pit')
             config = new File(config, 'pit_swing.groovy')
@@ -47,120 +40,53 @@ class PITController {
             }
         }
 
+        //
+        model.newIssueDialogMVC = buildMVCGroup('NewIssueDialog')
     }
 
-    /** 
-     * displayProject
-     * @param project Project to display.
-     * 
-     */
-    void displayProject(Project project) { 
-        view.issueTextArea.text = ""
-        if (!project) return
+    def openProject = { evt = null -> 
+        def projectDir
+        def newMVC
+        if (view.openDialog.showOpenDialog(view.frame) !=
+            JFileChooser.APPROVE_OPTION) return
 
-        if (!model.projectListModels[(project.name)]) {
-            def dlm = new DefaultListModel()
-            project.eachIssue(model.filter) { dlm.addElement(it) }
-            model.projectListModels[(project.name)] = dlm
+        projectDir = view.openDialog.selectedFile
+
+        // create new ProjectPanel MVC
+        newMVC = buildMVCGroup('ProjectPanel',
+            mainMVC: [model: model, view: view, controller: this],
+            newIssueDialogMVC: model.newIssueDialogMVC,
+            issueCellRenderer: model.issueListRenderer,
+            rootProject: new FileProject(projectDir))
+        newMVC.model.id = projectDir.name
+        
+        // if we already have a tab with this id
+        if (model.projectPanelMVCs[(newMVC.model.id)]) {
+            // try using the canonical path
+            newMVC.model.id = projectDir.canonicalPath
+
+            // still not unique?
+            if (projectPanelMVC[(newMVC.model.id)]) {
+                
+                // first time this has happened?
+                if (!projectIdMap[(newMVC.model.id)]) 
+                    projectIdMap[(newMVC.model.id)] = 0
+                // no? increment
+                else projectIdMap[(newMVC.model.id)] = 
+                    projectIdMap[(newMVC.model.id)] + 1
+
+                // use our new, unique id
+                newMVC.model.id = projectDir.name +
+                    projectIdMap[(newMVC.model.id)] 
+            }
         }
 
-        view.issueList.setModel(model.projectListModels[(project.name)])
+        model.projectPanelMVCs[newMVC.model.id] = newMVC
+        view.mainTabbedPane.addTab(newMVC.model.id, newMVC.view.panel)
     }
 
-    void displayIssue(Issue issue) {
-        if (!issue) return
-        view.issueTextArea.text = issue.text
-        view.issueTextArea.caretPosition = 0
+    def shutdown = { evt = null ->
+        app.shutdown()
     }
 
-    void showProjectPopup(Project project, def x, def y) {
-        model.popupProject = project
-        view.projectPopupMenu.show(view.projectTree, x, y)
-    }
-
-    void showIssuePopup(Issue issue, def x, def y) {
-        model.popupIssue = issue
-        view.issuePopupMenu.show(view.issueList, x, y)
-    }
-
-
-    def makeNodes(Project project) {
-        def rootNode = new DefaultMutableTreeNode(project)
-        project.eachProject(model.filter) { rootNode.add(makeNodes(it)) }
-        return rootNode
-    }
-
-    def newProject = { evt ->
-        def name = JOptionPane.showInputDialog(view.frame, 'Project name:',
-            'New Project...', JOptionPane.QUESTION_MESSAGE)
-
-        def project
-
-        if (evt.source == view.newProjectButton) 
-            project = model.selectedProject ?: model.rootProject
-        else project = model.popupProject ?: model.rootProject
-        def newProject = project.createNewProject(name)
-
-        project.projects[(newProject.name)] = newProject
-        view.projectTree.model = new DefaultTreeModel(
-            makeNodes(model.rootProject))
-    }
-
-    def deleteProject = { evt ->
-        def project
-
-        if (evt.source == view.deleteProjectButton)
-            project = model.selectedProject ?: model.rootProject
-        else project = model.popupProject ?: model.rootModel
-
-        project.delete()
-
-        model.rootProject = new FileProject(model.rootProject.source)
-    }
-
-    def newIssue = { evt = null ->
-        view.titleTextField.text = ""
-        view.categoryComboBox.selectedItem = Category.BUG
-        view.statusComboBox.selectedItem = Status.NEW
-        view.prioritySpinner.setValue(5)
-        view.newIssueDialog.visible = true
-    }
-
-    def createIssue = { evt = null ->
-        def issueText = ""
-
-        if (model.templates[(view.categoryComboBox.selectedItem)]) {
-            issueText = model.templates[(view.categoryComboBox.selectedItem)]
-            issueText = issueText.replaceFirst(/TITLE/,
-                view.titleTextField.text)
-        }
-
-        def issue = model.selectedProject.createNewIssue(
-            category: view.categoryComboBox.selectedItem,
-            status: view.statusComboBox.selectedItem,
-            priority: view.prioritySpinner.value,
-            text: issueText)
-        model.projectListModels[(model.selectedProject.name)] = null
-        displayProject(model.selectedProject)
-        view.newIssueDialog.visible = false
-    }
-
-    def deleteIssue = { evt ->
-        def issue
-        if (evt.source == view.deleteIssueButton)
-            issue = view.issueList.selectedValue
-        else issue = model.popupIssue
-
-        model.selectedProject.issues.remove(issue.id)
-        model.projectListModels[(model.selectedProject.name)]
-            .removeElement(issue)
-
-        issue.delete()
-    }
-
-    def changeCategory = { evt ->
-        model.popupIssue.status = status
-        view.issueList.invalidate()
-        view.issueList.repaint()
-    }
 }

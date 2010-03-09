@@ -1,0 +1,29 @@
+Add the ability to load multiple project roots simultaneously.
+==============================================================
+
+Description
+-----------
+
+I often need to switch between different issue repositories (project-specific,
+main work repo, etc.) and have to close the current repo and open a new one.
+I would like to be able to keep multiple repositories open at the same time.
+
+Implementation Notes
+--------------------
+
+The interface should use tabbed panes to represent the different project roots.
+The main view will need to split into seperate MVC components. This may simplify
+the initial configuration, as the view data structures for the lists will no
+longer be initialized at application startup.
+
+Solution
+--------
+
+TBD
+
+Resolution
+----------
+
+Date Created:   2010-02-08
+Date Resolved:  YYYY-MM-DD
+Delivery:       0017
