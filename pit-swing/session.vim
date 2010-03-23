@@ -3,10 +3,13 @@ if &cp | set nocp | endif
 nmap v :call Screen_Vars()
 nmap  vip
 vmap  "ry :call Send_to_Screen(@r)
+vnoremap  :Hexmode
+nnoremap  :Hexmode
 let s:cpo_save=&cpo
 set cpo&vim
 nmap gx <Plug>NetrwBrowseX
 nnoremap <silent> <Plug>NetrwBrowseX :call netrw#NetrwBrowseX(expand("<cWORD>"),0)
+inoremap  :Hexmode
 let &cpo=s:cpo_save
 unlet s:cpo_save
 set autoindent
@@ -42,8 +45,11 @@ badd +3 src/com/jdbernard/pit/swing/IssueListCellRenderer.groovy
 badd +15 src/main/com/jdbernard/pit/swing/IssueListCellRenderer.groovy
 badd +1 griffon-app/lifecycle/Initialize.groovy
 badd +1 griffon-app/models/com/jdbernard/pit/swing/NewIssueDialogModel.groovy
-badd +0 griffon-app/controllers/com/jdbernard/pit/swing/NewIssueDialogController.groovy
-badd +0 griffon-app/views/com/jdbernard/pit/swing/NewIssueDialogView.groovy
+badd +1 griffon-app/controllers/com/jdbernard/pit/swing/NewIssueDialogController.groovy
+badd +1 griffon-app/views/com/jdbernard/pit/swing/NewIssueDialogView.groovy
+badd +0 griffon-app/models/com/jdbernard/pit/swing/ProjectPanelModel.groovy
+badd +0 griffon-app/views/com/jdbernard/pit/swing/ProjectPanelView.groovy
+badd +0 griffon-app/controllers/com/jdbernard/pit/swing/ProjectPanelController.groovy
 args griffon-app/models/com/jdbernard/pit/swing/PITModel.groovy
 edit griffon-app/models/com/jdbernard/pit/swing/PITModel.groovy
 set splitbelow splitright
@@ -59,9 +65,9 @@ set nosplitbelow
 set nosplitright
 wincmd t
 set winheight=1 winwidth=1
-exe '1resize ' . ((&lines * 21 + 40) / 81)
+exe '1resize ' . ((&lines * 16 + 30) / 60)
 exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
-exe '2resize ' . ((&lines * 56 + 40) / 81)
+exe '2resize ' . ((&lines * 40 + 30) / 60)
 exe 'vert 2resize ' . ((&columns * 91 + 91) / 182)
 exe 'vert 3resize ' . ((&columns * 90 + 91) / 182)
 argglobal
@@ -160,12 +166,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 10) / 21)
+let s:l = 27 - ((15 * winheight(0) + 8) / 16)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
-normal! 030l
+27
+normal! 0
 wincmd w
 argglobal
 edit griffon-app/views/com/jdbernard/pit/swing/PITView.groovy
@@ -264,12 +270,12 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 40 - ((0 * winheight(0) + 28) / 56)
+let s:l = 52 - ((0 * winheight(0) + 20) / 40)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-40
-normal! 0
+52
+normal! 015l
 wincmd w
 argglobal
 edit griffon-app/controllers/com/jdbernard/pit/swing/PITController.groovy
@@ -368,19 +374,19 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 11 - ((0 * winheight(0) + 39) / 78)
+let s:l = 53 - ((42 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-11
+53
 normal! 04l
 wincmd w
-exe '1resize ' . ((&lines * 21 + 40) / 81)
+exe '1resize ' . ((&lines * 16 + 30) / 60)
 exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
-exe '2resize ' . ((&lines * 56 + 40) / 81)
+exe '2resize ' . ((&lines * 40 + 30) / 60)
 exe 'vert 2resize ' . ((&columns * 91 + 91) / 182)
 exe 'vert 3resize ' . ((&columns * 90 + 91) / 182)
-tabedit griffon-app/models/com/jdbernard/pit/swing/PITModel.groovy
+tabedit griffon-app/models/com/jdbernard/pit/swing/ProjectPanelModel.groovy
 set splitbelow splitright
 wincmd _ | wincmd |
 vsplit
@@ -394,9 +400,9 @@ set nosplitbelow
 set nosplitright
 wincmd t
 set winheight=1 winwidth=1
-exe '1resize ' . ((&lines * 29 + 40) / 81)
+exe '1resize ' . ((&lines * 20 + 30) / 60)
 exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
-exe '2resize ' . ((&lines * 48 + 40) / 81)
+exe '2resize ' . ((&lines * 36 + 30) / 60)
 exe 'vert 2resize ' . ((&columns * 91 + 91) / 182)
 exe 'vert 3resize ' . ((&columns * 90 + 91) / 182)
 argglobal
@@ -495,15 +501,15 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 14) / 29)
+let s:l = 25 - ((19 * winheight(0) + 10) / 20)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
+25
 normal! 0
 wincmd w
 argglobal
-edit griffon-app/views/com/jdbernard/pit/swing/PITView.groovy
+edit griffon-app/views/com/jdbernard/pit/swing/ProjectPanelView.groovy
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
@@ -599,15 +605,15 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 18 - ((17 * winheight(0) + 24) / 48)
+let s:l = 143 - ((24 * winheight(0) + 18) / 36)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-18
+143
 normal! 0
 wincmd w
 argglobal
-edit griffon-app/controllers/com/jdbernard/pit/swing/PITController.groovy
+edit griffon-app/controllers/com/jdbernard/pit/swing/ProjectPanelController.groovy
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
@@ -703,16 +709,17 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 39) / 78)
+let s:l = 93 - ((11 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-1
-normal! 0
+93
+normal! 032l
 wincmd w
-exe '1resize ' . ((&lines * 29 + 40) / 81)
+3wincmd w
+exe '1resize ' . ((&lines * 20 + 30) / 60)
 exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
-exe '2resize ' . ((&lines * 48 + 40) / 81)
+exe '2resize ' . ((&lines * 36 + 30) / 60)
 exe 'vert 2resize ' . ((&columns * 91 + 91) / 182)
 exe 'vert 3resize ' . ((&columns * 90 + 91) / 182)
 tabedit griffon-app/models/com/jdbernard/pit/swing/NewIssueDialogModel.groovy
@@ -729,9 +736,9 @@ set nosplitbelow
 set nosplitright
 wincmd t
 set winheight=1 winwidth=1
-exe '1resize ' . ((&lines * 24 + 40) / 81)
+exe '1resize ' . ((&lines * 17 + 30) / 60)
 exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
-exe '2resize ' . ((&lines * 53 + 40) / 81)
+exe '2resize ' . ((&lines * 39 + 30) / 60)
 exe 'vert 2resize ' . ((&columns * 91 + 91) / 182)
 exe 'vert 3resize ' . ((&columns * 90 + 91) / 182)
 argglobal
@@ -830,7 +837,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 12) / 24)
+let s:l = 1 - ((0 * winheight(0) + 8) / 17)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -934,7 +941,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 26) / 53)
+let s:l = 1 - ((0 * winheight(0) + 19) / 39)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -1038,17 +1045,17 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 39) / 78)
+let s:l = 1 - ((0 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 1
 normal! 0
 wincmd w
-2wincmd w
-exe '1resize ' . ((&lines * 24 + 40) / 81)
+3wincmd w
+exe '1resize ' . ((&lines * 17 + 30) / 60)
 exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
-exe '2resize ' . ((&lines * 53 + 40) / 81)
+exe '2resize ' . ((&lines * 39 + 30) / 60)
 exe 'vert 2resize ' . ((&columns * 91 + 91) / 182)
 exe 'vert 3resize ' . ((&columns * 90 + 91) / 182)
 tabedit griffon-app/conf/Application.groovy
@@ -1159,7 +1166,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 16 - ((15 * winheight(0) + 39) / 78)
+let s:l = 16 - ((11 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -1263,14 +1270,14 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 56 - ((55 * winheight(0) + 39) / 78)
+let s:l = 56 - ((40 * winheight(0) + 28) / 57)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 56
 normal! 0
 wincmd w
-2wincmd w
+3wincmd w
 exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
 exe 'vert 2resize ' . ((&columns * 90 + 91) / 182)
 tabedit griffon-app/lifecycle/Initialize.groovy
@@ -1375,14 +1382,14 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 39) / 79)
+let s:l = 1 - ((0 * winheight(0) + 29) / 58)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 1
 normal! 0
-2wincmd w
-tabnext 3
+3wincmd w
+tabnext 2
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf
 endif

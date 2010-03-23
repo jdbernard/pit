@@ -217,6 +217,7 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                     
         }
 
+        println model.mainMVC?.model?.issueDetailFont
         scrollPane(constraints: "bottom") {
             issueTextArea = textArea(
                 wrapStyleWord: true,
@@ -224,7 +225,8 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                     sourceProperty: 'selected'),
                 editable: bind( source: issueList, sourceEvent: 'valueChanged',
                     sourceValue: { issueList.selectedValue != null }),
-                font: new Font(Font.MONOSPACED, Font.PLAIN, 10),
+                font: bind(source: model.mainMVC.model,
+                    property: 'issueDetailFont'),
                 focusGained: {},
                 focusLost: {
                     if (!issueList?.selectedValue) return

@@ -1,0 +1,4 @@
+The auto-generated pit-swing.groovy file needs to be renamed.
+=============================================================
+
+Currently, when

@@ -6,6 +6,7 @@ import com.jdbernard.pit.Issue
 import com.jdbernard.pit.Project
 import com.jdbernard.pit.Status
 import groovy.beans.Bindable
+import java.awt.Font
 
 class PITModel {
     // filter for projects and issues
@@ -24,4 +25,6 @@ class PITModel {
     def projectPanelMVCs = [:]
 
     def projectIdMap = [:]
+
+    @Bindable issueDetailFont = new Font(Font.MONOSPACED, Font.PLAIN, 10)
 }

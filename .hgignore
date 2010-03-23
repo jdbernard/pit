@@ -2,3 +2,4 @@ build/
 \..*sw[op]
 dist/
 staging/
+target/test-reports

@@ -13,6 +13,7 @@ import javax.swing.DefaultComboBoxModel
 import javax.swing.DefaultListModel
 import javax.swing.JDialog
 import javax.swing.JFileChooser
+import javax.swing.JOptionPane
 import net.miginfocom.swing.MigLayout
 
 import java.awt.Color
@@ -109,6 +110,21 @@ frame = application(title:'Personal Issue Tracker',
                 }
             }
 
+            separator()
+
+            menuItem('Detail Text Size...',
+                actionPerformed: {
+                    def newSize = JOptionPane.showInputDialog(frame,
+                        'New text size: ', 'Change Issue Detail Text Size...',
+                        JOptionPane.QUESTION_MESSAGE)
+                    if (!newSize.isInteger())
+                        JOptionPane.showMessageDialog(frame,
+                            "$newSize is not a valid size.",
+                            'Change Issue Detail Text Size...',
+                            JOptionPane.ERROR_MESSAGE)
+                    model.issueDetailFont = model.issueDetailFont.deriveFont(
+                        newSize.toInteger())
+                }) 
         }
 
         menu('Sort') {
