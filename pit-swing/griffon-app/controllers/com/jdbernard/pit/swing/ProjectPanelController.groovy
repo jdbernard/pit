@@ -40,6 +40,12 @@ class ProjectPanelController {
 
     void displayIssue(Issue issue) {
         if (!issue) return
+
+        // hack because binding view.issueTextArea.font to
+        // mainMVC.mode.issueDetailFont causes problems
+        if (view.issueTextArea.font != model.mainMVC.model.issueDetailFont)
+            view.issueTextArea.font  = model.mainMVC.model.issueDetailFont
+
         view.issueTextArea.text = issue.text
         view.issueTextArea.caretPosition = 0
     }

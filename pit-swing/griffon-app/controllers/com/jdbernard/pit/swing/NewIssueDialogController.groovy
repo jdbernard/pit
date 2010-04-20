@@ -14,9 +14,13 @@ class NewIssueDialogController {
 
     def show = {
         view.titleTextField.text = ""
+        model.text = ""
         view.categoryComboBox.selectedItem = Category.BUG
+        model.category = Category.BUG
         view.statusComboBox.selectedItem = Status.NEW
+        model.status = Status.NEW
         view.prioritySpinner.setValue(5)
+        model.priority = 5
         view.dialog.visible = true
     }
 }

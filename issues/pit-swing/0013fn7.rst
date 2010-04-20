@@ -1,2 +1,0 @@
-Hide a new issue after a delay if does not match the viewing criteria.
-======================================================================

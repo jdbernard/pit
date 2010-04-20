@@ -1,0 +1,27 @@
+New 'Bugs' created are not correctly categorized.
+=================================================
+
+Description
+-----------
+
+If the user clicks *New Issue* and does not manually select *Bug* from the drop-down
+list, but instead leaves the default *Bug* selected, the actual issue bypasses the
+template generation phase and gets its category defaulted to *Task*.
+
+Implementation Notes
+--------------------
+
+It looks like this is related to the default value of the category list in the 
+*New Task* dialog.
+
+Solution
+--------
+
+How was the bug fixed?
+
+Resolution
+----------
+
+Date Created:   2010-04-20
+Date Resolved:  YYYY-MM-DD
+Delivery:       0022

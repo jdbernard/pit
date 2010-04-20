@@ -83,8 +83,7 @@ issuePopupMenu = popupMenu() {
                 enabled: bind { model.popupIssue != null },
                 actionPerformed: {
                     model.popupIssue.category = category
-                    issueList.invalidate()
-                    issueList.repaint()
+                    controller.refreshIssues()
                 })
         }
     }
@@ -96,8 +95,7 @@ issuePopupMenu = popupMenu() {
                 enabled: bind { model.popupIssue != null },
                 actionPerformed: {
                     model.popupIssue.status = status
-                    issueList.invalidate()
-                    issueList.repaint()
+                    controller.refreshIssues()
                 })
         }
     }
@@ -115,8 +113,7 @@ issuePopupMenu = popupMenu() {
                     'Change Priority...', JOptionPane.ERROR_MESSAGE)
                 return
             }
-            issueList.invalidate()
-            issueList.repaint()
+            controller.refreshIssues()
         })
 }
 
@@ -217,7 +214,6 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                     
         }
 
-        println model.mainMVC?.model?.issueDetailFont
         scrollPane(constraints: "bottom") {
             issueTextArea = textArea(
                 wrapStyleWord: true,
@@ -225,8 +221,7 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                     sourceProperty: 'selected'),
                 editable: bind( source: issueList, sourceEvent: 'valueChanged',
                     sourceValue: { issueList.selectedValue != null }),
-                font: bind(source: model.mainMVC.model,
-                    property: 'issueDetailFont'),
+                font: model.mainMVC.model.issueDetailFont,
                 focusGained: {},
                 focusLost: {
                     if (!issueList?.selectedValue) return

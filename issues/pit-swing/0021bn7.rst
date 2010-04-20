@@ -1,0 +1,23 @@
+Icons not displaying in the project tree.
+=========================================
+
+Description
+-----------
+
+There should be icons in the list to the left to decorate it a bit.
+
+Implementation Notes
+--------------------
+
+
+Solution
+--------
+
+How was the bug fixed?
+
+Resolution
+----------
+
+Date Created:   2010-04-20
+Date Resolved:  YYYY-MM-DD
+Delivery:       0021

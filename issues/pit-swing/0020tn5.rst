@@ -4,7 +4,7 @@ The auto-generated pit-swing.groovy file needs to be renamed.
 Description
 -----------
 
-Currently, when
+Currently, when 
 
 Solution
 --------

@@ -117,13 +117,13 @@ frame = application(title:'Personal Issue Tracker',
                     def newSize = JOptionPane.showInputDialog(frame,
                         'New text size: ', 'Change Issue Detail Text Size...',
                         JOptionPane.QUESTION_MESSAGE)
-                    if (!newSize.isInteger())
+                    if (newSize == null || !newSize.isFloat())
                         JOptionPane.showMessageDialog(frame,
                             "$newSize is not a valid size.",
                             'Change Issue Detail Text Size...',
                             JOptionPane.ERROR_MESSAGE)
-                    model.issueDetailFont = model.issueDetailFont.deriveFont(
-                        newSize.toInteger())
+                    else model.issueDetailFont = model.issueDetailFont
+                        .deriveFont(newSize.toFloat())
                 }) 
         }
 

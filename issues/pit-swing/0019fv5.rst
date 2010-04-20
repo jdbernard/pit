@@ -1,0 +1,28 @@
+Add the ability to change the Issue text size.
+==============================================
+
+Description
+-----------
+
+It would be good to be able to choose the size of the text for issue display.
+
+Implementation Notes
+--------------------
+
+This is a shared value between all project panels, so this needs to be on the
+enclosing PIT mvc, not the individual *ProjectPanel* mvcs. The ideal
+implementation is to bind the ``issueDetailTextArea.font`` property from the
+*ProjectPanel* view to the main mvc ``model.issueDetailFont``, but this fails
+and I cannot determine why. 
+
+Solution
+--------
+
+The ``ProjectPanelController.displayIssue`` method checks the value of
+``issueDetailTextArea.font`` against the main mvc ``model.issueDetailFont`` and
+updates it if it differs before actually displaying the issue selected.
+
+Resolution
+----------
+
+Delivery:       0019

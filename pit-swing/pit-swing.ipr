@@ -10,53 +10,47 @@
     <output url="file://$PROJECT_DIR$/out" />
   </component>
   <component name="libraryTable">
-    <library name="Griffon 0.2.1">
+    <library name="Griffon 0.3">
       <CLASSES>
-        <root url="jar:///usr/share/griffon/lib/commons-cli-1.0.jar!/" />
+        <root url="jar:///home/jdbernard/programs/griffon/lib/log4j-1.2.15.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/asm-2.2.3.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/lib/spring-2.5.6.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/ant-nodeps-1.7.1.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/lib/ant-trax-1.8.0.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/MultipleGradientPaint.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/lib/gant_groovy1.6-1.6.0.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/junit-3.8.2.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/lib/svnkit-1.2.0.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/jline-0.9.94.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/lib/junit-4.8.1.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/ant-junit-1.7.1.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/lib/commons-cli-1.2.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/swingxbuilder-0.1.6-SNAPSHOT.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/lib/ant-nodeps-1.8.0.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/swingx-0.9.3.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/lib/groovy-all-1.7.1.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/groovy-all-1.6.4.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/lib/commons-lang-2.4.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/svnkit-1.2.0.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/lib/ant-junit-1.8.0.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/ant-trax-1.7.1.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/lib/jline-0.9.94.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/spring-2.5.6.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/lib/ant-launcher-1.8.0.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/commons-lang-2.4.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/lib/commons-logging-1.1.1.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/swing-worker.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/lib/asm-3.2.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/ant-1.7.1.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/lib/ant-1.8.0.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/ant-launcher-1.7.1.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/dist/griffon-resources-0.3.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/gant_groovy1.6-1.6.0.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/dist/griffon-cli-0.3.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/commons-logging-1.1.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/dist/griffon-rt-0.3.jar!/" />
 
-<root url="jar:///usr/share/griffon/lib/log4j-1.2.15.jar!/" />
-
-<root url="jar:///usr/share/griffon/dist/griffon-resources-0.2.1.jar!/" />
-
-<root url="jar:///usr/share/griffon/dist/griffon-rt-0.2.1.jar!/" />
-
-<root url="jar:///usr/share/griffon/dist/griffon-cli-0.2.1.jar!/" />
+<root url="jar:///home/jdbernard/programs/griffon/dist/griffon-scripts-0.3.jar!/" />
 
 
       </CLASSES>

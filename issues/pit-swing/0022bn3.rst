@@ -1,0 +1,35 @@
+New 'Bugs' created are not correctly categorized.
+=================================================
+
+Description
+-----------
+
+If the user clicks *New Issue* and does not manually select *Bug* from the drop-down
+list, but instead leaves the default *Bug* selected, the actual issue bypasses the
+template generation phase and gets its category defaulted to *Task*.
+
+Implementation Notes
+--------------------
+
+It looks like this is related to the default value of the category list in the 
+*New Task* dialog.
+
+Solution
+--------
+
+The values from the *NewIssueDialog* are publicly visible via fields on the
+model. The view has bound properties to update the model's fields whenever the
+appropriate gui field is updated. But when the dialog is shown initially, the
+view is reset programatically, not triggering the update to the model values.
+In the case of the first new issue since launching the program, the fields on
+the model are ``null`` or have their default initialized values. In subsequent
+issues, they hold whatever was there before. If the user never changed those
+values, they held their old values. The solution was to update the model as
+well as the view when showing the dialog.
+
+Resolution
+----------
+
+Date Created:   2010-04-20
+Date Resolved:  2010-04-20
+Delivery:       0022

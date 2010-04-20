@@ -1,0 +1,7 @@
+Hide a new issue after a delay if does not match the viewing criteria.
+======================================================================
+
+Solution
+--------
+
+The issue is not hidden after a delay, it is immediately hidden.
