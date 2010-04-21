@@ -1,4 +1,0 @@
-Ignore hidden directories.
-==========================
-
-Directories that are hidden (determined via File.isHidden()) should not be traversed.

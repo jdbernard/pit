@@ -1,2 +1,0 @@
-Fix Issue.toString() so that only the first letter is capitalized.
-==================================================================

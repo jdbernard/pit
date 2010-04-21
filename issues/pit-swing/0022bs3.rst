@@ -17,11 +17,19 @@ It looks like this is related to the default value of the category list in the
 Solution
 --------
 
-How was the bug fixed?
+The values from the *NewIssueDialog* are publicly visible via fields on the
+model. The view has bound properties to update the model's fields whenever the
+appropriate gui field is updated. But when the dialog is shown initially, the
+view is reset programatically, not triggering the update to the model values.
+In the case of the first new issue since launching the program, the fields on
+the model are ``null`` or have their default initialized values. In subsequent
+issues, they hold whatever was there before. If the user never changed those
+values, they held their old values. The solution was to update the model as
+well as the view when showing the dialog.
 
 Resolution
 ----------
 
 Date Created:   2010-04-20
-Date Resolved:  YYYY-MM-DD
+Date Resolved:  2010-04-20
 Delivery:       0022

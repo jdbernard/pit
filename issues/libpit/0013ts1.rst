@@ -1,5 +1,0 @@
-Add unit tests for changing an issue's priority.
-================================================
-
-
-Test defined in test/com/jdbernard/pit/IssueTest.groovy

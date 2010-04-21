@@ -1,4 +1,0 @@
-Add unit tests for the PRIORITY filter
-======================================
-
-Add unit tests covering the priority selection criteria of the filter.

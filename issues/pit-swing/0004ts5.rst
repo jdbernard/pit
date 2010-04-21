@@ -1,2 +1,0 @@
-Issue display needs to save changes.
-====================================

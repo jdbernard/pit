@@ -1,4 +1,0 @@
-Add the ability to enter new issues
-===================================
-
-Implemented on 2010/02/17

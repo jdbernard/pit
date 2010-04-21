@@ -1,5 +1,0 @@
-Issue display may still lose changes.
-=====================================
-
-If the mouse is not within the text area and the user clicks on something
-that changes the text area content, the changes are not saved.

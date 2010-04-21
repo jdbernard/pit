@@ -1,2 +1,0 @@
-Clear project lists when opening a new directory.
-=================================================

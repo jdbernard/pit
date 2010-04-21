@@ -1,4 +1,0 @@
-Add unit tests for the PROJECTS filter
-======================================
-
-Add unit tests covering the projects filter criteria.

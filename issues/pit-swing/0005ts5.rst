@@ -1,2 +1,0 @@
-Do not load project directory on startup.
-=========================================
