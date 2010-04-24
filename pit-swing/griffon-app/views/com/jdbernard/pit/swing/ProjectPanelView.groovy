@@ -3,6 +3,7 @@ package com.jdbernard.pit.swing
 import com.jdbernard.pit.Category
 import com.jdbernard.pit.Status
 import com.jdbernard.pit.Project
+import com.jdbernard.pit.FlatProjectView
 import java.awt.Font
 import java.awt.GridBagConstraints as GBC
 import java.awt.Point
@@ -138,12 +139,15 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                 model: bind(source: model, sourceProperty: 'rootProject',
                     sourceValue: { 
                         if (model.rootProject) {
-                            projectTree.rootVisible =
-                                model.rootProject.issues.size()
-                            new DefaultTreeModel(controller.makeNodes(
-                                model.rootProject))
+                            def rootNode = new DefaultMutableTreeNode()
+                            def flatview = new FlatProjectView('All Issues')
+                            flatviews.projects[(model.rootProject.name)] =
+                                model.rootProject
+                            rootNode.add(new DefaultMutableTreeNode(flatview))
+                            rootNode.add(controller.makeNodes(model.rootProject))
+                            new DefaultTreeModel(rootNode)
+                            return rootNode
                         } else {
-                            projectTree.rootVisible = false
                             new DefaultTreeModel(new DefaultMutableTreeNode())
                         }
                     }),
@@ -160,6 +164,7 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                             evt.x, evt.y)
                     }
                 })
+            projectTree.rootVisible = false
     
             projectTree.selectionModel.selectionMode =
                 TreeSelectionModel.SINGLE_TREE_SELECTION

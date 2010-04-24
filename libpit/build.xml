@@ -1,4 +1,4 @@
-<project name="Personal Issue Tracker">
+<project name="Personal Issue Tracker" default="release">
     <property file="../version.properties"/>
     <property file="project.properties"/>
     <property environment="env"/>

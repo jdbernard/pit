@@ -2,6 +2,7 @@ package com.jdbernard.pit.swing
 
 import com.jdbernard.pit.Category
 import com.jdbernard.pit.FileProject
+import com.jdbernard.pit.FlatProjectView
 import com.jdbernard.pit.Issue
 import com.jdbernard.pit.Project
 import com.jdbernard.pit.Status
@@ -62,11 +63,13 @@ class ProjectPanelController {
 
     void refreshProject() {
         if (model.rootProject) {
-            view.projectTree.rootVisible = model.rootProject.issues.size()
-            view.projectTree.model = new DefaultTreeModel(
-                makeNodes(model.rootProject))
+            def rootNode = new DefaultMutableTreeNode()
+            def flatview = new FlatProjectView('All Issues')
+            flatview.projects[(model.rootProject.name)] = model.rootProject
+            rootNode.add(new DefaultMutableTreeNode(flatview))
+            rootNode.add(makeNodes(model.rootProject))
+            view.projectTree.model = new DefaultTreeModel(rootNode)
         } else {
-            projectTree.rootVisible = false
             view.projectTree.model = new DefaultTreeModel(
                 new DefaultMutableTreeNode())
         }
@@ -96,8 +99,7 @@ class ProjectPanelController {
         def newProject = project.createNewProject(name)
 
         project.projects[(newProject.name)] = newProject
-        view.projectTree.model = new DefaultTreeModel(
-            makeNodes(model.rootProject))
+        refreshProject()
     }
 
     def deleteProject = { evt ->
