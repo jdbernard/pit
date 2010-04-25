@@ -146,7 +146,6 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                             rootNode.add(new DefaultMutableTreeNode(flatview))
                             rootNode.add(controller.makeNodes(model.rootProject))
                             new DefaultTreeModel(rootNode)
-                            return rootNode
                         } else {
                             new DefaultTreeModel(new DefaultMutableTreeNode())
                         }
