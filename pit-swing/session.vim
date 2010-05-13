@@ -1,14 +1,23 @@
 let SessionLoad = 1
 if &cp | set nocp | endif
+let s:cpo_save=&cpo
+set cpo&vim
+noremap! <Right> 
+noremap! <Left> 
+noremap! <Down> 
+noremap! <Up> 
+inoremap <Nul> 
 nmap v :call Screen_Vars()
 nmap  vip
 vmap  "ry :call Send_to_Screen(@r)
 vnoremap  :Hexmode
 nnoremap  :Hexmode
-let s:cpo_save=&cpo
-set cpo&vim
 nmap gx <Plug>NetrwBrowseX
 nnoremap <silent> <Plug>NetrwBrowseX :call netrw#NetrwBrowseX(expand("<cWORD>"),0)
+noremap <Right> ""
+noremap <Left> ""
+noremap <Down> ""
+noremap <Up> ""
 inoremap  :Hexmode
 let &cpo=s:cpo_save
 unlet s:cpo_save
@@ -47,9 +56,9 @@ badd +1 griffon-app/lifecycle/Initialize.groovy
 badd +1 griffon-app/models/com/jdbernard/pit/swing/NewIssueDialogModel.groovy
 badd +1 griffon-app/controllers/com/jdbernard/pit/swing/NewIssueDialogController.groovy
 badd +1 griffon-app/views/com/jdbernard/pit/swing/NewIssueDialogView.groovy
-badd +0 griffon-app/models/com/jdbernard/pit/swing/ProjectPanelModel.groovy
-badd +0 griffon-app/views/com/jdbernard/pit/swing/ProjectPanelView.groovy
-badd +0 griffon-app/controllers/com/jdbernard/pit/swing/ProjectPanelController.groovy
+badd +1 griffon-app/models/com/jdbernard/pit/swing/ProjectPanelModel.groovy
+badd +1 griffon-app/views/com/jdbernard/pit/swing/ProjectPanelView.groovy
+badd +1 griffon-app/controllers/com/jdbernard/pit/swing/ProjectPanelController.groovy
 args griffon-app/models/com/jdbernard/pit/swing/PITModel.groovy
 edit griffon-app/models/com/jdbernard/pit/swing/PITModel.groovy
 set splitbelow splitright
@@ -65,16 +74,15 @@ set nosplitbelow
 set nosplitright
 wincmd t
 set winheight=1 winwidth=1
-exe '1resize ' . ((&lines * 16 + 30) / 60)
-exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
-exe '2resize ' . ((&lines * 40 + 30) / 60)
-exe 'vert 2resize ' . ((&columns * 91 + 91) / 182)
-exe 'vert 3resize ' . ((&columns * 90 + 91) / 182)
+exe '1resize ' . ((&lines * 30 + 50) / 100)
+exe 'vert 1resize ' . ((&columns * 140 + 139) / 279)
+exe '2resize ' . ((&lines * 66 + 50) / 100)
+exe 'vert 2resize ' . ((&columns * 140 + 139) / 279)
+exe 'vert 3resize ' . ((&columns * 138 + 139) / 279)
 argglobal
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
-setlocal balloonexpr=
 setlocal nobinary
 setlocal bufhidden=
 setlocal buflisted
@@ -113,8 +121,8 @@ setlocal formatexpr=
 setlocal formatoptions=tcq
 setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 setlocal grepprg=
-setlocal iminsert=2
-setlocal imsearch=2
+setlocal iminsert=0
+setlocal imsearch=0
 setlocal include=
 setlocal includeexpr=
 setlocal indentexpr=
@@ -166,11 +174,11 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 27 - ((15 * winheight(0) + 8) / 16)
+let s:l = 2 - ((1 * winheight(0) + 15) / 30)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-27
+2
 normal! 0
 wincmd w
 argglobal
@@ -178,7 +186,6 @@ edit griffon-app/views/com/jdbernard/pit/swing/PITView.groovy
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
-setlocal balloonexpr=
 setlocal nobinary
 setlocal bufhidden=
 setlocal buflisted
@@ -217,8 +224,8 @@ setlocal formatexpr=
 setlocal formatoptions=tcq
 setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 setlocal grepprg=
-setlocal iminsert=2
-setlocal imsearch=2
+setlocal iminsert=0
+setlocal imsearch=0
 setlocal include=
 setlocal includeexpr=
 setlocal indentexpr=
@@ -270,19 +277,18 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 52 - ((0 * winheight(0) + 20) / 40)
+let s:l = 1 - ((0 * winheight(0) + 33) / 66)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-52
-normal! 015l
+1
+normal! 0
 wincmd w
 argglobal
 edit griffon-app/controllers/com/jdbernard/pit/swing/PITController.groovy
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
-setlocal balloonexpr=
 setlocal nobinary
 setlocal bufhidden=
 setlocal buflisted
@@ -321,8 +327,8 @@ setlocal formatexpr=
 setlocal formatoptions=tcq
 setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 setlocal grepprg=
-setlocal iminsert=2
-setlocal imsearch=2
+setlocal iminsert=0
+setlocal imsearch=0
 setlocal include=
 setlocal includeexpr=
 setlocal indentexpr=
@@ -374,18 +380,18 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 53 - ((42 * winheight(0) + 28) / 57)
+let s:l = 1 - ((0 * winheight(0) + 48) / 97)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-53
-normal! 04l
+1
+normal! 0
 wincmd w
-exe '1resize ' . ((&lines * 16 + 30) / 60)
-exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
-exe '2resize ' . ((&lines * 40 + 30) / 60)
-exe 'vert 2resize ' . ((&columns * 91 + 91) / 182)
-exe 'vert 3resize ' . ((&columns * 90 + 91) / 182)
+exe '1resize ' . ((&lines * 30 + 50) / 100)
+exe 'vert 1resize ' . ((&columns * 140 + 139) / 279)
+exe '2resize ' . ((&lines * 66 + 50) / 100)
+exe 'vert 2resize ' . ((&columns * 140 + 139) / 279)
+exe 'vert 3resize ' . ((&columns * 138 + 139) / 279)
 tabedit griffon-app/models/com/jdbernard/pit/swing/ProjectPanelModel.groovy
 set splitbelow splitright
 wincmd _ | wincmd |
@@ -400,16 +406,15 @@ set nosplitbelow
 set nosplitright
 wincmd t
 set winheight=1 winwidth=1
-exe '1resize ' . ((&lines * 20 + 30) / 60)
-exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
-exe '2resize ' . ((&lines * 36 + 30) / 60)
-exe 'vert 2resize ' . ((&columns * 91 + 91) / 182)
-exe 'vert 3resize ' . ((&columns * 90 + 91) / 182)
+exe '1resize ' . ((&lines * 36 + 50) / 100)
+exe 'vert 1resize ' . ((&columns * 140 + 139) / 279)
+exe '2resize ' . ((&lines * 60 + 50) / 100)
+exe 'vert 2resize ' . ((&columns * 140 + 139) / 279)
+exe 'vert 3resize ' . ((&columns * 138 + 139) / 279)
 argglobal
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
-setlocal balloonexpr=
 setlocal nobinary
 setlocal bufhidden=
 setlocal buflisted
@@ -448,8 +453,8 @@ setlocal formatexpr=
 setlocal formatoptions=tcq
 setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 setlocal grepprg=
-setlocal iminsert=2
-setlocal imsearch=2
+setlocal iminsert=0
+setlocal imsearch=0
 setlocal include=
 setlocal includeexpr=
 setlocal indentexpr=
@@ -501,11 +506,11 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 25 - ((19 * winheight(0) + 10) / 20)
+let s:l = 1 - ((0 * winheight(0) + 18) / 36)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-25
+1
 normal! 0
 wincmd w
 argglobal
@@ -513,7 +518,6 @@ edit griffon-app/views/com/jdbernard/pit/swing/ProjectPanelView.groovy
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
-setlocal balloonexpr=
 setlocal nobinary
 setlocal bufhidden=
 setlocal buflisted
@@ -552,8 +556,8 @@ setlocal formatexpr=
 setlocal formatoptions=tcq
 setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 setlocal grepprg=
-setlocal iminsert=2
-setlocal imsearch=2
+setlocal iminsert=0
+setlocal imsearch=0
 setlocal include=
 setlocal includeexpr=
 setlocal indentexpr=
@@ -605,11 +609,11 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 143 - ((24 * winheight(0) + 18) / 36)
+let s:l = 1 - ((0 * winheight(0) + 30) / 60)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-143
+1
 normal! 0
 wincmd w
 argglobal
@@ -617,7 +621,6 @@ edit griffon-app/controllers/com/jdbernard/pit/swing/ProjectPanelController.groo
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
-setlocal balloonexpr=
 setlocal nobinary
 setlocal bufhidden=
 setlocal buflisted
@@ -656,8 +659,8 @@ setlocal formatexpr=
 setlocal formatoptions=tcq
 setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 setlocal grepprg=
-setlocal iminsert=2
-setlocal imsearch=2
+setlocal iminsert=0
+setlocal imsearch=0
 setlocal include=
 setlocal includeexpr=
 setlocal indentexpr=
@@ -709,19 +712,18 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 93 - ((11 * winheight(0) + 28) / 57)
+let s:l = 1 - ((0 * winheight(0) + 48) / 97)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
-93
-normal! 032l
+1
+normal! 0
 wincmd w
-3wincmd w
-exe '1resize ' . ((&lines * 20 + 30) / 60)
-exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
-exe '2resize ' . ((&lines * 36 + 30) / 60)
-exe 'vert 2resize ' . ((&columns * 91 + 91) / 182)
-exe 'vert 3resize ' . ((&columns * 90 + 91) / 182)
+exe '1resize ' . ((&lines * 36 + 50) / 100)
+exe 'vert 1resize ' . ((&columns * 140 + 139) / 279)
+exe '2resize ' . ((&lines * 60 + 50) / 100)
+exe 'vert 2resize ' . ((&columns * 140 + 139) / 279)
+exe 'vert 3resize ' . ((&columns * 138 + 139) / 279)
 tabedit griffon-app/models/com/jdbernard/pit/swing/NewIssueDialogModel.groovy
 set splitbelow splitright
 wincmd _ | wincmd |
@@ -736,16 +738,15 @@ set nosplitbelow
 set nosplitright
 wincmd t
 set winheight=1 winwidth=1
-exe '1resize ' . ((&lines * 17 + 30) / 60)
-exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
-exe '2resize ' . ((&lines * 39 + 30) / 60)
-exe 'vert 2resize ' . ((&columns * 91 + 91) / 182)
-exe 'vert 3resize ' . ((&columns * 90 + 91) / 182)
+exe '1resize ' . ((&lines * 31 + 50) / 100)
+exe 'vert 1resize ' . ((&columns * 140 + 139) / 279)
+exe '2resize ' . ((&lines * 65 + 50) / 100)
+exe 'vert 2resize ' . ((&columns * 140 + 139) / 279)
+exe 'vert 3resize ' . ((&columns * 138 + 139) / 279)
 argglobal
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
-setlocal balloonexpr=
 setlocal nobinary
 setlocal bufhidden=
 setlocal buflisted
@@ -784,8 +785,8 @@ setlocal formatexpr=
 setlocal formatoptions=tcq
 setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 setlocal grepprg=
-setlocal iminsert=2
-setlocal imsearch=2
+setlocal iminsert=0
+setlocal imsearch=0
 setlocal include=
 setlocal includeexpr=
 setlocal indentexpr=
@@ -837,7 +838,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 8) / 17)
+let s:l = 1 - ((0 * winheight(0) + 15) / 31)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -849,7 +850,6 @@ edit griffon-app/views/com/jdbernard/pit/swing/NewIssueDialogView.groovy
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
-setlocal balloonexpr=
 setlocal nobinary
 setlocal bufhidden=
 setlocal buflisted
@@ -888,8 +888,8 @@ setlocal formatexpr=
 setlocal formatoptions=tcq
 setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 setlocal grepprg=
-setlocal iminsert=2
-setlocal imsearch=2
+setlocal iminsert=0
+setlocal imsearch=0
 setlocal include=
 setlocal includeexpr=
 setlocal indentexpr=
@@ -941,7 +941,7 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 19) / 39)
+let s:l = 1 - ((0 * winheight(0) + 32) / 65)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
@@ -953,7 +953,6 @@ edit griffon-app/controllers/com/jdbernard/pit/swing/NewIssueDialogController.gr
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
-setlocal balloonexpr=
 setlocal nobinary
 setlocal bufhidden=
 setlocal buflisted
@@ -992,8 +991,8 @@ setlocal formatexpr=
 setlocal formatoptions=tcq
 setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 setlocal grepprg=
-setlocal iminsert=2
-setlocal imsearch=2
+setlocal iminsert=0
+setlocal imsearch=0
 setlocal include=
 setlocal includeexpr=
 setlocal indentexpr=
@@ -1045,19 +1044,18 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 28) / 57)
+let s:l = 1 - ((0 * winheight(0) + 48) / 97)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 1
 normal! 0
 wincmd w
-3wincmd w
-exe '1resize ' . ((&lines * 17 + 30) / 60)
-exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
-exe '2resize ' . ((&lines * 39 + 30) / 60)
-exe 'vert 2resize ' . ((&columns * 91 + 91) / 182)
-exe 'vert 3resize ' . ((&columns * 90 + 91) / 182)
+exe '1resize ' . ((&lines * 31 + 50) / 100)
+exe 'vert 1resize ' . ((&columns * 140 + 139) / 279)
+exe '2resize ' . ((&lines * 65 + 50) / 100)
+exe 'vert 2resize ' . ((&columns * 140 + 139) / 279)
+exe 'vert 3resize ' . ((&columns * 138 + 139) / 279)
 tabedit griffon-app/conf/Application.groovy
 set splitbelow splitright
 wincmd _ | wincmd |
@@ -1068,13 +1066,12 @@ set nosplitbelow
 set nosplitright
 wincmd t
 set winheight=1 winwidth=1
-exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
-exe 'vert 2resize ' . ((&columns * 90 + 91) / 182)
+exe 'vert 1resize ' . ((&columns * 140 + 139) / 279)
+exe 'vert 2resize ' . ((&columns * 138 + 139) / 279)
 argglobal
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
-setlocal balloonexpr=
 setlocal nobinary
 setlocal bufhidden=
 setlocal buflisted
@@ -1113,8 +1110,8 @@ setlocal formatexpr=
 setlocal formatoptions=tcq
 setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 setlocal grepprg=
-setlocal iminsert=2
-setlocal imsearch=2
+setlocal iminsert=0
+setlocal imsearch=0
 setlocal include=
 setlocal includeexpr=
 setlocal indentexpr=
@@ -1166,19 +1163,18 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 16 - ((11 * winheight(0) + 28) / 57)
+let s:l = 16 - ((15 * winheight(0) + 48) / 97)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 16
-normal! 08l
+normal! 01l
 wincmd w
 argglobal
 edit griffon-app/conf/Config.groovy
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
-setlocal balloonexpr=
 setlocal nobinary
 setlocal bufhidden=
 setlocal buflisted
@@ -1217,8 +1213,8 @@ setlocal formatexpr=
 setlocal formatoptions=tcq
 setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 setlocal grepprg=
-setlocal iminsert=2
-setlocal imsearch=2
+setlocal iminsert=0
+setlocal imsearch=0
 setlocal include=
 setlocal includeexpr=
 setlocal indentexpr=
@@ -1270,16 +1266,15 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 56 - ((40 * winheight(0) + 28) / 57)
+let s:l = 56 - ((55 * winheight(0) + 48) / 97)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 56
 normal! 0
 wincmd w
-3wincmd w
-exe 'vert 1resize ' . ((&columns * 91 + 91) / 182)
-exe 'vert 2resize ' . ((&columns * 90 + 91) / 182)
+exe 'vert 1resize ' . ((&columns * 140 + 139) / 279)
+exe 'vert 2resize ' . ((&columns * 138 + 139) / 279)
 tabedit griffon-app/lifecycle/Initialize.groovy
 set splitbelow splitright
 set nosplitbelow
@@ -1290,7 +1285,6 @@ argglobal
 setlocal keymap=
 setlocal noarabic
 setlocal autoindent
-setlocal balloonexpr=
 setlocal nobinary
 setlocal bufhidden=
 setlocal buflisted
@@ -1329,8 +1323,8 @@ setlocal formatexpr=
 setlocal formatoptions=tcq
 setlocal formatlistpat=^\\s*\\d\\+[\\]:.)}\\t\ ]\\s*
 setlocal grepprg=
-setlocal iminsert=2
-setlocal imsearch=2
+setlocal iminsert=0
+setlocal imsearch=0
 setlocal include=
 setlocal includeexpr=
 setlocal indentexpr=
@@ -1382,14 +1376,13 @@ setlocal nowinfixwidth
 setlocal wrap
 setlocal wrapmargin=0
 silent! normal! zE
-let s:l = 1 - ((0 * winheight(0) + 29) / 58)
+let s:l = 1 - ((0 * winheight(0) + 49) / 98)
 if s:l < 1 | let s:l = 1 | endif
 exe s:l
 normal! zt
 1
 normal! 0
-3wincmd w
-tabnext 2
+tabnext 1
 if exists('s:wipebuf')
   silent exe 'bwipe ' . s:wipebuf
 endif

@@ -20,23 +20,43 @@ class PITController {
             def config = new File(System.getProperty('user.home'), '.pit')
             config = new File(config, 'pit_swing.groovy')
 
+            // read and process configuration
             if (config.exists() && config.isFile()) {
+                // load script
                 def loader = new GroovyClassLoader(PITController.classLoader)
+
+                // create binding for variables in the script
                 def configBinding = new Binding()
 
-                // add default values
+                // add default values for all configurable values
                 configBinding.templates = model.templates
                 configBinding.issueListRenderer = model.issueListRenderer
+                configBinding.initialRepositories = []
 
                 def configScript = loader.parseClass(config)
                     .newInstance(configBinding)
 
                 configScript.invokeMethod("run", null)
 
+                // act on the results of the configuration script
+
+                // use custom templates, if given
                 model.templates = configBinding.templates ?: [:]
+
+                // check for customer issur list rendered
                 if (configBinding.issueListRenderer &&
                     configBinding.issueListRenderer != model.issueListRenderer)
                     model.issueListRenderer = configBinding.issueListRenderer
+
+                // open any initial repositories configured
+                if (configBinding.initialRepositories)  {
+                    configBinding.initialRepositories.each { repo ->
+                        // try to create a file object if this is not one
+                        if (!(repo instanceof File)) repo = new File(repo)
+
+                        loadProject(repo)
+                    }
+                }
             }
         }
 
@@ -51,12 +71,19 @@ class PITController {
     }
 
     def openProject = { evt = null -> 
-        def projectDir
-        def newMVC
         if (view.openDialog.showOpenDialog(view.frame) !=
             JFileChooser.APPROVE_OPTION) return
 
-        projectDir = view.openDialog.selectedFile
+        loadProject(view.openDialog.selectedFile)
+
+    }
+
+    def loadProject = { File projectDir ->
+        def newMVC
+
+        // if this is not a valid directory, do nothing
+        // TODO: log to the user that this is not a valid directory
+        if (!projectDir.exists() || !projectDir.isDirectory()) return;
 
         // create new ProjectPanel MVC
         newMVC = buildMVCGroup('ProjectPanel',
