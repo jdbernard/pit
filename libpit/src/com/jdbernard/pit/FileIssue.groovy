@@ -23,31 +23,64 @@ public class FileIssue extends Issue {
 
         this.source = file
 
-        text = file.text
+        super.@text = file.text
     }
 
-    public void setCategory(Category c) {
-        super.setCategory(c)
-        source.renameTo(new File(source.canonicalFile.parentFile, getFilename()))
+    public void setCategory(Category c) throws IOException {
+        boolean renamed
+        renamed = source.renameTo(new File(source.canonicalFile.parentFile,
+            makeFilename(id, c, status, priority)))
+
+        if (!renamed)
+            throw new IOException("I was unable to set the category. "
+                + "I need to rename the file for this issue, but something is "
+                + "preventing me from doing so (maybe the path to the file is "
+                + "no longer valid, or maybe the file is currently open in "
+                + "some other program).")
+        else super.setCategory(c)
     }
 
-    public void setStatus(Status s) {
-        super.setStatus(s)
-        source.renameTo(new File(source.canonicalFile.parentFile, getFilename()))
+    public void setStatus(Status s) throws IOException {
+        boolean renamed
+        renamed = source.renameTo(new File(source.canonicalFile.parentFile,
+            makeFilename(id, category, s, priority)))
+            
+        if (!renamed)
+            throw new IOException("I was unable to set the status. "
+                + "I need to rename the file for this issue, but something is "
+                + "preventing me from doing so (maybe the path to the file is "
+                + "no longer valid, or maybe the file is currently open in "
+                + "some other program).")
+        else super.setStatus(s)
     }
 
-    public void setPriority(int p) {
-        super.setPriority(p)
-        source.renameTo(new File(source.canonicalFile.parentFile, getFilename()))
+    public void setPriority(int p) throws IOException {
+        boolean renamed
+        renamed = source.renameTo(new File(source.canonicalFile.parentFile,
+            makeFilename(id, category, status, p)))
+
+        if (!renamed)
+            throw new IOException("I was unable to set the priority. "
+                + "I need to rename the file for this issue, but something is "
+                + "preventing me from doing so (maybe the path to the file is "
+                + "no longer valid, or maybe the file is currently open in "
+                + "some other program).")
+        else super.setPriority(p)
     }
 
     public String getFilename() {
         return makeFilename(id, category, status, priority)
     }
 
-    public void setText(String text) {
+    public void setText(String text) throws IOException {
+        try { source.write(text) }
+        catch (IOException ioe) {
+            throw new IOException("I could not save the new text for this "
+                + "issue. I can not write to the file for this issue. I do not"
+                + " know why, I am sorry (maybe the file can not be reached).")
+        }
+
         super.setText(text)
-        source.write(text)
     }
 
     public boolean delete() { return source.delete() }

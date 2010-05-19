@@ -42,8 +42,13 @@ class FileIssueTest {
         assertEquals issues[0].category, Category.FEATURE
         assertEquals issues[1].category, Category.TASK
 
-        issues[0].category = Category.TASK
-        issues[1].category = Category.BUG
+        try {
+            issues[0].category = Category.TASK
+            issues[1].category = Category.BUG
+        } catch (Exception e) { 
+            Assert.fail("An unexpected Exception occurred: "
+                + e.getLocalizedMessage())
+        }
 
         assertEquals issues[0].category, Category.TASK
         assertEquals issues[1].category, Category.BUG
@@ -52,6 +57,27 @@ class FileIssueTest {
         assertTrue new File(testDir, '0002bs5.rst').exists()
         assertFalse new File(testDir, '0001fn1.rst').exists()
         assertFalse new File(testDir, '0002ts5.rst').exists()
+
+    }
+
+    @Test void testSetCategoryFails() {
+        FileInputStream fin
+        try {
+            // get a lock to the file to prevent the rename
+            def issueFile = new File('0001fn1.rst')
+            fin = new FileInputStream(issueFile)
+
+            // try to set the category
+            issues[0].category = Category.TASK
+
+            // should throw IOE before here
+            Assert.fail()
+        } catch (IOException ioe) {
+        } catch (Exception e) {
+            Assert.fail("Unexpected exception: " + e.getLocalizedMessage())
+        } finally {
+            if (fin != null) fin.close()
+        }
     }
 
     @Test void testSetStatus() {
@@ -59,8 +85,13 @@ class FileIssueTest {
         assertEquals issues[0].status, Status.NEW
         assertEquals issues[1].status, Status.RESOLVED
 
-        issues[0].status = Status.RESOLVED
-        issues[1].status = Status.REJECTED
+        try {
+            issues[0].status = Status.RESOLVED
+            issues[1].status = Status.REJECTED
+        } catch (Exception e) {
+            Assert.fail("An unexpected Exception occurred: "
+                + e.getLocalizedMessage())
+        }
 
         assertTrue new File(testDir, '0001fs1.rst').exists()
         assertTrue new File(testDir, '0002tj5.rst').exists()
@@ -68,13 +99,38 @@ class FileIssueTest {
         assertFalse new File(testDir, '0002ts5.rst').exists()
     }
 
+    @Test void testSetStatusFails() {
+        FileInputStream fin
+        try {
+            // get a lock to the file to prevent the rename
+            def issueFile = new File('0001fn1.rst')
+            fin = new FileInputStream(issueFile)
+
+            // try to set the status
+            issues[0].status = Status.REJECTED
+
+            // should throw IOE before here
+            Assert.fail()
+        } catch (IOException ioe) {
+        } catch (Exception e) {
+            Assert.fail("Unexpected exception: " + e.getLocalizedMessage())
+        } finally {
+            if (fin != null) fin.close()
+        }
+    }
+    
     @Test void testSetPriority() {
 
         assertEquals issues[0].priority, 1
         assertEquals issues[1].priority, 5
 
-        issues[0].priority = 2
-        issues[1].priority = 9
+        try {
+            issues[0].priority = 2
+            issues[1].priority = 9
+        } catch (Exception e) {
+            Assert.fail("An unexpected Exception occurred: "
+                + e.getLocalizedMessage())
+        }
 
         assertEquals issues[0].priority, 2
         assertEquals issues[1].priority, 9
@@ -83,6 +139,26 @@ class FileIssueTest {
         assertTrue new File(testDir, '0002ts9.rst').exists()
         assertFalse new File(testDir, '0001fn1.rst').exists()
         assertFalse new File(testDir, '0002ts5.rst').exists()
+    }
+
+    @Test void testSetPriorityFails() {
+        FileInputStream fin
+        try {
+            // get a lock to the file to prevent the rename
+            def issueFile = new File('0001fn1.rst')
+            fin = new FileInputStream(issueFile)
+
+            // try to set the priority
+            issues[0].priority = 9
+
+            // should throw IOE before here
+            Assert.fail()
+        } catch (IOException ioe) {
+        } catch (Exception e) {
+            Assert.fail("Unexpected exception: " + e.getLocalizedMessage())
+        } finally {
+            if (fin != null) fin.close()
+        }
     }
 
     @Test void testConstruction() {
@@ -98,6 +174,27 @@ class FileIssueTest {
                                       "=========================================\n\n" +
                                       "Make our killer app shine!."
         assertEquals issue.source    , issueFile
+    }
+
+    @Test void testSetTextFails() {
+        try {
+            // make the issue file un-writable
+            def issueFile = new File('0001fn1.rst')
+            if (issueFile.setReadOnly()) {
+
+                // try to write something
+                issues[0].text = "This should fail to be written."
+
+                // should throw IOE before here
+                Assert.fail()
+            } else {
+                println "Could not run testSetTextFails, unable to change " +
+                    "the test isseu file's permissions."
+            }
+        } catch (IOException ioe) {
+        } catch (Exception e) {
+            Assert.fail("Unexpected exception: " + e.getLocalizedMessage())
+        }
     }
 
     @Test void testMakeFilename() {

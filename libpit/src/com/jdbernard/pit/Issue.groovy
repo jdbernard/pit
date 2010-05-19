@@ -26,7 +26,7 @@ public abstract class Issue {
 
     public Category getCategory() { return category }
 
-    public void setCategory(Category c) {
+    public void setCategory(Category c) throws IOException {
         if (c == null)
             throw new IAE("Category cannot be null.")
 
@@ -35,7 +35,7 @@ public abstract class Issue {
 
     public Status getStatus() { return status }
 
-    public void setStatus(Status s) {
+    public void setStatus(Status s) throws IOException {
         if (s == null)
             throw new IAE("Status cannot be null.")
 
@@ -44,13 +44,15 @@ public abstract class Issue {
 
     public int getPriority() { return priority }
 
-    public void setPriority(int p) { priority = Math.min(9, Math.max(0, p)) }
+    public void setPriority(int p) throws IOException {
+        priority = Math.min(9, Math.max(0, p))
+    }
 
     public String getTitle() { return text.readLines()[0] }
 
     public String getText() { return text }
 
-    public void setText(String t) { text = t }
+    public void setText(String t) throws IOException { text = t }
 
     public boolean hasDelivery() { return deliveryDate == null }
 

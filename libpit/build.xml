@@ -82,7 +82,7 @@
             classpathref="groovyc.classpath"/>
     </target>
 
-    <target name="run-tests" depends="compile-tests">
+    <target name="test" depends="compile-tests">
         <junit fork="yes" haltonfailure="yes">
             <classpath refid="test.classpath"/>
             <formatter type="brief" usefile="false" />
@@ -94,7 +94,7 @@
         </junit>
     </target>
 
-    <target name="build" depends="compile,run-tests">
+    <target name="build" depends="compile,test">
         <mkdir dir="${build.dir}/jar"/>
         <jar
             destfile="${build.dir}/jar/pit-${application.version}.${build.number.final}.jar"
