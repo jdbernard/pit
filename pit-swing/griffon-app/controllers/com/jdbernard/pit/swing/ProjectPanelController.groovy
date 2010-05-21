@@ -29,14 +29,22 @@ class ProjectPanelController {
         view.issueTextArea.text = ""
         if (!project) return
 
-        if (!model.projectListModels[(project.name)]) {
-            def dlm = new DefaultListModel()
-            project.eachIssue(model.filter ?: model.mainMVC.model.filter)
-                { dlm.addElement(it) }
-            model.projectListModels[(project.name)] = dlm
+        if (!model.projectTableModels[(project.name)]) {
+            def itm = new IssueTableModel(project,
+                model.filter ?: model.mainMVC.model.filter)
+            itm.categoryIcons = model.mainMVC.model.categoryIcons
+            itm.statusIcons = model.mainMVC.model.statusIcons
+            model.projectTableModels[(project.name)] = itm
         }
 
-        view.issueList.setModel(model.projectListModels[(project.name)])
+        view.issueTable.setModel(model.projectTableModels[(project.name)])
+
+        def tcm = view.issueTable.columnModel
+        tcm.getColumn(0).maxWidth = 24
+        tcm.getColumn(1).maxWidth = 40
+        tcm.getColumn(2).maxWidth = 35
+        if (view.issueTable.model.columnCount == 5)
+            tcm.getColumn(4).maxWidth = 150
     }
 
     void displayIssue(Issue issue) {
@@ -58,7 +66,7 @@ class ProjectPanelController {
 
     void showIssuePopup(Issue issue, def x, def y) {
         model.popupIssue = issue
-        view.issuePopupMenu.show(view.issueList, x, y)
+        view.issuePopupMenu.show(view.issueTable, x, y)
     }
 
     void refreshProject() {
@@ -76,7 +84,7 @@ class ProjectPanelController {
     }
 
     void refreshIssues() {
-        model.projectListModels.clear()
+        model.projectTableModels.clear()
         displayProject(model.selectedProject)
     }
 
@@ -131,7 +139,7 @@ class ProjectPanelController {
                 status: nidModel.status,
                 priority: nidModel.priority,
                 text: issueText)
-            model.projectListModels[(model.selectedProject.name)] = null
+            model.projectTableModels[(model.selectedProject.name)] = null
             displayProject(model.selectedProject)
         }
     }
@@ -139,20 +147,21 @@ class ProjectPanelController {
     def deleteIssue = { evt ->
         def issue
         if (evt.source == view.deleteIssueButton)
-            issue = view.issueList.selectedValue
+            issue = getSelectedIssue()
         else issue = model.popupIssue
 
         model.selectedProject.issues.remove(issue.id)
-        model.projectListModels[(model.selectedProject.name)]
-            .removeElement(issue)
+        view.issueTable.model.issues.remove(issue)
 
         issue.delete()
+        view.issueTable.invlidate()
     }
 
-    def changeCategory = { evt ->
-        model.popupIssue.status = status
-        view.issueList.invalidate()
-        view.issueList.repaint()
-    }
+    def getSelectedIssue() {
+        if (view.issueTable.selectionModel.isSelectionEmpty())
+            return null
 
+        return view.issueTable.model.issues[view.issueTable.
+            convertRowIndexToModel(view.issueTable.selectedRow)]
+    }
 }

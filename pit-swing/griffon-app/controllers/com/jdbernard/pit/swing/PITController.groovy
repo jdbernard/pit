@@ -13,9 +13,7 @@ class PITController {
     void mvcGroupInit(Map args) {
 
         SwingUtilities.invokeAndWait {
-            model.issueListRenderer = new IssueListCellRenderer()
-            model.issueListRenderer.categoryIcons = model.categoryIcons
-            model.issueListRenderer.statusIcons = model.statusIcons
+            model.issueListRenderer = new IssueTableCellRenderer()
 
             def config = new File(System.getProperty('user.home'), '.pit')
             config = new File(config, 'pit_swing.groovy')

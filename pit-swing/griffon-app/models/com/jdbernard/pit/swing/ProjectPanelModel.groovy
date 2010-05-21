@@ -19,7 +19,7 @@ class ProjectPanelModel {
     @Bindable Issue popupIssue = null
 
     // cache the ListModels
-    def projectListModels = [:]
+    def projectTableModels = [:]
     def issueCellRenderer
 
     // local filter for projects and issues

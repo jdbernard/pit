@@ -10,8 +10,10 @@ import java.awt.Point
 import java.awt.event.MouseEvent
 import javax.swing.JOptionPane
 import javax.swing.JSplitPane
+import javax.swing.JTable
 import javax.swing.JTextField
 import javax.swing.ListSelectionModel
+import javax.swing.table.TableCellRenderer
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeCellRenderer
 import javax.swing.tree.DefaultTreeModel
@@ -83,8 +85,14 @@ issuePopupMenu = popupMenu() {
                 icon: model.mainMVC.model.categoryIcons[(category)],
                 enabled: bind { model.popupIssue != null },
                 actionPerformed: {
-                    model.popupIssue.category = category
-                    controller.refreshIssues()
+                    try {
+                        model.popupIssue.category = category
+                        controller.refreshIssues()
+                    } catch (IOException ioe) {
+                        JOptionPane.showMessageDialog(mainMVC.view.frame,
+                            ioe.getLocalizedMessage(), 'Change Category',
+                            JOptionPane.ERROR_MESSAGE)
+                    }
                 })
         }
     }
@@ -95,8 +103,14 @@ issuePopupMenu = popupMenu() {
                 icon: model.mainMVC.model.statusIcons[(status)],
                 enabled: bind { model.popupIssue != null },
                 actionPerformed: {
-                    model.popupIssue.status = status
-                    controller.refreshIssues()
+                    try {
+                        model.popupIssue.status = status
+                        controller.refreshIssues()
+                    } catch (IOException ioe) { 
+                        JOptionPane.showMessageDialog(mainMVC.view.frame,
+                            ioe.getLocalizedMessage(), 'Change Status',
+                            JOptionPane.ERROR_MESSAGE)
+                    }
                 })
         }
     }
@@ -108,11 +122,15 @@ issuePopupMenu = popupMenu() {
                 'New priority (0-9)', 'Change Priority...',
                 JOptionPane.QUESTION_MESSAGE)
             try { model.popupIssue.priority = newPriority.toInteger() }
-            catch (exception) {
+            catch (NumberFormatException nfe) {
                 JOptionPane.showMessageDialog(mainMVC.view.frame,
                     'The priority value must be an integer in [0-9].',
                     'Change Priority...', JOptionPane.ERROR_MESSAGE)
                 return
+            } catch (IOException ioe) {
+                JOptionPane.showMessageDialog(mainMVC.view.fraw,
+                    ioe.getLocalizedMessage(), 'Change Priority...',
+                    JOptionPane.ERROR_MESSAGE)
             }
             controller.refreshIssues()
         })
@@ -188,7 +206,37 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
             scrollPane(constraints: gbc(fill: GBC.BOTH, weightx: 2,
                     weighty: 2, gridx: 0, gridy: 0, gridwidth: 3)) {
 
-                issueList = list(
+                issueTable = table(
+                    autoCreateRowSorter: true,
+                    autoResizeMode: JTable.AUTO_RESIZE_LAST_COLUMN,
+                    cellSelectionEnabled: false,
+                    columnSelectionAllowed: false,
+                    dragEnabled: false,
+                    rowSelectionAllowed: true,
+                    showHorizontalLines: false,
+                    showVerticalLines: false,
+                    mouseClicked: { evt ->
+                        if (evt.button == MouseEvent.BUTTON3) {
+                            def translatedPoint = evt.locationOnScreen.clone()
+                            translatedPoint.translate(-issueTable.locationOnScreen.@x,
+                                -issueTable.locationOnScreen.@y)
+                            def row = issueTable.rowAtPoint(translatedPoint)
+
+                            issueTable.setRowSelectionInterval(row, row)
+
+                            controller.showIssuePopup(
+                                controller.getSelectedIssue(), evt.x, evt.y)
+                        }
+                    })
+
+                issueTable.setDefaultRenderer(Object.class,
+                    model.issueCellRenderer)
+                issueTable.selectionModel.valueChanged = { evt ->
+                    if (evt.valueIsAdjusting) return
+                    controller.displayIssue(controller.getSelectedIssue())
+                }
+
+                /*issueList = list(
                     cellRenderer: model.issueCellRenderer,
                     selectionMode: ListSelectionModel.SINGLE_SELECTION,
                     valueChanged: { evt ->
@@ -202,7 +250,7 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                             controller.showIssuePopup(
                                 issueList.selectedValue, evt.x, evt.y)
                         }
-                    })
+                    })*/
             }
 
             wordWrapCheckBox = checkBox('Word wrap',
@@ -213,8 +261,8 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
 
             deleteIssueButton = button(deleteIssue,
                 constraints: gbc(gridx: 2, gridy: 1, anchor: GBC.EAST),
-                enabled: bind(source: issueList, sourceEvent: 'valueChanged',
-                    sourceValue: { issueList.selectedValue != null }))
+                enabled: bind(source: issueTable.selectionModel, sourceEvent: 'valueChanged',
+                    sourceValue: { !issueTable.selectionModel.isSelectionEmpty() }))
                     
         }
 
@@ -223,19 +271,21 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                 wrapStyleWord: true,
                 lineWrap: bind(source: wordWrapCheckBox,
                     sourceProperty: 'selected'),
-                editable: bind( source: issueList, sourceEvent: 'valueChanged',
-                    sourceValue: { issueList.selectedValue != null }),
+                editable: bind( source: issueTable.selectionModel, sourceEvent: 'valueChanged',
+                    sourceValue: { !issueTable.selectionModel.isSelectionEmpty() }),
                 font: model.mainMVC.model.issueDetailFont,
                 focusGained: {},
                 focusLost: {
-                    if (!issueList?.selectedValue) return
-                    if (issueTextArea.text != issueList.selectedValue.text)
-                        issueList.selectedValue.text = issueTextArea.text
+                    def issue = controller.getSelectedIssue()
+                    if (issue == null) return
+                    if (issueTextArea.text != issue.text)
+                        issue.text = issueTextArea.text
                 },
                 mouseExited: {
-                    if (!issueList?.selectedValue) return
-                    if (issueTextArea.text != issueList.selectedValue.text)
-                        issueList.selectedValue.text = issueTextArea.text
+                    def issue = controller.getSelectedIssue()
+                    if (issue == null) return
+                    if (issueTextArea.text != issue.text)
+                        issue.text = issueTextArea.text
                 })
         }
     }
