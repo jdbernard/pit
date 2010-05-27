@@ -10,13 +10,27 @@ import javax.swing.DefaultListModel
 import javax.swing.JOptionPane
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
+import org.dom4j.Document
+import org.dom4j.io.OutputFormat
+import org.dom4j.io.XMLWriter
+import org.nuiton.jrst.JRSTGenerator
+import org.nuiton.jrst.JRSTReader
 
 class ProjectPanelController {
     // these will be injected by Griffon
     def model
     def view
 
+    def jrstReader
+    def jrstGen
+
+    static URL rst2htmlXSL =
+        ProjectPanelController.class.getResource("/rst2xhtml.xsl")
+
     void mvcGroupInit(Map args) {
+        jrstReader = new JRSTReader()
+        jrstGen = new JRSTGenerator()
+
         refreshProject()
     }
 
@@ -27,6 +41,8 @@ class ProjectPanelController {
      */
     void displayProject(Project project) { 
         view.issueTextArea.text = ""
+        view.issueTextDisplay.text = ""
+        view.issueTextPanelLayout.show(view.issueTextPanel, "display")
         if (!project) return
 
         if (!model.projectTableModels[(project.name)]) {
@@ -57,6 +73,9 @@ class ProjectPanelController {
 
         view.issueTextArea.text = issue.text
         view.issueTextArea.caretPosition = 0
+        view.issueTextDisplay.text = rst2html(issue.text)
+        view.issueTextDisplay.caretPosition = 0
+        view.issueTextPanelLayout.show(view.issueTextPanel, "display")
     }
 
     void showProjectPopup(Project project, def x, def y) {
@@ -163,5 +182,41 @@ class ProjectPanelController {
 
         return view.issueTable.model.issues[view.issueTable.
             convertRowIndexToModel(view.issueTable.selectedRow)]
+    }
+
+    String rst2html(String rst) {
+        Document doc // memory model of document
+        StringWriter outString
+        StringBuilder result = new StringBuilder()
+
+        // read the RST in with the RST parser
+        new StringReader(rst).withReader { doc = jrstReader.read(it) }
+
+        // transform to XHTML
+        doc = jrstGen.transform(doc, rst2htmlXSL)
+
+        // write to the StringWriter
+        outString = new StringWriter()
+        outString.withWriter { new XMLWriter(it, new OutputFormat("", true)).write(doc) }
+
+        // java's embeded html is primitive, we need to massage the results
+        outString.toString().eachLine { line ->
+
+            // remove the XML version and encoding, title element,
+            // meta elements
+            if (line =~ /<\?.*\?>/ || line =~ /<meta.*$/ || line =~ /<title.*$/) { return }
+
+            // all other elements, remove all class,xmlns attributes
+            def m = (line =~ /(<\S+)(\s*(class|xmlns)=".*"\s*)*(\/?>.*)/)
+            if (m) line = m[0][1] + m[0][4]
+
+            result.append(line)
+            
+            // add in the CSS information to the head
+            if (line =~/<head>/) result.append(model.issueCSS)
+        }
+        println result.toString()
+
+        return result.toString()
     }
 }

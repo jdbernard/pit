@@ -30,6 +30,8 @@ class PITController {
                 configBinding.templates = model.templates
                 configBinding.issueListRenderer = model.issueListRenderer
                 configBinding.initialRepositories = []
+                configBinding.issueCSS = model.issueCSS
+                configBinding.PIT_HOME = config.parentFile
 
                 def configScript = loader.parseClass(config)
                     .newInstance(configBinding)
@@ -55,6 +57,12 @@ class PITController {
                         loadProject(repo)
                     }
                 }
+
+                // open any custom CSS for issue dsiplay
+                if (configBinding.issueCSS instanceof File)
+                    model.issueCSS = configBinding.issueCSS.text
+                else
+                    model.issueCSS = configBinding.issueCSS
             }
         }
 
@@ -88,6 +96,7 @@ class PITController {
             mainMVC: [model: model, view: view, controller: this],
             newIssueDialogMVC: model.newIssueDialogMVC,
             issueCellRenderer: model.issueListRenderer,
+            issueCSS: model.issueCSS,
             rootProject: new FileProject(projectDir))
         newMVC.model.id = projectDir.name
         

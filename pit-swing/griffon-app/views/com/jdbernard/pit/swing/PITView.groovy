@@ -57,7 +57,8 @@ Status.values().each {
 openDialog = fileChooser(fileSelectionMode: JFileChooser.DIRECTORIES_ONLY)
 
 frame = application(title:'Personal Issue Tracker',
-  minimumSize: [800, 500],
+  minimumSize: [400, 200],
+  preferredSize: [800, 500],
   pack:true,
   locationRelativeTo: null,
   iconImage: imageIcon('/icon64x64.png').image,

@@ -10,6 +10,8 @@ import java.awt.Point
 import java.awt.event.MouseEvent
 import javax.swing.JOptionPane
 import javax.swing.JSplitPane
+import javax.swing.JLabel
+import javax.swing.JScrollPane
 import javax.swing.JTable
 import javax.swing.JTextField
 import javax.swing.ListSelectionModel
@@ -261,32 +263,60 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
 
             deleteIssueButton = button(deleteIssue,
                 constraints: gbc(gridx: 2, gridy: 1, anchor: GBC.EAST),
-                enabled: bind(source: issueTable.selectionModel, sourceEvent: 'valueChanged',
+                enabled: bind(source: issueTable.selectionModel,
+                    sourceEvent: 'valueChanged',
                     sourceValue: { !issueTable.selectionModel.isSelectionEmpty() }))
                     
         }
 
-        scrollPane(constraints: "bottom") {
-            issueTextArea = textArea(
-                wrapStyleWord: true,
-                lineWrap: bind(source: wordWrapCheckBox,
-                    sourceProperty: 'selected'),
-                editable: bind( source: issueTable.selectionModel, sourceEvent: 'valueChanged',
-                    sourceValue: { !issueTable.selectionModel.isSelectionEmpty() }),
-                font: model.mainMVC.model.issueDetailFont,
-                focusGained: {},
-                focusLost: {
-                    def issue = controller.getSelectedIssue()
-                    if (issue == null) return
-                    if (issueTextArea.text != issue.text)
-                        issue.text = issueTextArea.text
-                },
-                mouseExited: {
-                    def issue = controller.getSelectedIssue()
-                    if (issue == null) return
-                    if (issueTextArea.text != issue.text)
-                        issue.text = issueTextArea.text
-                })
+        scrollPane(constraints: "bottom",
+            horizontalScrollBarPolicy: JScrollPane.HORIZONTAL_SCROLLBAR_NEVER) {
+            issueTextPanel = panel {
+                issueTextPanelLayout = cardLayout()
+
+                issueTextArea = textArea(
+                    constraints: "editor",
+                    wrapStyleWord: true,
+                    lineWrap: bind(source: wordWrapCheckBox,
+                        sourceProperty: 'selected'),
+                    editable: bind( source: issueTable.selectionModel,
+                        sourceEvent: 'valueChanged',
+                        sourceValue:
+                            { !issueTable.selectionModel.isSelectionEmpty() }),
+                    font: model.mainMVC.model.issueDetailFont,
+                    focusGained: {},
+                    focusLost: {
+                        def issue = controller.getSelectedIssue()
+                        if (issue == null) return
+                        if (issueTextArea.text != issue.text) {
+                            issue.text = issueTextArea.text
+                            issueTextDisplay.text = controller.rst2html(
+                                issueTextArea.text)
+                        }
+                        issueTextPanelLayout.show(issueTextPanel, "display")
+                    },
+                    mouseExited: {
+                        def issue = controller.getSelectedIssue()
+                        if (issue == null) return
+                        if (issueTextArea.text != issue.text) {
+                            issue.text = issueTextArea.text
+                            issueTextDisplay.text = controller.rst2html(
+                                issueTextArea.text)
+                        }
+                        issueTextPanelLayout.show(issueTextPanel, "display")
+                    })
+                    
+                issueTextDisplay = editorPane(contentType: "text/html",
+                    constraints: "display",
+                    editable: false,
+                    preferredSize: [200, 200],
+                    mouseClicked: { evt -> 
+                        if (evt.clickCount > 1)
+                            issueTextPanelLayout.show(issueTextPanel, "editor")
+                    })
+            }
+
+            issueTextPanelLayout.show(issueTextPanel, "display")
         }
     }
 }

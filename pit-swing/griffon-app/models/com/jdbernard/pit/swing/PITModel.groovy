@@ -18,6 +18,8 @@ class PITModel {
     // map of category -> issue template
     def templates = [:]
 
+    def issueCSS = getClass().getResource("/default-issue.css").openStream().text
+
     def categoryIcons = [:]
     def statusIcons = [:]
 

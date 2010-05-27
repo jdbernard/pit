@@ -18,6 +18,8 @@ class ProjectPanelModel {
     @Bindable Project selectedProject = null
     @Bindable Issue popupIssue = null
 
+    String issueCSS = ""
+
     // cache the ListModels
     def projectTableModels = [:]
     def issueCellRenderer
