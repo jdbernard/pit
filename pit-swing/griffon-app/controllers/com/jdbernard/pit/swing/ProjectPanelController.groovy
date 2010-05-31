@@ -173,7 +173,7 @@ class ProjectPanelController {
         view.issueTable.model.issues.remove(issue)
 
         issue.delete()
-        view.issueTable.invlidate()
+        view.issueTable.invalidate()
     }
 
     def getSelectedIssue() {
@@ -215,7 +215,6 @@ class ProjectPanelController {
             // add in the CSS information to the head
             if (line =~/<head>/) result.append(model.issueCSS)
         }
-        println result.toString()
 
         return result.toString()
     }

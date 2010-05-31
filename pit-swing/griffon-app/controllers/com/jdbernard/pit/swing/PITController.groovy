@@ -1,5 +1,6 @@
 package com.jdbernard.pit.swing
 
+import com.jdbernard.pit.Category
 import com.jdbernard.pit.FileProject
 import javax.swing.JFileChooser
 import javax.swing.SwingUtilities
@@ -15,55 +16,82 @@ class PITController {
         SwingUtilities.invokeAndWait {
             model.issueListRenderer = new IssueTableCellRenderer()
 
-            def config = new File(System.getProperty('user.home'), '.pit')
-            config = new File(config, 'pit_swing.groovy')
+            File pitHome, pitrcFile, pitswingrcFile
+            Properties config = new Properties()
 
-            // read and process configuration
-            if (config.exists() && config.isFile()) {
-                // load script
-                def loader = new GroovyClassLoader(PITController.classLoader)
+            // look for config directory
+            pitHome = new File(System.getProperty('user.home'), '.pit')
+            println "$pitHome is ${pitHome.exists() ? '' : 'not '} present."
 
-                // create binding for variables in the script
-                def configBinding = new Binding()
+            // look for general config options
+            pitrcFile = new File(pitHome, 'pitrc')
+            println "$pitrcFile is ${pitrcFile.exists() ? '' : 'not '} present."
 
-                // add default values for all configurable values
-                configBinding.templates = model.templates
-                configBinding.issueListRenderer = model.issueListRenderer
-                configBinding.initialRepositories = []
-                configBinding.issueCSS = model.issueCSS
-                configBinding.PIT_HOME = config.parentFile
-
-                def configScript = loader.parseClass(config)
-                    .newInstance(configBinding)
-
-                configScript.invokeMethod("run", null)
-
-                // act on the results of the configuration script
-
-                // use custom templates, if given
-                model.templates = configBinding.templates ?: [:]
-
-                // check for customer issur list rendered
-                if (configBinding.issueListRenderer &&
-                    configBinding.issueListRenderer != model.issueListRenderer)
-                    model.issueListRenderer = configBinding.issueListRenderer
-
-                // open any initial repositories configured
-                if (configBinding.initialRepositories)  {
-                    configBinding.initialRepositories.each { repo ->
-                        // try to create a file object if this is not one
-                        if (!(repo instanceof File)) repo = new File(repo)
-
-                        loadProject(repo)
-                    }
-                }
-
-                // open any custom CSS for issue dsiplay
-                if (configBinding.issueCSS instanceof File)
-                    model.issueCSS = configBinding.issueCSS.text
-                else
-                    model.issueCSS = configBinding.issueCSS
+            // load general config (if present)
+            if (pitrcFile.exists()) {
+                pitrcFile.withInputStream() { config.load(it) }
+                println "Loaded pitrc"
             }
+
+            // look for swing specific config
+            pitswingrcFile = new File(pitHome, 'pitswingrc')
+            println "$pitswingrcFile is " (pitswingrcFile.exists() ? 
+                '' : 'not ') + "present."
+
+            // load swing specific config (if present)
+            if (pitswingrcFile.exists()) {
+                pitswingrcFile.withInputStream() { config.load(it) }
+                println "Loaded pitswingrc"
+            }
+
+            // Process Configurable Options
+            // ----------------------------
+
+            config.keySet().each { println it }
+
+            // add custom category templates
+            Category.values().each { category ->
+                def expectedKey = "issue." + category.name().toLowerCase() +
+                    ".template"
+                println "Looking for key: $expectedKey"
+                config.keySet().each { currentKey ->
+                    if (currentKey == expectedKey) 
+                    model.templates[(category)] = 
+                        config.getProperty(expectedKey, "")
+                    println "Template for category $category: '" +
+                        model.templates[(category)] + "'"
+                }
+            }
+
+            // load custom issueListRenderer
+            // TODO: not yet supported (maybe no need)
+
+            // load initial repositories
+            if (config.containsKey('initial-repositories')) {
+                def initRepos = config.getProperty('initial-repositories', '')
+                initRepos = initRepos.split(/[;:,]/)
+                initRepos.each { repoPath -> loadProject(new File(repoPath)) }
+                println "Init repos: '$initRepos'"
+            }
+
+            // load custom issue CSS
+            if (config.containsKey('issue.display.css')) {
+                def issueCSS = config.getProperty('issue.display.css', "")
+
+                // look for a file relative to the pit home directory
+                def cssFile
+
+                // use short-circuit logic to test several possible locations
+                // for a css file
+                if ((cssFile = new File(pitHome, issueCSS)).exists() ||
+                    (cssFile = new File(pitHome.parentFile(), issueCSS)).exists() ||
+                    (cssFile = new File(issueCSS).exists()))
+                    issueCSS = cssFile.text
+                
+                println "CS for issue display: $issueCSS"
+                model.issueCSS = issueCSS
+            }
+
         }
 
         //

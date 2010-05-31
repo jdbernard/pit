@@ -309,7 +309,7 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                 issueTextDisplay = editorPane(contentType: "text/html",
                     constraints: "display",
                     editable: false,
-                    preferredSize: [200, 200],
+                    preferredSize: [10, 10],
                     mouseClicked: { evt -> 
                         if (evt.clickCount > 1)
                             issueTextPanelLayout.show(issueTextPanel, "editor")
