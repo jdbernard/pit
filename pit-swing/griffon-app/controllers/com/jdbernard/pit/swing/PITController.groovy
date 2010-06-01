@@ -17,49 +17,56 @@ class PITController {
             model.issueListRenderer = new IssueTableCellRenderer()
 
             File pitHome, pitrcFile, pitswingrcFile
+            boolean logDbg = logger.isDebugEnabled()
             Properties config = new Properties()
 
             // look for config directory
             pitHome = new File(System.getProperty('user.home'), '.pit')
-            println "$pitHome is ${pitHome.exists() ? '' : 'not '} present."
+            if (logDbg) logger.debug("$pitHome is " +
+                (pitHome.exists() ? '' : 'not ') + "present.")
 
             // look for general config options
             pitrcFile = new File(pitHome, 'pitrc')
-            println "$pitrcFile is ${pitrcFile.exists() ? '' : 'not '} present."
+            if(logDbg) logger.debug("$pitrcFile is " +
+                (pitrcFile.exists() ? '' : 'not ') + "present.")
 
             // load general config (if present)
             if (pitrcFile.exists()) {
                 pitrcFile.withInputStream() { config.load(it) }
-                println "Loaded pitrc"
+                if (logDbg) logger.debug("Loaded pitrc")
             }
 
             // look for swing specific config
             pitswingrcFile = new File(pitHome, 'pitswingrc')
-            println "$pitswingrcFile is " (pitswingrcFile.exists() ? 
-                '' : 'not ') + "present."
+            if (logDbg) logger.debug("$pitswingrcFile is " +
+                    (pitswingrcFile.exists() ?  '' : 'not ') + "present.")
 
             // load swing specific config (if present)
             if (pitswingrcFile.exists()) {
                 pitswingrcFile.withInputStream() { config.load(it) }
-                println "Loaded pitswingrc"
+                if(logDbg) logger.debug("Loaded pitswingrc")
             }
 
             // Process Configurable Options
             // ----------------------------
 
-            config.keySet().each { println it }
+            if (logDbg) {
+                logger.debug("Configurable properties:")
+                config.keySet().each { logger.debug(it) }
+            }
 
             // add custom category templates
             Category.values().each { category ->
                 def expectedKey = "issue." + category.name().toLowerCase() +
                     ".template"
-                println "Looking for key: $expectedKey"
+                if(logDbg) logger.debug("Looking for key: $expectedKey")
+
                 config.keySet().each { currentKey ->
                     if (currentKey == expectedKey) 
                     model.templates[(category)] = 
                         config.getProperty(expectedKey, "")
-                    println "Template for category $category: '" +
-                        model.templates[(category)] + "'"
+                    if (logDbg) logger.debug("Template for category $category: '" +
+                        model.templates[(category)] + "'")
                 }
             }
 
@@ -71,7 +78,7 @@ class PITController {
                 def initRepos = config.getProperty('initial-repositories', '')
                 initRepos = initRepos.split(/[;:,]/)
                 initRepos.each { repoPath -> loadProject(new File(repoPath)) }
-                println "Init repos: '$initRepos'"
+                if(logDbg) logger.debug("Init repos: '$initRepos'")
             }
 
             // load custom issue CSS
@@ -88,7 +95,7 @@ class PITController {
                     (cssFile = new File(issueCSS).exists()))
                     issueCSS = cssFile.text
                 
-                println "CS for issue display: $issueCSS"
+                if (logDbg) logger.debug("CS for issue display: $issueCSS")
                 model.issueCSS = issueCSS
             }
 

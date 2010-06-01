@@ -213,7 +213,8 @@ class ProjectPanelController {
             result.append(line)
             
             // add in the CSS information to the head
-            if (line =~/<head>/) result.append(model.issueCSS)
+            if (line =~/<head>/) result.append('<style type="text/css">' +
+                model.issueCSS + '</style>')
         }
 
         return result.toString()

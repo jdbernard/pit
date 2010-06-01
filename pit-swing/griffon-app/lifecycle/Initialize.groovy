@@ -22,13 +22,8 @@ import griffon.util.GriffonPlatformHelper
 import griffon.util.GriffonApplicationHelper
 
 GriffonPlatformHelper.tweakForNativePlatform(app)
-SwingBuilder.lookAndFeel('mac', 'org.pushingpixels.substance.api.skin.SubstanceCremeCoffeeLookAndFeel', 'nimbus', ['metal', [boldFonts: false]])
+SwingBuilder.lookAndFeel('org.pushingpixels.substance.api.skin.SubstanceCremeCoffeeLookAndFeel', 'nimbus', ['metal', [boldFonts: false]])
 
 // make config directory
 def confDir = new File(System.getProperty('user.home'), '.pit')
 if (!confDir.exists()) confDir.mkdirs()
-// find or create configuration file
-def swingConf = new File(confDir, 'pit-swing.groovy')
-if (!swingConf.exists()) swingConf.createNewFile()
-// run config
-GriffonApplicationHelper.runScriptInsideEDT(swingConf.canonicalPath, app)
