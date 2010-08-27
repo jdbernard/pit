@@ -3,3 +3,4 @@ build/
 dist/
 staging/
 target/test-reports
+pit-swing-old

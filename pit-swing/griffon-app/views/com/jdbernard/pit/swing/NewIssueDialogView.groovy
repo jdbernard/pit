@@ -61,4 +61,5 @@ dialog = dialog(title: 'New Task...', modal: true, pack: true,
         },
         constraints: gbc(gridx: 1, gridy: 5, insets: [5, 5, 5, 5],
             anchor: GBC.WEST))
+
 }

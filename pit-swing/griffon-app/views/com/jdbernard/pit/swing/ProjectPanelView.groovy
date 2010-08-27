@@ -75,13 +75,13 @@ projectPopupMenu = popupMenu() {
     menuItem(deleteProjectPop)
 }
 
-// popup menu for isses
+// popup menu for issues
 issuePopupMenu = popupMenu() {
     menuItem(newIssue)
     menuItem(deleteIssuePop)
     separator()
 
-    menu('Change Category', enabled: bind { model.popupIssue != null }) { 
+    menu('Change Category', enabled: bind { model.popupIssue != null }) {
         Category.values().each { category ->
             menuItem(category.toString(),
                 icon: model.mainMVC.model.categoryIcons[(category)],
@@ -91,15 +91,15 @@ issuePopupMenu = popupMenu() {
                         model.popupIssue.category = category
                         controller.refreshIssues()
                     } catch (IOException ioe) {
-                        JOptionPane.showMessageDialog(mainMVC.view.frame,
-                            ioe.getLocalizedMessage(), 'Change Category',
+                        JOptionPane.showMessage(mainMVC.view.frame,
+                            ioe.getLocalizedMessage(), "Change Category",
                             JOptionPane.ERROR_MESSAGE)
                     }
                 })
         }
     }
 
-    menu('Change Status', enabled: bind { model.popupIssue != null }) {
+    menu('Change Status', enabled: bind { model.popupIssue != null}) {
         Status.values().each { status ->
             menuItem(status.toString(),
                 icon: model.mainMVC.model.statusIcons[(status)],
@@ -108,8 +108,8 @@ issuePopupMenu = popupMenu() {
                     try {
                         model.popupIssue.status = status
                         controller.refreshIssues()
-                    } catch (IOException ioe) { 
-                        JOptionPane.showMessageDialog(mainMVC.view.frame,
+                    } catch (IOException ioe) {
+                        JOptionPane.showMessage(model.mainMVC.view.frame,
                             ioe.getLocalizedMessage(), 'Change Status',
                             JOptionPane.ERROR_MESSAGE)
                     }
@@ -123,14 +123,14 @@ issuePopupMenu = popupMenu() {
             def newPriority = JOptionPane.showInputDialog(mainMVC.view.frame,
                 'New priority (0-9)', 'Change Priority...',
                 JOptionPane.QUESTION_MESSAGE)
-            try { model.popupIssue.priority = newPriority.toInteger() }
+            try { model.popupIsse.priority = newPriority.toInteger() }
             catch (NumberFormatException nfe) {
                 JOptionPane.showMessageDialog(mainMVC.view.frame,
                     'The priority value must be an integer in [0-9].',
                     'Change Priority...', JOptionPane.ERROR_MESSAGE)
                 return
             } catch (IOException ioe) {
-                JOptionPane.showMessageDialog(mainMVC.view.fraw,
+                JOptionPane.showMessageDialog(model.mainMVC.view.frame,
                     ioe.getLocalizedMessage(), 'Change Priority...',
                     JOptionPane.ERROR_MESSAGE)
             }
@@ -140,28 +140,28 @@ issuePopupMenu = popupMenu() {
 
 // main split view
 panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
-    // dividerLocation: bind(source: model.mainModel, property: dividerLocation),
+    dividerLocation: 200,
     oneTouchExpandable: true,
-    constraints: gbc(fill: GBC.BOTH, insets: [10,10,10,10],
+    constraints: gbc(fill: GBC.BOTH, insets: [10, 10, 10, 10],
         weightx: 2, weighty: 2)) {
 
-    // left side (projects tree and buttons)
-    panel(constraints: "left") {
+    // left side (project tree and buttons
+    panel(constraints: 'left') {
         gridBagLayout()
 
         // tree view of projects
-        scrollPane(constraints: gbc(fill: GBC.BOTH, gridx: 0, gridy:0,
+        scrollPane(constraints: gbc(fill: GBC.BOTH, gridx: 0, gridy: 0,
             gridwidth: 2, weightx: 2, weighty: 2)) {
             treeCellRenderer = new DefaultTreeCellRenderer()
             treeCellRenderer.leafIcon = treeCellRenderer.closedIcon
 
             projectTree = tree(cellRenderer: treeCellRenderer,
                 model: bind(source: model, sourceProperty: 'rootProject',
-                    sourceValue: { 
+                    sourceValue: {
                         if (model.rootProject) {
                             def rootNode = new DefaultMutableTreeNode()
                             def flatview = new FlatProjectView('All Issues')
-                            flatviews.projects[(model.rootProject.name)] =
+                            flatview.projects[(model.rootProject.name)] =
                                 model.rootProject
                             rootNode.add(new DefaultMutableTreeNode(flatview))
                             rootNode.add(controller.makeNodes(model.rootProject))
@@ -178,18 +178,17 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                 mouseClicked: { evt ->
                     if (evt.button == MouseEvent.BUTTON3) {
                         controller.showProjectPopup(
-                            projectTree.getPathForLocation(evt.x, evt.y)
-                                ?.lastPathComponent?.userObject,
+                            projectTree.getPathForLocation(evt.x, evt.y)?.
+                                lastPathComponent?.userObject,
                             evt.x, evt.y)
                     }
                 })
             projectTree.rootVisible = false
-    
+
             projectTree.selectionModel.selectionMode =
                 TreeSelectionModel.SINGLE_TREE_SELECTION
         }
 
-        // project buttons
         newProjectButton = button(newProject,
             constraints: gbc(fill: GBC.NONE, gridx: 0, gridy: 1,
                 anchor: GBC.WEST))
@@ -198,7 +197,7 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                 anchor: GBC.WEST))
     }
 
-    // split between issue list and issue details
+    // split between issues list and issue details
     splitPane(orientation: JSplitPane.VERTICAL_SPLIT,
         dividerLocation: 200, constraints: "right") {
 
@@ -206,7 +205,7 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
             gridBagLayout()
 
             scrollPane(constraints: gbc(fill: GBC.BOTH, weightx: 2,
-                    weighty: 2, gridx: 0, gridy: 0, gridwidth: 3)) {
+                weighty: 2, gridx: 0, gridy: 0, gridwidth: 3)) {
 
                 issueTable = table(
                     autoCreateRowSorter: true,
@@ -223,7 +222,7 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                             translatedPoint.translate(-issueTable.locationOnScreen.@x,
                                 -issueTable.locationOnScreen.@y)
                             def row = issueTable.rowAtPoint(translatedPoint)
-
+                            
                             issueTable.setRowSelectionInterval(row, row)
 
                             controller.showIssuePopup(
@@ -238,21 +237,6 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                     controller.displayIssue(controller.getSelectedIssue())
                 }
 
-                /*issueList = list(
-                    cellRenderer: model.issueCellRenderer,
-                    selectionMode: ListSelectionModel.SINGLE_SELECTION,
-                    valueChanged: { evt ->
-                        controller.displayIssue(issueList.selectedValue)
-                    },
-                    mouseClicked: { evt ->
-                        if (evt.button == MouseEvent.BUTTON3) {
-                            issueList.selectedIndex = issueList.locationToIndex(
-                                [evt.x, evt.y] as Point)
-
-                            controller.showIssuePopup(
-                                issueList.selectedValue, evt.x, evt.y)
-                        }
-                    })*/
             }
 
             wordWrapCheckBox = checkBox('Word wrap',
@@ -266,7 +250,6 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
                 enabled: bind(source: issueTable.selectionModel,
                     sourceEvent: 'valueChanged',
                     sourceValue: { !issueTable.selectionModel.isSelectionEmpty() }))
-                    
         }
 
         scrollPane(constraints: "bottom",
@@ -274,45 +257,38 @@ panel = splitPane(orientation: JSplitPane.HORIZONTAL_SPLIT,
             issueTextPanel = panel {
                 issueTextPanelLayout = cardLayout()
 
+                def leavingEditorClosure = {
+                    def issue = controller.getSelectedIssue()
+                    if (issue == null) return
+                    if (issueTextArea.text != issue.text) {
+                        issue.text = issueTextArea.text
+                        issueTextDisplay.text = controller.rst2html(
+                            issueTextArea.text)
+                    }
+                    issueTextPanelLayout.show(issueTextPanel, 'display')
+                }
+
                 issueTextArea = textArea(
-                    constraints: "editor",
+                    constraints: 'editor',
                     wrapStyleWord: true,
                     lineWrap: bind(source: wordWrapCheckBox,
                         sourceProperty: 'selected'),
-                    editable: bind( source: issueTable.selectionModel,
+                    editable: bind(source: issueTable.selectionModel,
                         sourceEvent: 'valueChanged',
                         sourceValue:
                             { !issueTable.selectionModel.isSelectionEmpty() }),
                     font: model.mainMVC.model.issueDetailFont,
                     focusGained: {},
-                    focusLost: {
-                        def issue = controller.getSelectedIssue()
-                        if (issue == null) return
-                        if (issueTextArea.text != issue.text) {
-                            issue.text = issueTextArea.text
-                            issueTextDisplay.text = controller.rst2html(
-                                issueTextArea.text)
-                        }
-                        issueTextPanelLayout.show(issueTextPanel, "display")
-                    },
-                    mouseExited: {
-                        def issue = controller.getSelectedIssue()
-                        if (issue == null) return
-                        if (issueTextArea.text != issue.text) {
-                            issue.text = issueTextArea.text
-                            issueTextDisplay.text = controller.rst2html(
-                                issueTextArea.text)
-                        }
-                        issueTextPanelLayout.show(issueTextPanel, "display")
-                    })
-                    
-                issueTextDisplay = editorPane(contentType: "text/html",
-                    constraints: "display",
+                    focusLost: leavingEditorClosure,
+                    mouseExited: leavingEditorClosure)
+
+                issueTextDisplay = editorPane(contentType: 'text/html',
+                    constraints: 'display',
                     editable: false,
                     preferredSize: [10, 10],
-                    mouseClicked: { evt -> 
+                    mouseClicked: {evt ->
                         if (evt.clickCount > 1)
-                            issueTextPanelLayout.show(issueTextPanel, "editor")
+                            issueTextPanelLayout.show(issueTextPanel, 'editor')
                     })
             }
 

@@ -7,26 +7,28 @@ import com.jdbernard.pit.Project
 import com.jdbernard.pit.Status
 import groovy.beans.Bindable
 import java.awt.Font
+import javax.swing.ImageIcon
 
 class PITModel {
-    // filter for projects and issues
+
+    // filter for projects and classes
     Filter filter = new Filter(categories: [],
         status: [Status.NEW, Status.VALIDATION_REQUIRED])
 
     def issueListRenderer
 
     // map of category -> issue template
-    def templates = [:]
+    Map<Category, String> templates = [:]
 
-    def issueCSS = getClass().getResource("/default-issue.css").openStream().text
-
-    def categoryIcons = [:]
-    def statusIcons = [:]
+    String issueCSS = getClass().getResourceAsStream("/default-issue.css").text
+    
+    Map<Category, ImageIcon> categoryIcons = [:]
+    Map<Category, ImageIcon> statusIcons = [:]
 
     def newIssueDialogMVC
-    def projectPanelMVCs = [:]
+    Map projectPanelMVCs = [:]
 
-    def projectIdMap = [:]
+    Map projectIdMap = [:]
 
-    @Bindable issueDetailFont = new Font(Font.MONOSPACED, Font.PLAIN, 10)
+    @Bindable Font issueDetailFont = new Font(Font.MONOSPACED, Font.PLAIN, 10)
 }

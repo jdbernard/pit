@@ -1,22 +1,33 @@
 application {
-	title="PitSwing"
-	startupGroups=["PIT"]
-	autoShutdown=true
+    title = 'PitSwing'
+    startupGroups = ['PIT']
+
+    // Should Griffon exit when no Griffon created frames are showing?
+    autoShutdown = true
+
+    // If you want some non-standard application class, apply it here
+    //frameClass = 'javax.swing.JFrame'
 }
 mvcGroups {
-	NewIssueDialog {
-		model="com.jdbernard.pit.swing.NewIssueDialogModel"
-		controller="com.jdbernard.pit.swing.NewIssueDialogController"
-		view="com.jdbernard.pit.swing.NewIssueDialogView"
-	}
-	ProjectPanel {
-		model="com.jdbernard.pit.swing.ProjectPanelModel"
-		view="com.jdbernard.pit.swing.ProjectPanelView"
-		controller="com.jdbernard.pit.swing.ProjectPanelController"
-	}
-	PIT {
-		model="com.jdbernard.pit.swing.PITModel"
-		view="com.jdbernard.pit.swing.PITView"
-		controller="com.jdbernard.pit.swing.PITController"
-	}
+    // MVC Group for "ProjectPanel"
+    'ProjectPanel' {
+        model = 'com.jdbernard.pit.swing.ProjectPanelModel'
+        view = 'com.jdbernard.pit.swing.ProjectPanelView'
+        controller = 'com.jdbernard.pit.swing.ProjectPanelController'
+    }
+
+    // MVC Group for "NewIssueDialog"
+    'NewIssueDialog' {
+        model = 'com.jdbernard.pit.swing.NewIssueDialogModel'
+        view = 'com.jdbernard.pit.swing.NewIssueDialogView'
+        controller = 'com.jdbernard.pit.swing.NewIssueDialogController'
+    }
+
+    // MVC Group for "PIT"
+    'PIT' {
+        model = 'com.jdbernard.pit.swing.PITModel'
+        view = 'com.jdbernard.pit.swing.PITView'
+        controller = 'com.jdbernard.pit.swing.PITController'
+    }
+
 }

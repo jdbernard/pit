@@ -34,17 +34,18 @@ class ProjectPanelController {
         refreshProject()
     }
 
-    /** 
+    /**
      * displayProject
-     * @param project Project to display.
-     * 
+     * @param project Project to display
      */
-    void displayProject(Project project) { 
-        view.issueTextArea.text = ""
-        view.issueTextDisplay.text = ""
-        view.issueTextPanelLayout.show(view.issueTextPanel, "display")
+    void displayProject(Project project) {
         if (!project) return
 
+        view.issueTextArea.text = ""
+        view.issueTextDisplay.text = ""
+        view.issueTextPanelLayout.show(view.issueTextPanel, 'display')
+
+        // build a new IssueTableModel if none cached
         if (!model.projectTableModels[(project.name)]) {
             def itm = new IssueTableModel(project,
                 model.filter ?: model.mainMVC.model.filter)
@@ -67,7 +68,7 @@ class ProjectPanelController {
         if (!issue) return
 
         // hack because binding view.issueTextArea.font to
-        // mainMVC.mode.issueDetailFont causes problems
+        // mainMVC.model.issueDetailFont causes problems
         if (view.issueTextArea.font != model.mainMVC.model.issueDetailFont)
             view.issueTextArea.font  = model.mainMVC.model.issueDetailFont
 
@@ -75,10 +76,10 @@ class ProjectPanelController {
         view.issueTextArea.caretPosition = 0
         view.issueTextDisplay.text = rst2html(issue.text)
         view.issueTextDisplay.caretPosition = 0
-        view.issueTextPanelLayout.show(view.issueTextPanel, "display")
+        view.issueTextPanelLayout.show(view.issueTextPanel, 'display')
     }
 
-    void showProjectPopup(Project project, def x, def y) {
+    void showProejctPopup(Project project, def x, def y) {
         model.popupProject = project
         view.projectPopupMenu.show(view.projectTree, x, y)
     }
@@ -120,7 +121,7 @@ class ProjectPanelController {
 
         def project
 
-        if (evt.source == view.newProjectButton) 
+        if (evt.source == view.newProjectButton)
             project = model.selectedProject ?: model.rootProject
         else project = model.popupProject ?: model.rootProject
         def newProject = project.createNewProject(name)
@@ -134,7 +135,7 @@ class ProjectPanelController {
 
         if (evt.source == view.deleteProjectButton)
             project = model.selectedProject ?: model.rootProject
-        else project = model.popupProject ?: model.rootModel
+        else project = model.popupProject ?: model.rootProject
 
         project.delete()
 
@@ -185,7 +186,7 @@ class ProjectPanelController {
     }
 
     String rst2html(String rst) {
-        Document doc // memory model of document
+        Document doc
         StringWriter outString
         StringBuilder result = new StringBuilder()
 
@@ -201,19 +202,18 @@ class ProjectPanelController {
 
         // java's embeded html is primitive, we need to massage the results
         outString.toString().eachLine { line ->
-
-            // remove the XML version and encoding, title element,
-            // meta elements
+            
+            // remove the XML version and encoding, title element, meta elems
             if (line =~ /<\?.*\?>/ || line =~ /<meta.*$/ || line =~ /<title.*$/) { return }
 
-            // all other elements, remove all class,xmlns attributes
+            // all other elements, remove all class, xmlns attributes
             def m = (line =~ /(<\S+)(\s*(class|xmlns)=".*"\s*)*(\/?>.*)/)
             if (m) line = m[0][1] + m[0][4]
 
             result.append(line)
-            
+
             // add in the CSS information to the head
-            if (line =~/<head>/) result.append('<style type="text/css">' +
+            if (line =~ /<head>/) result.append('<style type="text/css">' +
                 model.issueCSS + '</style>')
         }
 

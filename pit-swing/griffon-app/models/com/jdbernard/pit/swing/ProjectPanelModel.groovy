@@ -20,7 +20,7 @@ class ProjectPanelModel {
 
     String issueCSS = ""
 
-    // cache the ListModels
+    // cache the models
     def projectTableModels = [:]
     def issueCellRenderer
 

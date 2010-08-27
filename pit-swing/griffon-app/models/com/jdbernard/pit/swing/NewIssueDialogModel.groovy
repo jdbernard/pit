@@ -5,7 +5,6 @@ import com.jdbernard.pit.Status
 import groovy.beans.Bindable
 
 class NewIssueDialogModel {
-
     @Bindable boolean accept
     String text
     Category category

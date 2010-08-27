@@ -8,6 +8,7 @@ import com.jdbernard.pit.Project
 import com.jdbernard.pit.FileProject
 import groovy.beans.Bindable
 import java.awt.BorderLayout as BL
+import java.awt.Color
 import java.awt.GridBagConstraints as GBC
 import javax.swing.DefaultComboBoxModel
 import javax.swing.DefaultListModel
@@ -16,7 +17,6 @@ import javax.swing.JFileChooser
 import javax.swing.JOptionPane
 import net.miginfocom.swing.MigLayout
 
-import java.awt.Color
 
 actions {
     action(
@@ -53,20 +53,17 @@ Status.values().each {
     model.statusIcons[(it)] = imageIcon("/${it.name().toLowerCase()}.png")
 }
 
-
-openDialog = fileChooser(fileSelectionMode: JFileChooser.DIRECTORIES_ONLY)
-
-frame = application(title:'Personal Issue Tracker',
+frame = application(title: 'Personal Issue Tracker',
   minimumSize: [400, 200],
   preferredSize: [800, 500],
-  pack:true,
+  pack: true,
   locationRelativeTo: null,
   iconImage: imageIcon('/icon64x64.png').image,
   iconImages: [imageIcon('/icon64x64.png').image,
                imageIcon('/icon32x32.png').image,
                imageIcon('/icon16x16.png').image]
 ) {
-
+    
     // main menu
     menuBar() {
         menu("File") {
@@ -76,12 +73,12 @@ frame = application(title:'Personal Issue Tracker',
             menuItem(shutdown)
         }
 
-        menu('View') {
+        menu("View") {
             menu('Category') {
                 Category.values().each { cat ->
                     checkBoxMenuItem(cat.toString(),
                         selected: model.filter.categories.contains(cat),
-                        actionPerformed: { evt ->
+                        actionPerformed: {
                             if (model.filter.categories.contains(cat)) {
                                 model.filter.categories.remove(cat)
                                 evt.source.selected = false
@@ -120,17 +117,17 @@ frame = application(title:'Personal Issue Tracker',
                         JOptionPane.QUESTION_MESSAGE)
                     if (newSize == null || !newSize.isFloat())
                         JOptionPane.showMessageDialog(frame,
-                            "$newSize is not a valid size.",
-                            'Change Issue Detail Text Size...',
+                            '$newSize is not a valid size.',
+                            'Change Issue Detail Size...',
                             JOptionPane.ERROR_MESSAGE)
                     else model.issueDetailFont = model.issueDetailFont
                         .deriveFont(newSize.toFloat())
-                }) 
+                })
         }
 
-        menu('Sort') {
+        menu("Sort") {
             sortMenuButtonGroup = buttonGroup()
-            checkBoxMenuItem('By ID', 
+            checkBoxMenuItem('By ID',
                 buttonGroup: sortMenuButtonGroup,
                 actionPerformed: {
                     model.filter.issueSorter = { it.id }
@@ -160,6 +157,7 @@ frame = application(title:'Personal Issue Tracker',
                     model.filter.issueSorter = { it.title }
                     controller.refreshIssues()
                 })
+
         }
     }
 
