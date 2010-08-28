@@ -123,7 +123,7 @@ issuePopupMenu = popupMenu() {
             def newPriority = JOptionPane.showInputDialog(mainMVC.view.frame,
                 'New priority (0-9)', 'Change Priority...',
                 JOptionPane.QUESTION_MESSAGE)
-            try { model.popupIsse.priority = newPriority.toInteger() }
+            try { model.popupIssue.priority = newPriority.toInteger() }
             catch (NumberFormatException nfe) {
                 JOptionPane.showMessageDialog(mainMVC.view.frame,
                     'The priority value must be an integer in [0-9].',

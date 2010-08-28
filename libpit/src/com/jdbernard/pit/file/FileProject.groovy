@@ -1,4 +1,6 @@
-package com.jdbernard.pit
+package com.jdbernard.pit.file
+
+import com.jdbernard.pit.*
 
 class FileProject extends Project {
 

@@ -1,5 +1,6 @@
-package com.jdbernard.pit
+package com.jdbernard.pit.file
 
+import com.jdbernard.pit.*
 import java.lang.IllegalArgumentException as IAE
 
 public class FileIssue extends Issue {
