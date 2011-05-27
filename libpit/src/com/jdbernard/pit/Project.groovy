@@ -33,5 +33,7 @@ public abstract class Project {
 
     public abstract Project createNewProject(String name)
 
-    public abstract boolean delete()
+    public abstract boolean deleteIssue(Issue issue)
+
+    public abstract boolean deleteProject(Project project)
 }

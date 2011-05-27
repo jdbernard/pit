@@ -74,7 +74,25 @@ class FileProject extends Project {
         return new FileProject(newDir)
     }
 
-    public boolean delete() { return source.deleteDir() }
+    public boolean deleteIssue(Issue issue) {
+        if (!issues[(issue.id)]) return false
+
+        issues.remove(issue.id)
+        if (issue instanceof FileIssue)
+            return issue.deleteFile()
+
+        else return true
+    }
+
+    public boolean deleteProject(Project project) {
+        if (!projects[(project.name)]) return false
+
+        projects.remove(project.name)
+        if (project instanceof FileProject)
+            return project.source.delete()
+
+        return true
+    }
 
     @Override
     public String toString() { return name }

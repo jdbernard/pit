@@ -63,7 +63,8 @@ public abstract class Issue {
     public void setDeliveryDate(Date dd) { deliveryDate = dd }
 
     @Override
-    public String toString() { return "${id}(${priority}-${status}): ${category} ${title}" }
+    public String toString() {
+        return "${id}(${priority}-${status}): ${category} ${title}"
+    }
 
-    public abstract boolean delete()
 }

@@ -84,7 +84,7 @@ public class FileIssue extends Issue {
         super.setText(text)
     }
 
-    public boolean delete() { return source.delete() }
+    boolean deleteFile() { return source.deleteDir() }
 
     public static boolean isValidFilename(String name) {
         return name ==~ fileExp

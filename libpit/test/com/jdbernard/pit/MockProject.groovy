@@ -5,11 +5,13 @@ class MockProject extends Project {
     public MockProject(String name) { super(name) }
 
     public Issue createNewIssue(Map options) {
-        throw new UnsupportedOperationException()
+        return new MockIssue(options.id ?: 'n/a',
+            options.c ?: Category.TASK, options.s ?: Status.NEW,
+            options.p ?: 5)
     }
 
     public Project createNewProject(String name) {
-        throw new UnsupportedOperationException()
+        return new MockProject(name)
     }
 
     public boolean delete() { return true }
