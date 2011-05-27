@@ -1,9 +1,11 @@
 package com.jdbernard.pit
 
+import com.jdbernard.pit.file.*
+
 import static java.lang.Math.max
 import static java.lang.Math.min
 
-def cli = new CliBuilder(usage: '')
+def cli = new CliBuilder(usage: 'pit-cli [options]')
 cli.h(longOpt: 'help', 'Show help information.')
 cli.v(longOpt: 'verbose', 'Show verbose task information')
 cli.l(longOpt: 'list', 'List issues. Unless otherwise specified it lists all '
@@ -32,9 +34,12 @@ cli.C(argName: 'new-category', longOpt: 'set-category', args: 1,
 cli.T(argName: 'new-status', longOpt: 'set-status', args: 1,
     required: false, 'Modify the status of the selected issues.')
 cli.n(longOpt: 'new-issue', 'Create a new issue.')
+cli.d(longOpt: 'dir', argName: 'dir', args: 1, required: false,
+    'Use <dir> as the base directory (defaults to current directory).')
 
 def opts = cli.parse(args)
 def issuedb = [:]
+def workingDir = new File('.')
 
 if (!opts) System.exit(1) // better solution?
 
@@ -48,10 +53,12 @@ def statusList = ['new', 'validation_required']
 if (opts.t) statusList = opts.t.split(/[,\s]/)
 statusList = statusList.collect { Status.toStatus(it) }
 
+if (opts.d) workingDir = new File(opts.d)
+
 def EOL = System.getProperty('line.separator')
 
 // build issue list
-issuedb = new FileProject(new File('.'))
+issuedb = new FileProject(workingDir)
 
 // build filter from options
 def filter = new Filter('categories': categories,
