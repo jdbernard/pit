@@ -53,7 +53,13 @@ def statusList = ['new', 'validation_required']
 if (opts.t) statusList = opts.t.split(/[,\s]/)
 statusList = statusList.collect { Status.toStatus(it) }
 
-if (opts.d) workingDir = new File(opts.d)
+if (opts.d) {
+    workingDir = new File(opts.d.trim())
+    if (!workingDir.exists()) {
+        println "Directory '${workingDir}' does not exist."
+        return -1
+    }
+}
 
 def EOL = System.getProperty('line.separator')
 
