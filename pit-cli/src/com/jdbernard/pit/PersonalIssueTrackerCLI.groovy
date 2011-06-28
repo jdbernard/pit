@@ -148,7 +148,7 @@ else if (opts.n) {
         } catch (e) { println "Not a valid value." }
     }
 
-    println "Enter issue (use EOF of ^D to end): "
+    println "Enter issue (use EOF or ^D to end): "
     try {
         sin.eachLine { line ->
             def m = line =~ /(.*)EOF.*/
