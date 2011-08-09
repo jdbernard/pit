@@ -5,6 +5,8 @@ import com.jdbernard.pit.file.*
 import static java.lang.Math.max
 import static java.lang.Math.min
 
+// -------- command-line interface specification -------- //
+
 def cli = new CliBuilder(usage: 'pit-cli [options]')
 cli.h(longOpt: 'help', 'Show help information.')
 cli.v(longOpt: 'verbose', 'Show verbose task information')
@@ -14,8 +16,8 @@ cli.i(argName: 'id', longOpt: 'id', args: 1,
     'Filter issues by id. Accepts a comma-delimited list.')
 cli.c(argName: 'category', longOpt: 'category', args: 1,
     'Filter issues by category (bug, feature, task). Accepts a '
-    + 'comma-delimited list.')
-cli.t(argName: 'status', longOpt: 'status', args: 1,
+    + 'comma-delimited list. By default all categories are selected.')
+cli.s(argName: 'status', longOpt: 'status', args: 1,
     'Filter issues by status (new, reassigned, rejected, resolved, ' +
     'validation_required)')
 cli.p(argName: 'priority', longOpt: 'priority', args: 1,
@@ -24,152 +26,225 @@ cli.p(argName: 'priority', longOpt: 'priority', args: 1,
 cli.r(argName: 'project', longOpt: 'project', args: 1,
     'Filter issues by project (relative to the current directory). Accepts a '
     + 'comma-delimited list.')
-cli.s(longOpt: 'show-subprojects',
+/*cli.s(longOpt: 'show-subprojects',
     'Include sup projects in listing (default behaviour)')
-cli.S(longOpt: 'no-subprojects', 'Do not list subprojects.')
+cli.S(longOpt: 'no-subprojects', 'Do not list subprojects.')*/ // TODO: figure out better flags for these options.
 cli.P(argName: 'new-priority', longOpt: 'set-priority', args: 1,
     required: false, 'Modify the priority of the selected issues.')
 cli.C(argName: 'new-category', longOpt: 'set-category', args: 1,
     required: false, 'Modify the category of the selected issues.')
-cli.T(argName: 'new-status', longOpt: 'set-status', args: 1,
+cli.S(argName: 'new-status', longOpt: 'set-status', args: 1,
     required: false, 'Modify the status of the selected issues.')
 cli.n(longOpt: 'new-issue', 'Create a new issue.')
 cli.d(longOpt: 'dir', argName: 'dir', args: 1, required: false,
     'Use <dir> as the base directory (defaults to current directory).')
 
+// -------- parse CLI options -------- //
 def opts = cli.parse(args)
 def issuedb = [:]
 def workingDir = new File('.')
 
-if (!opts) System.exit(1) // better solution?
+// defaults for the issue filter/selector
+def selectOpts = [
+    categories: ['bug', 'feature', 'task'],
+    status:     ['new', 'validation_required'],
+    priority:   9,
+    projects:   [],
+    ids:        [],
+    acceptProjects: true]
 
-if (opts.h) cli.usage()
+// defaults for changing properties of issue(s)
+def assignOpts = [
+    category:   Category.TASK,
+    status:     Status.NEW,
+    priority:   5,
+    text:       "New issue."]
 
-def categories = ['bug','feature','task']
-if (opts.c) categories = opts.c.split(/[,\s]/)
-categories = categories.collect { Category.toCategory(it) }
+if (!opts) opts.l = true; // default to 'list'
 
-def statusList = ['new', 'validation_required']
-if (opts.t) statusList = opts.t.split(/[,\s]/)
-statusList = statusList.collect { Status.toStatus(it) }
+if (opts.h) {
+    cli.usage()
+    System.exit(0) }
 
+// read the category filter designation(s)
+if (opts.c) {
+    if (opts.c =~ /all/) {} // no-op, same as defaults
+    else { selectOpts.categories = opts.c.split(/[,\s]/) } }
+        
+// parse the categories names into Category objects
+try { selectOpts.categories =
+    selectOpts.categories.collect { Category.toCategory(it) } }
+catch (Exception e) {
+    println "Invalid category option: '-c ${e.localizedMessage}'."
+    println "Valid options are: \n${Category.values().join(', ')}"
+    println " (abbreviations are accepted)."
+    System.exit(1) }
+
+// read the status filter designation(s)
+if (opts.s) {
+    // -s all
+    if (opts.s =~ /all/) selectOpts.status = ['new', 'reassigned', 'rejected',
+        'resolved', 'validation_required']
+    // is <list>
+    else selectOpts.status = opts.s.split(/[,\s]/) } 
+
+// parse the statuses into Status objects
+try { selectOpts.status =
+    selectOpts.status.collect { Status.toStatus(it) } }
+catch (Exception e) {
+    println "Invalid status option: '-s ${e.localizedMessage}'."
+    println "Valid options are: \b${Status.values().join(', ')}"
+    println " (abbreviations are accepted.)"
+    System.exit(1) }
+
+// read and parse the priority filter
+if (opts.p) try {
+    selectOpts.priority = opts.p.toInteger() }
+catch (NumberFormatException nfe) {
+    println "Not a valid priority value: '-p ${opts.p}'."
+    println "Valid values are: 0-9"
+    System.exit(1) }
+
+// read and parse the projects filter
+if (opts.r) { selectOpts.projects =
+    opts.r.toLowerCase().split(/[,\s]/).asType(List.class) }
+
+// read and parse the ids filter
+if (opts.i) { selectOpts.ids = opts.i.split(/[,\s]/).asType(List.class) }
+
+// TODO: accept projects value from input
+
+// read and parse the category to assign
+if (opts.C) try { assignOpts.category = Category.toCategory(opts.C) }
+catch (Exception e) {
+    println "Invalid category option: '-C ${e.localizedMessage}'."
+    println "Valid categories are: \n${Category.values().join(', ')}"
+    println " (abbreviations are accepted)."
+    System.exit(1) }
+
+// read and parse the status to assign
+if (opts.S) try { assignOpts.status = Status.toStatus(opts.S) }
+catch (Exception e) {
+    println "Invalid status option: '-S ${e.localizedMessage}'."
+    println "Valid stasus options are: \n{Status.values().join(', ')}"
+    println " (abbreviations are accepted)."
+    System.exit(1) }
+
+// read and parse the priority to assign
+if (opts.P) try {assignOpts.priority = opts.P.toInteger() }
+catch (NumberFormatException nfe) {
+    println "Not a valid priority value: '-P ${opts.P}'."
+    println "Valid values are: 0-9"
+    System.exit(1) }
+
+// look for assignment text
+if (opts.getArgs().length > 0) {
+    assignOpts.text = opts.getArgs()[0] }
+
+// set the project working directory
 if (opts.d) {
     workingDir = new File(opts.d.trim())
     if (!workingDir.exists()) {
         println "Directory '${workingDir}' does not exist."
-        return -1
-    }
-}
-
+        return -1 } }
 def EOL = System.getProperty('line.separator')
 
 // build issue list
 issuedb = new FileProject(workingDir)
 
 // build filter from options
-def filter = new Filter('categories': categories,
-    'status': statusList,
-    'priority': (opts.p ? opts.p.toInteger() : 9),
-    'projects': (opts.r ? opts.r.toLowerCase().split(/[,\s]/).asType(List.class) : []),
-    'ids': (opts.i ? opts.i.split(/[,\s]/).asType(List.class) : []),
-    'acceptProjects': (opts.s || !opts.S))
+def filter = new Filter(selectOpts)
  
 // list first
 if (opts.l) {
 
+    // local function (closure) to print a single issue
     def printIssue = { issue, offset ->
         println "${offset}${issue}"
         if (opts.v) {
             println ""
             issue.text.eachLine { println "${offset}  ${it}" }
-            println ""
-        }
-    }
+            println "" } }
 
+    // local function (closure) to print a project and all visible subprojects
     def printProject
     printProject = { project, offset ->
         println "\n${offset}${project.name}"
         println "${offset}${'-'.multiply(project.name.length())}"
         project.eachIssue(filter) { printIssue(it, offset) }
-        project.eachProject(filter) { printProject(it, offset + "  ") }
-    }
+        project.eachProject(filter) { printProject(it, offset + "  ") } }
+
+    // print all the issues in the root of this db
     issuedb.eachIssue(filter) { printIssue(it, "") }
-    issuedb.eachProject(filter) { printProject(it, "") }
-}
+    // print all projects
+    issuedb.eachProject(filter) { printProject(it, "") } } 
 
-// change priority second
-else if (opts.P) {
-    def priority
-    try { priority = max(0, min(9, opts.P.toInteger())) }
-    catch (e) { println "Invalid priority: ${opts.P}"; return 1 }
-
-    walkProject(issuedb, filter) { it.priority = priority }
-}
-// change category third
-else if (opts.C) {
-    def cat
-    try { cat = Category.toCategory(opts.C) }
-    catch (e) { println "Invalid category: ${opts.C}"; return 1 }
-
-    walkProject(issuedb, filter) { it.category = cat }
-}
-// change status fourth
-else if (opts.T) {
-    def status
-    try { status = Status.toStatus(opts.T) }
-    catch (e) { println "Invalid status: ${opts.T}"; return 1 }
-
-    walkProject(issuedb, filter) { it.status = status }
-}
-// new entry last
+// new issues second
 else if (opts.n) {
     def cat, priority
     String text = ""
     Issue issue
     def sin = System.in.newReader()
 
-    while(true) {
-        try {
-            print "Category (bug, feature, task, closed): "
-            cat = Category.toCategory(sin.readLine())
-            break
-        } catch (e) {
-            println "Invalid category: " + e.getLocalizedMessage()
-            println "Valid options are: \n${Category.values().join(', ')}\n " +
-                    "(abbreviations are accepted.)"
-        }
-    }
+    if (opts.C) { cat = assignOpts.category }
+    else while(true) {
+            try {
+                print "Category (bug, feature, task, closed): "
+                cat = Category.toCategory(sin.readLine())
+                break }
+            catch (e) {
+                println "Invalid category: " + e.getLocalizedMessage()
+                println "Valid options are: \n${Category.values().join(', ')}"
+                println " (abbreviations are accepted)." } }
 
-    while (true) {
+    if (opts.P) { priority = assignOpts.priority }
+    else while (true) {
         try {
             print "Priority (0-9): "
             priority = max(0, min(9, sin.readLine().toInteger()))
-            break
-        } catch (e) { println "Not a valid value." }
-    }
+            break }
+        catch (e) { println "Not a valid value." } }
 
-    println "Enter issue (use EOF or ^D to end): "
-    try {
-        sin.eachLine { line ->
-            def m = line =~ /(.*)EOF.*/
-            if (m) {
-                text += m[0][1] + EOL
-                sin.close()
-            } else text += line + EOL
-        }
-    } catch (e) {}
+    if (opts.getArgs().length  > 0) { text = assignOpts.text }
+    else {
+        println "Enter issue (use EOF): "
+        try {
+            def line = ""
+            while(true) {
+                line = sin.readLine()
 
+                if (line =~ /EOF/) break
+
+                text += line + EOL
+            } }
+        catch (e) {} }
 
     issue = issuedb.createNewIssue(category: cat, priority: priority, text: text)
     
     println "New issue created: "
-    println issue
+    println issue }
+    
+// last, changes to existing issues
+else {
+    // change priority 
+    if (opts.P) walkProject(issuedb, filter) { 
+        it.priority = assignOpts.priority
+        println "[${it}] -- set priority to ${assignOpts.priority}"}
+
+    // change third
+    else if (opts.C) walkProject(issuedb, filter) {
+        it.category = assignOpts.cat
+        println "[${it}] -- set category to ${assignOpts.category}"}
+
+    // change status
+    else if (opts.S) walkProject(issuedb, filter) {
+        it.status = assignOpts.status 
+        println "[${it}] -- set status to ${assignOpts.status}"}
 }
 
+// walk every issue and project in this project recursively and execute the
+// given closure on each issue that meets the filter criteria
 def walkProject(Project p, Filter filter, Closure c) {
     p.eachIssue(filter, c)
     p.eachProject(filter) { walkProject(it, filter, c) }
-}
-
-def printProject(Project project, String offset, Filter filter, boolean verbose = false) {
 }
