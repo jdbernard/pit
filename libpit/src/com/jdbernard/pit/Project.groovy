@@ -22,6 +22,19 @@ public abstract class Project {
                 c.call(p)
     }
 
+    // walk every issue and project in this project recursively and execute the
+    // given closure on each issue that meets the filter criteria
+    public void walkProject(Filter filter, Closure c) {
+        this.eachIssue(filter, c)
+        this.eachProject(filter) { p -> p.walkProject(filter, c) }
+    }
+
+    // This get all issues, including subissues
+    public List getAllIssues(Filter filter = null) {
+        List result = this.issues.findAll { filter.accept(it) }
+        this.eachProject(filter) { p -> result += p.getAllIssues(filter) }
+    }
+
     public void setName(String name) { this.name = name }
 
     public String getName() { return name }

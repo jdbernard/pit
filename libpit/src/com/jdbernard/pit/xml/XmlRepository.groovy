@@ -24,7 +24,7 @@ public class XmlRepository extends Repository {
         repoFile.withOutputStream { XmlUtil.serialize(repository, it) }
     }
 
-    public XmlProject[] getRootProjects() {
+    public Project[] getRootProjects() {
         return projects as XmlProject[]
     }
 

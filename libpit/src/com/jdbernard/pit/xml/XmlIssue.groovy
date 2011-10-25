@@ -49,10 +49,11 @@ public class XmlIssue extends Issue {
     }
 
     public void setPriority(int p) {
-        super(p)
+        super.setPriority(p)
 
         issueNode.@priority = p
         repository.persist()
+    }
 
     public void setText(String t) {
         super.setText(t)

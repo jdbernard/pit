@@ -15,4 +15,6 @@ class MockProject extends Project {
     }
 
     public boolean delete() { return true }
+    public boolean deleteProject(Project project) { return true }
+    public boolean deleteIssue(Issue issue) { return true }
 }

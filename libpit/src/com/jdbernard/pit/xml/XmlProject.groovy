@@ -8,7 +8,7 @@ public class XmlProject extends Project {
     XmlRepository repository
 
     XmlProject(def projectNode, XmlRepository repository) {
-        super(projectName.@name)
+        super(projectNode.@name)
         
         this.projectNode = projectNode
         this.repository = repository
@@ -25,7 +25,7 @@ public class XmlProject extends Project {
     }
 
     public void setName(String name) {
-        super(name)
+        super.setName(name)
 
         projectNode.@name = name
         repository.persist()

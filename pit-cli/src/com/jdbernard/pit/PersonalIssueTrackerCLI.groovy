@@ -47,7 +47,8 @@ def workingDir = new File('.')
 // defaults for the issue filter/selector
 def selectOpts = [
     categories: ['bug', 'feature', 'task'],
-    status:     ['new', 'validation_required'],
+    status:     ['new', 'reassigned', 'rejected',
+        'resolved', 'validation_required'],
     priority:   9,
     projects:   [],
     ids:        [],
@@ -227,24 +228,17 @@ else if (opts.n) {
 // last, changes to existing issues
 else {
     // change priority 
-    if (opts.P) walkProject(issuedb, filter) { 
+    if (opts.P) issuedb.walkProject(filter) { 
         it.priority = assignOpts.priority
         println "[${it}] -- set priority to ${assignOpts.priority}"}
 
     // change third
-    else if (opts.C) walkProject(issuedb, filter) {
+    else if (opts.C) issuedb.walkProject(filter) {
         it.category = assignOpts.cat
         println "[${it}] -- set category to ${assignOpts.category}"}
 
     // change status
-    else if (opts.S) walkProject(issuedb, filter) {
+    else if (opts.S) issuedb.walkProject(filter) {
         it.status = assignOpts.status 
         println "[${it}] -- set status to ${assignOpts.status}"}
-}
-
-// walk every issue and project in this project recursively and execute the
-// given closure on each issue that meets the filter criteria
-def walkProject(Project p, Filter filter, Closure c) {
-    p.eachIssue(filter, c)
-    p.eachProject(filter) { walkProject(it, filter, c) }
 }
