@@ -13,7 +13,7 @@ public class FileRepository extends Repository {
     
     public void persist() {} // nothing to do
     public Project[] getRootProjects() {
-        return fileProject.proejcts.values() as Project[]
+        return [fileProject] as Project[]
     }
 
     public FileProject createNewProject(String name) {

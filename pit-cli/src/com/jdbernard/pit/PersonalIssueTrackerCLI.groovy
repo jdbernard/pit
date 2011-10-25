@@ -38,8 +38,10 @@ cli.S(argName: 'new-status', longOpt: 'set-status', args: 1,
 cli.n(longOpt: 'new-issue', 'Create a new issue.')
 cli.d(longOpt: 'dir', argName: 'dir', args: 1, required: false,
     'Use <dir> as the base directory (defaults to current directory).')
+cli._(longOpt: 'version', 'Display PIT version information.')
 
 // -------- parse CLI options -------- //
+def VERSION = "2.6.0"
 def opts = cli.parse(args)
 def issuedb = [:]
 def workingDir = new File('.')
@@ -156,8 +158,15 @@ issuedb = new FileProject(workingDir)
 // build filter from options
 def filter = new Filter(selectOpts)
  
-// list first
-if (opts.l) {
+// -------- Actions -------- //
+// list version information first
+if (opts.version) {
+
+    println "PIT CLI Version ${VERSION}"
+    println "Written by Jonathan Bernard\n" }
+
+// list second
+else if (opts.l) {
 
     // local function (closure) to print a single issue
     def printIssue = { issue, offset ->
@@ -180,7 +189,7 @@ if (opts.l) {
     // print all projects
     issuedb.eachProject(filter) { printProject(it, "") } } 
 
-// new issues second
+// new issues third
 else if (opts.n) {
     def cat, priority
     String text = ""
