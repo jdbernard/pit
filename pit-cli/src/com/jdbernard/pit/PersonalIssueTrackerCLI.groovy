@@ -41,7 +41,7 @@ cli.d(longOpt: 'dir', argName: 'dir', args: 1, required: false,
 cli._(longOpt: 'version', 'Display PIT version information.')
 
 // -------- parse CLI options -------- //
-def VERSION = "2.6.0"
+def VERSION = "2.6.1"
 def opts = cli.parse(args)
 def issuedb = [:]
 def workingDir = new File('.')
@@ -199,7 +199,7 @@ else if (opts.n) {
     if (opts.C) { cat = assignOpts.category }
     else while(true) {
             try {
-                print "Category (bug, feature, task, closed): "
+                print "Category (bug, feature, task): "
                 cat = Category.toCategory(sin.readLine())
                 break }
             catch (e) {
