@@ -199,7 +199,7 @@ else if (opts.n) {
     if (opts.C) { cat = assignOpts.category }
     else while(true) {
             try {
-                print "Category (bug, feature, task, closed): "
+                print "Category (bug, feature, task): "
                 cat = Category.toCategory(sin.readLine())
                 break }
             catch (e) {
