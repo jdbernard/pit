@@ -25,6 +25,7 @@ public class FileIssue extends Issue {
         this.source = file
 
         super.@text = file.text
+        super.@title = super.@text.readLines()[0]
     }
 
     public void setCategory(Category c) throws IOException {
@@ -73,15 +74,14 @@ public class FileIssue extends Issue {
         return makeFilename(id, category, status, priority)
     }
 
-    public void setText(String text) throws IOException {
-        try { source.write(text) }
-        catch (IOException ioe) {
-            throw new IOException("I could not save the new text for this "
-                + "issue. I can not write to the file for this issue. I do not"
-                + " know why, I am sorry (maybe the file can not be reached).")
-        }
+    public void setTitle(String title) throws IOException {
+        super.setTitle(title)
+        writeFile()
+    }
 
+    public void setText(String text) throws IOException {
         super.setText(text)
+        writeFile()
     }
 
     boolean deleteFile() { return source.deleteDir() }
@@ -105,6 +105,53 @@ public class FileIssue extends Issue {
             throw new IAE( "'${id}' is not a legal value for id.")
         
         return id + category.symbol + status.symbol + priority + ".rst";
+    }
+
+    public static String formatIssue(Issue issue) {
+        def result = new StringBuilder()
+        result.append(title)
+        result.append("\n")
+        result.append("=".multiply(title.length()))
+        result.append("\n")
+        result.append(text)
+        result.append("\n----\n")
+
+        // If there are any extended properties, let's write those.
+        if (super.@extendedProperties.size() > 0) {
+            def extOutput = [:]
+            def maxKeyLen = 0
+            def maxValLen = 0
+
+            // Find the longest key and value, convert all to strings.
+            super.@extendedProperties.each { key, val ->
+                def ks = key.toString(), vs = val.toString()
+                extOutput[ks] = vs
+                if (ks.length() > maxKeyLen) { maxKeyLen = ks.length() }
+                if (vs.length() > maxKeyLen) { maxValLen = vs.length() } }
+
+            result.append("=".multiply(maxKeyLen + 1))
+            result.append(" ")
+            result.append("=".multiply(maxValLen))
+            result.append("\n")
+
+            extOutput.sort().each { key, val ->
+                result.append(key.padRight(maxKeyLen))
+                result.append(": ")
+                result.append(val.padRight(maxValLen))
+                result.append("\n") }
+
+            result.append("=".multiply(maxKeyLen + 1))
+            result.append(" ")
+            result.append("=".multiply(maxValLen))
+            result.append("\n") }}
+
+    protected void writeFile() {
+        try { source.write(formatIssue(this) }
+        catch (IOException ioe) {
+            throw new IOException("I could not save the new text for this "
+                + "issue. I can not write to the file for this issue. I do not"
+                + " know why, I am sorry (maybe the file can not be reached).")
+        }
     }
 
 }

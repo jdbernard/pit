@@ -9,8 +9,9 @@ public abstract class Issue {
     protected Status status
     protected int priority
     protected String text
-    protected Date deliveryDate
-    protected Date creationDate
+    protected String title
+
+    protected Map extendedPropeties = [:]
 
     Issue(String id, Category c = Category.TASK, Status s = Status.NEW,
     int p = 9) {
@@ -18,8 +19,6 @@ public abstract class Issue {
         this.category = c
         this.status = s
         this.priority = p
-        this.creationDate = new Date()
-        this.deliveryDate = null
     }
 
     public String getId() { return id; }
@@ -48,19 +47,18 @@ public abstract class Issue {
         priority = Math.min(9, Math.max(0, p))
     }
 
-    public String getTitle() { return text.readLines()[0] }
+    public String getTitle() { return title }
+
+    public String setTitle(String t) throws IOException { title = t }
 
     public String getText() { return text }
 
     public void setText(String t) throws IOException { text = t }
 
-    public boolean hasDelivery() { return deliveryDate == null }
+    public def propertyMissing(String name) { extendedProperties[name] }
 
-    public Date getCreationDate() { return creationDate }
-
-    public Date getDeliveryDate() { return deliveryDate }
-
-    public void setDeliveryDate(Date dd) { deliveryDate = dd }
+    public def propertyMissing(String name, def value) {
+        extendedProperties[name] = value }
 
     @Override
     public String toString() {

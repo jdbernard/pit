@@ -18,7 +18,8 @@ public class XmlIssue extends Issue {
     }
 
     XmlIssue(String id, Category c = Category.TASK, Status s = Status.NEW,
-    int p = 9, String text, XmlRepository repository, XmlProject project) {
+    int p = 9, String title, String text, XmlRepository repository,
+    XmlProject project) {
         super(id, c, s, p)
 
         this.project = project
@@ -26,9 +27,10 @@ public class XmlIssue extends Issue {
 
         // Node constructor adds the node to the parent node
         issueNode = new Node(project.projectNode, "Issue", 
-            [id: id, category: c, status: s, priority: p])
+            [id: id, category: c, status: s, priority: p, title: title])
 
-        this.text = text
+        super.@title = title
+        super.@text = text
         issueNode.value = text
 
         repository.persist()
@@ -59,6 +61,13 @@ public class XmlIssue extends Issue {
         super.setText(t)
 
         issueNode.value = t
+        repository.persist()
+    }
+
+    public void setTitle(String t) {
+        super.setTitle(t)
+
+        issueNode.@title = t
         repository.persist()
     }
 
