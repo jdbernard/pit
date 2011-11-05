@@ -1,31 +1,75 @@
 package com.jdbernard.pit.file
 
 import com.jdbernard.pit.*
+
 import java.lang.IllegalArgumentException as IAE
+
+import org.joda.time.DateMidnight
+import org.joda.time.DateTime
+
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 
 public class FileIssue extends Issue {
 
     protected File source
+    private Logger log = LoggerFactory.getLogger(getClass())
+
     public static final String fileExp = /(\d+)([bft])([ajnsv])(\d).*/
 
     public FileIssue(File file) {
 
-        super('REPLACE_ME')
+        super(id: -1, title: 'REPLACE_ME')
+
+        if (log.isDebugEnabled()) {
+            log.debug("Loading a FileIssue from '{}'", file.canonicalPath) }
 
         def matcher = file.name =~ fileExp
         if (!matcher)
             throw new IllegalArgumentException("${file} " +
                 "is not a valid Issue file.")
 
+        // Read issue attributes from the filename.
         super.@id = matcher[0][1]
         super.@category = Category.toCategory(matcher[0][2])
         super.@status = Status.toStatus(matcher[0][3])
         super.@priority = matcher[0][4].toInteger()
 
+        log.debug("id: {}\tcategory: {}\tstatus: {}\tpriority: {}",
+            [super.@id, super.@category, super.@status, super.@priority])
+
         this.source = file
 
-        super.@text = file.text
-        super.@title = super.@text.readLines()[0]
+        String text = ""
+        boolean parsingText = true
+
+        // Now parse the actual file contents.
+        file.text.eachLine { line, lineNumber ->
+
+            log.trace("lineNumber: {}, line: {}", lineNumber, line)
+
+            if (lineNumber == 0) {
+                super.@title = line
+                log.debug("Found title: {}", super.@title) }
+
+            else if (lineNumber > 2) {
+                // We see the horizontal rule
+                if (line ==~ /\s*^\-{4}\-*\s*$/) { parsingText = false }
+
+                if (parsingText) { text += "$line\n" }
+
+                else {
+                    def match = (line =~ /^([^:]+):(.+)$/)
+                    if (match) {
+                        def key = match[0][1].trim()
+                        def value = parseValue(match[0][2].trim())
+                        super.@extendedProperties[key] = value
+                    }
+                }
+            }
+        }
+
+        super.@text = text
     }
 
     public void setCategory(Category c) throws IOException {
@@ -109,22 +153,22 @@ public class FileIssue extends Issue {
 
     public static String formatIssue(Issue issue) {
         def result = new StringBuilder()
-        result.append(title)
+        result.append(issue.@title)
         result.append("\n")
-        result.append("=".multiply(title.length()))
+        result.append("=".multiply(issue.@title.length()))
         result.append("\n")
-        result.append(text)
+        result.append(issue.@text)
         result.append("\n----\n")
 
         // If there are any extended properties, let's write those.
-        if (super.@extendedProperties.size() > 0) {
+        if (issue.@extendedProperties.size() > 0) {
             def extOutput = [:]
             def maxKeyLen = 0
             def maxValLen = 0
 
             // Find the longest key and value, convert all to strings.
-            super.@extendedProperties.each { key, val ->
-                def ks = key.toString(), vs = val.toString()
+            issue.@extendedProperties.each { key, val ->
+                def ks = key.toString(), vs = formatProperty(val)
                 extOutput[ks] = vs
                 if (ks.length() > maxKeyLen) { maxKeyLen = ks.length() }
                 if (vs.length() > maxKeyLen) { maxValLen = vs.length() } }
@@ -146,7 +190,7 @@ public class FileIssue extends Issue {
             result.append("\n") }}
 
     protected void writeFile() {
-        try { source.write(formatIssue(this) }
+        try { source.write(formatIssue(this)) }
         catch (IOException ioe) {
             throw new IOException("I could not save the new text for this "
                 + "issue. I can not write to the file for this issue. I do not"
@@ -154,4 +198,16 @@ public class FileIssue extends Issue {
         }
     }
 
+    public def parseValue(String value) {
+        switch (value) {
+            case ~/\d{4}-\d{2}-\d{2}/: return DateMidnight.parse(value)
+            default: return value
+        }
+    }
+
+    public String formatProperty(DateTime prop) {
+        return prop.format("YYYY-MM-dd'T'HH:mm:ss") }
+
+    public String formatProperty(DateMidnight prop) {
+        return prop.format("YYYY-MM-dd") }
 }

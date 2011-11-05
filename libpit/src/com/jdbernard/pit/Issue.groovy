@@ -13,13 +13,20 @@ public abstract class Issue {
 
     protected Map extendedPropeties = [:]
 
-    Issue(String id, Category c = Category.TASK, Status s = Status.NEW,
-    int p = 9) {
-        this.id = id
-        this.category = c
-        this.status = s
-        this.priority = p
-    }
+    Issue(Map props) {
+        this.id = props.id
+        this.category = props.category ?: Category.TASK
+        this.status = props.status ?: Status.NEW
+        this.priority = props.priority ?: 9
+        this.title = props.title ?: ''
+        this.text = props.text ?: ''
+
+        def nativeProps =
+            ["id", "category", "status", "priority", "title", "text"]
+
+        props.each { key, val ->
+            if (nativeProps.contains(key)) { return }
+            this.extendedProperties[key] = val }}
 
     public String getId() { return id; }
 
@@ -49,7 +56,7 @@ public abstract class Issue {
 
     public String getTitle() { return title }
 
-    public String setTitle(String t) throws IOException { title = t }
+    public void setTitle(String t) throws IOException { title = t }
 
     public String getText() { return text }
 

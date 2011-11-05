@@ -171,9 +171,7 @@ class FileIssueTest {
         assertEquals issue.status    , Status.NEW
         assertEquals issue.priority  , 1
         assertEquals issue.title     , "Add the killer feature to the killer app."
-        assertEquals issue.text      , "Add the killer feature to the killer app.\n" +
-                                      "=========================================\n\n" +
-                                      "Make our killer app shine!."
+        assertEquals issue.text      , "Make our killer app shine!."
         assertEquals issue.source    , issueFile
     }
 
