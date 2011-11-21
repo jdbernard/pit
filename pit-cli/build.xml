@@ -1,40 +1,8 @@
 <project name="Personal Issue Tracker CLI">
-    <property file="../version.properties"/>
+
     <property file="project.properties"/>
-    <property environment="env" />
 
-    <path id="groovy.libs">
-        <fileset dir="${env.GROOVY_HOME}/lib">
-            <include name="**/*.jar"/>
-        </fileset>
-    </path>
-
-    <path id="groovy.embeddable">
-        <fileset dir="${env.GROOVY_HOME}/embeddable">
-            <include name="**/*.jar"/>
-        </fileset>
-    </path>
-
-
-    <path id="project.libs">
-        <fileset dir="${lib.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
-    </path>
-
-    <path id="groovyc.classpath">
-        <path refid="groovy.libs"/>
-        <path refid="project.libs"/>
-    </path>
-
-    <path id="package.jars">
-        <path refid="groovy.embeddable"/>
-        <path refid="project.libs"/>
-    </path>
-
-    <taskdef name="groovyc"
-        classname="org.codehaus.groovy.ant.Groovyc"
-        classpathref="groovy.libs"/>
+    <import file="../jdb-build-1.6.xml"/>
 
     <target name="init">
         <fail
@@ -42,77 +10,26 @@
             message="GROOVY_HOME environment variable is not set."/>
         <echo message="GROOVY_HOME: ${env.GROOVY_HOME}"/>
 
-        <fail message="Could not find PIT ${application.version} library.">
+        <fail message="Could not find PIT ${version} library.">
             <condition>
                 <not>
                     <available
-                        file="${lib.dir}/pit-${application.version}.jar"/>
+                        file="${basedir}/../libpit/release/libpit-${version}.jar"/>
                 </not>
             </condition>
         </fail>
-        <echo message="PIT library found at ${lib.dir}/pit-${application.version}.jar"/>
-
-        <fail message="The PIT project is at version ${application.version} but pit-cli is versioned as ${expected.application.version}. Ensure that pit-cli is updated tp reflect the changes in libpit and then run the 'upgrade-version' task to sync the pit-vli subproject with the PIT project.">
-            <condition>
-                <not>
-                    <equals
-                        arg1="${application.version}" 
-                        arg2="${expected.application.version}"/>
-                </not>
-            </condition>
-        </fail>
-        <echo message="Application version: ${application.version}"/>
-            
     </target>
 
-    <target name="upgrade-version">
-        <propertyfile file="project.properties">
-            <entry
-                key="expected.application.version"
-                value="${application.version}"/>
-            <entry key="build.number" value="0"/>
-        </propertyfile>
-        <echo message="pit-cli version upgraded to ${application.version}"/>
-    </target>
-
-    <target name="increment-build-number" depends="init">
-        <propertyfile file="project.properties">
-            <entry key="build.number" operation="+" type="int" default="0"/>
-        </propertyfile>
-    </target>
-
-    <target name="clean">
-        <delete dir="${build.dir}"/>
-    </target>
-
-    <target name="compile" depends="init,increment-build-number">
-        <mkdir dir="${build.dir}/classes"/>
-        <groovyc
-            srcdir="${src.dir}"
-            destdir="${build.dir}/classes"
-            classpathref="groovyc.classpath"/>
-    </target>
-
-    <target name="build" depends="compile">
-        <mkdir dir="${build.dir}/jar"/>
-        <unjar dest="${build.dir}/classes">
-            <path refid="package.jars"/>
-        </unjar>
-        <jar
-            destfile="${build.dir}/jar/${build.jar}"
-            basedir="${build.dir}/classes"
-            compress="on">
-            <manifest>
-                <attribute name="Main-Class" value="${main.class}"/>
-            </manifest>
-        </jar>
+    <target name="lib">
+        <copy todir="${build.dir}/lib/compile/jar"
+              file="${basedir}/../libpit/release/libpit-${version}.jar"/>
+        <copy todir="${build.dir}/lib/runtime/jar"
+              file="${basedir}/../libpit/release/libpit-${version}.jar"/>
     </target>
 
     <target name="release" depends="build">
-        <delete dir="${release.dir}"/>
-        <mkdir dir="${release.dir}"/>
-        <copy file="${build.dir}/jar/${build.jar}"
-            tofile="${release.dir}/${release.jar}"/>
+        <mkdir dir="${release.dir}/lib"/>
+        <copy tofile="${release.dir}/${name}-${version}.jar"
+              file="${build.dir}/${name}-${version}.${build.number}.jar"/>
     </target>
-
 </project>
