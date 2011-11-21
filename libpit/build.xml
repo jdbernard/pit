@@ -1,30 +1,8 @@
 <project name="Personal Issue Tracker" default="release">
-    <property file="../version.properties"/>
+
     <property file="project.properties"/>
-    <property environment="env"/>
 
-    <path id="groovy.libs">
-        <fileset dir="${env.GROOVY_HOME}/lib">
-            <include name="**/*.jar"/>
-        </fileset>
-    </path>
-
-    <path id="groovyc.classpath">
-        <path refid="groovy.libs"/>
-        <fileset dir="${lib.dir}">
-            <include name="**/*.jar"/>
-        </fileset>
-        <pathelement path="${build.dir}/classes"/>
-    </path>
-
-    <path id="test.classpath">
-        <path refid="groovyc.classpath"/>
-        <pathelement path="${build.dir}/tests"/>
-    </path>
-
-    <taskdef name="groovyc"
-        classname="org.codehaus.groovy.ant.Groovyc"
-        classpathref="groovy.libs"/>
+    <import file="../jdb-build-1.6.xml"/>
 
     <target name="init">
         <fail
@@ -33,79 +11,4 @@
         <echo message="GROOVY_HOME: ${env.GROOVY_HOME}"/>
     </target>
 
-    <target name="increment-build-number" depends="init">
-        <!-- Check to see if the application version has changed.
-             If it has, reset the build number to 0 -->
-        <condition property="build.number.final" 
-            value="${build.number}"
-            else="0" >
-            <equals
-                arg1="${application.version}"
-                arg2="${expected.application.version}"/>
-        </condition>
-
-        <echo message="Version: ${application.version}"/>
-        <echo message="Build number: ${build.number.final}"/>
-
-        <!-- Write the actual application version and build number -->
-        <propertyfile file="project.properties">
-            <entry key="build.number" value="${build.number.final}"/>
-            <entry
-                key="expected.application.version"
-                value="${application.version}"/>
-        </propertyfile>
-
-        <!-- increment build number -->
-        <propertyfile file="project.properties">
-            <entry key="build.number" operation="+" type="int" default="0"/>
-        </propertyfile>
-        <property file="project.properties"/>
-    </target>
-
-    <target name="clean">
-        <delete dir="${build.dir}"/>
-    </target>
-
-    <target name="compile" depends="init,increment-build-number">
-        <mkdir dir="${build.dir}/classes"/>
-        <groovyc
-            srcdir="${src.dir}"
-            destdir="${build.dir}/classes"
-            classpathref="groovyc.classpath"/>
-    </target>
-
-    <target name="compile-tests" depends="init,compile">
-        <mkdir dir="${build.dir}/tests"/>
-        <groovyc
-            srcdir="${test.dir}"
-            destdir="${build.dir}/tests"
-            classpathref="groovyc.classpath"/>
-    </target>
-
-    <target name="test" depends="compile-tests">
-        <junit fork="yes" haltonfailure="yes">
-            <classpath refid="test.classpath"/>
-            <formatter type="brief" usefile="false" />
-            <batchtest>
-                <fileset dir="${build.dir}/tests">
-                    <include name="**/*Test.class"/>
-                </fileset>
-            </batchtest>
-        </junit>
-    </target>
-
-    <target name="build" depends="compile,test">
-        <mkdir dir="${build.dir}/jar"/>
-        <jar
-            destfile="${build.dir}/jar/pit-${application.version}.${build.number.final}.jar"
-            basedir="${build.dir}/classes"
-            compress="on"/>
-    </target>
-
-    <target name="release" depends="build">
-        <delete dir="${release.dir}"/>
-        <mkdir dir="${release.dir}"/>
-        <copy file="${build.dir}/jar/pit-${application.version}.${build.number.final}.jar"
-            tofile="${release.dir}/${release.jar}"/>
-    </target>
 </project>

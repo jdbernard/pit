@@ -1,0 +1,7 @@
+IssueFile - Title Body PropertyBlock?
+Title - ONE_LINE TITLE_SEPARATOR
+Body - ANY_LINE+
+Separator - DASH{4} NEW_LINE
+PropertyBlock - HorizontalRule TableSeparator PropertyDefinition+ TableSeparator
+TableSeparator - 
+PropertyDefinition - PropertyKey COLON PropertyValue
