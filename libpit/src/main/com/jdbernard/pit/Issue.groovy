@@ -11,7 +11,7 @@ public abstract class Issue {
     protected String text
     protected String title
 
-    protected Map extendedPropeties = [:]
+    Map extendedProperties = [:]
 
     Issue(Map props) {
         this.id = props.id
