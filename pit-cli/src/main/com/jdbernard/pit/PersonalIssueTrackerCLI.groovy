@@ -41,7 +41,7 @@ cli.d(longOpt: 'dir', argName: 'dir', args: 1, required: false,
 cli._(longOpt: 'version', 'Display PIT version information.')
 
 // -------- parse CLI options -------- //
-def VERSION = "2.6.0"
+def VERSION = "3.0.0"
 def opts = cli.parse(args)
 def issuedb = [:]
 def workingDir = new File('.')
@@ -152,12 +152,6 @@ if (opts.d) {
         return -1 } }
 def EOL = System.getProperty('line.separator')
 
-// build issue list
-issuedb = new FileProject(workingDir)
-
-// build filter from options
-def filter = new Filter(selectOpts)
- 
 // -------- Actions -------- //
 // list version information first
 if (opts.version) {
@@ -165,8 +159,16 @@ if (opts.version) {
     println "PIT CLI Version ${VERSION}"
     println "Written by Jonathan Bernard\n" }
 
+else {
+
+// build issue list
+issuedb = new FileProject(workingDir)
+
+// build filter from options
+def filter = new Filter(selectOpts)
+ 
 // list second
-else if (opts.l) {
+if (opts.l) {
 
     // local function (closure) to print a single issue
     def printIssue = { issue, offset ->
@@ -250,4 +252,4 @@ else {
     else if (opts.S) issuedb.walkProject(filter) {
         it.status = assignOpts.status 
         println "[${it}] -- set status to ${assignOpts.status}"}
-}
+}}
