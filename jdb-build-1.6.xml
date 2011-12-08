@@ -59,7 +59,9 @@
     </target>
 
     <!--======== LIBRARY TARGETS ========-->
-    <target name="lib" depends="-lib-local,-lib-ivy"/>
+    <target name="-lib" depends="-lib-local,-lib-ivy,lib"/>
+
+    <target name="lib"/>
 
     <target name="-lib-ivy" unless="${lib.local}"/>
 
@@ -96,7 +98,7 @@
     </target>
 
     <!--======== COMPILATION TARGETS ========-->
-    <target name="-compile-groovy" depends="-init,-init-groovy,lib">
+    <target name="-compile-groovy" depends="-init,-init-groovy,-lib">
         <mkdir dir="${build.dir}/main/classes"/>
         <groovyc srcdir="${src.dir}/main" destdir="${build.dir}/main/classes"
             includeAntRuntime="false" fork="yes">
@@ -109,7 +111,7 @@
         </groovyc>
     </target>
 
-    <target name="-compile-java" depends="-init,lib">
+    <target name="-compile-java" depends="-init,-lib">
         <mkdir dir="${build.dir}/main/classes"/>
         <javac srcdir="${src.dir}/main" destdir="${build.dir}/main/classes"
             includeAntRuntime="false" classpathref="compile-libs"/>

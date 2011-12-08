@@ -8,8 +8,8 @@ class Filter {
     List<String> ids = null
     int priority = 9
     boolean acceptProjects = true
-    Closure issueSorter = defaultIssueSorter
-    Closure projectSorter = defaultProjectSorter
+    def issueSorter = defaultIssueSorter
+    def projectSorter = defaultProjectSorter
 
     public static Closure defaultIssueSorter = { it.id.toInteger() }
     public static Closure defaultProjectSorter = { it.name }

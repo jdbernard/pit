@@ -12,25 +12,25 @@ public enum Status {
     protected Status(String s) { symbol = s }
 
     public static Status toStatus(String str) {
-        Status retVal = null
-        for(status in Status.values())  {
-            if (status.symbol.equalsIgnoreCase(str) ||
-                status.name().startsWith(str.toUpperCase())) {
+        // Try to match based on symbol
+        def match = Status.values().find {it.symbol.equalsIgnoreCase(str)}
+        if (match) { return match }
 
-                if (retVal != null)
-                    throw new IllegalArgumentException("Request string is" +
-                        " ambigous, '${str}' could represent ${retVal} or " +
-                        "${status}, possibly others.")
+        // No match on the symbol, look for the status name (or abbreviations)
+        match = Status.values().findAll {
+            it.name().startsWith(str.toUpperCase()) }
 
-                retVal = status
-            }
-        }
+        // No matching status, oops.
+        if (match.size() == 0) {
+            throw new IllegalArgumentException("No status matches '${str}'") }
 
-        if (retVal == null)
-            throw new IllegalArgumentException("No status matches '${str}'")
+        // More than one matching status, oops.
+        else if (match.size() > 1) {
+            throw new IllegalArgumentException("Request string is" +
+                " ambigous, '${str}' could represent any of ${match}.")}
 
-        return retVal
-    }
+        // Only one matching status, yay!
+        else { return match[0] }}
 
     public String toString() {
         def words = name().split("_")
