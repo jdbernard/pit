@@ -83,7 +83,7 @@ cli._(longOpt: 'version', 'Display PIT version information.')
 // ======== Parse CLI Options ======== //
 // =================================== //
 
-def VERSION = "3.2.1"
+def VERSION = "3.2.2"
 def opts = cli.parse(args)
 def issuedb = [:]
 def workingDir = new File('.')

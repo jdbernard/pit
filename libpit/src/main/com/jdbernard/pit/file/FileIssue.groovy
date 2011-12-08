@@ -110,6 +110,10 @@ public class FileIssue extends Issue {
         super.setText(text)
         writeFile() }
 
+    public def propertyMissing(String name, def value) {
+        super.propertyMissing(name, value)
+        writeFile() }
+
     boolean deleteFile() { return source.deleteDir() }
 
     public static boolean isValidFilename(String name) {
@@ -153,7 +157,7 @@ public class FileIssue extends Issue {
 
                 extOutput[ks] = vs
                 if (ks.length() > maxKeyLen) { maxKeyLen = ks.length() }
-                if (vs.length() > maxKeyLen) { maxValLen = vs.length() } }
+                if (vs.length() > maxValLen) { maxValLen = vs.length() } }
 
             result.append("=".multiply(maxKeyLen + 1))
             result.append(" ")
