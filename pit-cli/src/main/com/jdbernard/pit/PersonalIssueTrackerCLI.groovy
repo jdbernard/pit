@@ -2,6 +2,8 @@ package com.jdbernard.pit
 
 import com.jdbernard.pit.file.*
 
+import org.joda.time.DateMidnight
+
 import static java.lang.Math.max
 import static java.lang.Math.min
 
@@ -36,12 +38,41 @@ cli.C(argName: 'new-category', longOpt: 'set-category', args: 1,
 cli.S(argName: 'new-status', longOpt: 'set-status', args: 1,
     required: false, 'Modify the status of the selected issues.')
 cli.n(longOpt: 'new-issue', 'Create a new issue.')
+cli.o(longOpt: 'order', argName: 'order', args: 1, required: false,
+    'Order (sort) the results by the given properties. Provide a comma-' +
+    'seperated list of property names to sort by in order of importance. The' +
+    ' basic properties (id, category, status, and priority) can be given' +
+    ' using their one-letter forms (i,c,s,p) for brevity. For example:' +
+    ' "-o Due,p,c" would sort first by the extended property "Due", then for' +
+    ' items that have the same "Due" value it would sort by priority, then' +
+    ' by category.')
 cli.d(longOpt: 'dir', argName: 'dir', args: 1, required: false,
     'Use <dir> as the base directory (defaults to current directory).')
+cli.D(longOpt: 'daily-list', 'Print a Daily Task list based on issue Due and' +
+    ' Reminder properties.')
+cli._(longOpt: 'dl-scheduled', 'Show scheduled tasks in the daily list (all' +
+    ' are shown by default).')
+cli._(longOpt: 'dl-due', 'Show due tasks in the daily list (all are shown by' +
+    ' default).')
+cli._(longOpt: 'dl-reminder', 'Show upcoming tasks in the daily list (all ' +
+    ' are shown by default).')
+cli._(longOpt: 'dl-open', 'Show open tasks in the daily list (all are shown ' +
+    ' by default).')
+cli._(longOpt: 'dl-hide-scheduled', 'Hide scheduled tasks in the daily list' +
+    ' (all are shown by default).')
+cli._(longOpt: 'dl-hide-due', 'Show due tasks in the daily list (all are' +
+    ' shown by default).')
+cli._(longOpt: 'dl-hide-reminder', 'Show upcoming tasks in the daily list' +
+    ' (all  are shown by default).')
+cli._(longOpt: 'dl-hide-open', 'Show open tasks in the daily list (all are' +
+    ' shown  by default).')
 cli._(longOpt: 'version', 'Display PIT version information.')
 
-// -------- parse CLI options -------- //
-def VERSION = "3.0.0"
+// =================================== //
+// ======== Parse CLI Options ======== //
+// =================================== //
+
+def VERSION = "3.1.0"
 def opts = cli.parse(args)
 def issuedb = [:]
 def workingDir = new File('.')
@@ -96,7 +127,7 @@ try { selectOpts.status =
     selectOpts.status.collect { Status.toStatus(it) } }
 catch (Exception e) {
     println "Invalid status option: '-s ${e.localizedMessage}'."
-    println "Valid options are: \b${Status.values().join(', ')}"
+    print "Valid options are: \n${Status.values().join(', ')}"
     println " (abbreviations are accepted.)"
     System.exit(1) }
 
@@ -115,6 +146,17 @@ if (opts.r) { selectOpts.projects =
 // read and parse the ids filter
 if (opts.i) { selectOpts.ids = opts.i.split(/[,\s]/).asType(List.class) }
 
+// read and parse sort criteria
+if (opts.o) {
+    def sortProps = opts.o.split(',')
+    selectOpts.issueSorter = sortProps.collect { prop ->
+        switch (prop) {
+            case ~/^i$/: return { issue -> issue.id }
+            case ~/^p$/: return { issue -> issue.priority }
+            case ~/^s$/: return { issue -> issue.status }
+            case ~/^c$/: return { issue -> issue.category }
+            default: return { issue -> issue[prop] } }}}
+    
 // TODO: accept projects value from input
 
 // read and parse the category to assign
@@ -152,7 +194,11 @@ if (opts.d) {
         return -1 } }
 def EOL = System.getProperty('line.separator')
 
-// -------- Actions -------- //
+
+// ========================= //
+// ======== Actions ======== //
+// ========================= //
+
 // list version information first
 if (opts.version) {
 
@@ -191,7 +237,104 @@ if (opts.l) {
     // print all projects
     issuedb.eachProject(filter) { printProject(it, "") } } 
 
-// new issues third
+// daily list second
+else if (opts.D) {
+
+    // Parse daily list specific display options
+    def visibleSections = []
+    def suppressedSections
+
+    // Parse the additive options first.
+    if (opts.'dl-scheduled') { visibleSections << 'scheduled' }
+    if (opts.'dl-due') { visibleSections << 'due' }
+    if (opts.'dl-reminder') { visibleSections << 'reminder' }
+    if (opts.'dl-open') { visibleSections << 'open' }
+
+    // If the user did not add any sections assume they want them all.
+    if (visibleSections.size() == 0) {
+        visibleSections = ['scheduled', 'due', 'reminder', 'open'] }
+
+    // Now go through the negative options.
+    if (opts.'dl-hide-scheduled') { visibleSections -= 'scheduled' }
+    if (opts.'dl-hide-due') { visibleSections -= 'due' }
+    if (opts.'dl-hide-reminder') { visibleSections -= 'reminder' }
+    if (opts.'dl-hide-open') { visibleSections -= 'open' }
+
+    // If the user did not specifically ask for a status filter, we want a
+    // different filter for the default when we are doing a daily list.
+    if (!opts.s) { filter.status = [Status.NEW, Status.VALIDATION_REQUIRED] }
+
+    // If the user did not give a specific sorting order, define our own.
+    if (!opts.o) { filter.issueSorter = [ {it.due}, {it.priority}, {it.id} ] }
+
+    // Get our issues
+    def allIssues = issuedb.getAllIssues(filter)
+
+    // Set up our time interval.
+    def today = new DateMidnight()
+    def tomorrow = today.plusDays(1)
+
+    def scheduledToday = []
+    def dueToday = []
+    def reminderToday = []
+    def notDueOrReminder = []
+
+    def printIssue = { issue ->
+        if (issue.due) println "${issue.due.toString('EEE, MM/dd')} -- ${issue}"
+        else println "           -- ${issue}" }
+
+    // Sort the issues into seperate lists based on their due dates and
+    // reminders.
+    allIssues.each { issue ->
+        // Find the issues that are scheduled for today.
+        if (issue.scheduled && issue.scheduled < tomorrow) {
+            scheduledToday << issue }
+
+        // Find the issues that are due today or are past due.
+        else if (issue.due && issue.due < tomorrow) { dueToday << issue }
+
+        // Find the issues that are not yet due but have a reminder for today or
+        // days past.
+        else if (issue.reminder && issue.reminder < tomorrow) {
+            reminderToday << issue }
+
+        // All the others (not due and no reminder).
+        else notDueOrReminder << issue }
+
+    // Print the issues
+    if (visibleSections.contains('scheduled') && scheduledToday.size() > 0) {
+        println "Tasks Scheduled for Today"
+        println "-------------------------"
+
+        scheduledToday.each { printIssue(it) }
+
+        println "" }
+
+    if (visibleSections.contains('due') && dueToday.size() > 0) {
+        println "Tasks Due Today"
+        println "---------------"
+
+        dueToday.each { printIssue(it) }
+
+        println ""}
+
+    if (visibleSections.contains('reminder') && reminderToday.size() > 0) {
+        println "Upcoming Tasks"
+        println "--------------"
+
+        reminderToday.each { printIssue(it) }
+
+        println ""}
+
+    if (visibleSections.contains('open') && notDueOrReminder.size() > 0) {
+        println "Other Open Issues"
+        println "-----------------"
+
+        notDueOrReminder.each { printIssue(it) }
+
+        println "" }}
+
+// new issues fourth
 else if (opts.n) {
     def cat, priority
     String text = ""
@@ -243,7 +386,7 @@ else {
         it.priority = assignOpts.priority
         println "[${it}] -- set priority to ${assignOpts.priority}"}
 
-    // change third
+    // change category
     else if (opts.C) issuedb.walkProject(filter) {
         it.category = assignOpts.cat
         println "[${it}] -- set category to ${assignOpts.category}"}
@@ -251,5 +394,4 @@ else {
     // change status
     else if (opts.S) issuedb.walkProject(filter) {
         it.status = assignOpts.status 
-        println "[${it}] -- set status to ${assignOpts.status}"}
-}}
+        println "[${it}] -- set status to ${assignOpts.status}"} }}
