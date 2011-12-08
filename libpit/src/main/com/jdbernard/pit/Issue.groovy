@@ -2,7 +2,7 @@ package com.jdbernard.pit
 
 import java.lang.IllegalArgumentException as IAE
 
-public abstract class Issue {
+public class Issue {
 
     protected String id
     protected Category category
@@ -17,16 +17,15 @@ public abstract class Issue {
         this.id = props.id
         this.category = props.category ?: Category.TASK
         this.status = props.status ?: Status.NEW
-        this.priority = props.priority ?: 9
+        this.priority = props.priority ?: 5
         this.title = props.title ?: ''
         this.text = props.text ?: ''
 
+        // Put all the non-native properties into our extendedProperties map.
         def nativeProps =
             ["id", "category", "status", "priority", "title", "text"]
-
-        props.each { key, val ->
-            if (nativeProps.contains(key)) { return }
-            this.extendedProperties[key] = val }}
+        extendedProperties.putAll(props.findAll {
+            !nativeProps.contains(it.key) })}
 
     public String getId() { return id; }
 

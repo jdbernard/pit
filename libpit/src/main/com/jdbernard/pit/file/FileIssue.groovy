@@ -138,10 +138,10 @@ public class FileIssue extends Issue {
         result.append("=".multiply(issue.title.length()))
         result.append("\n\n")
         result.append(issue.text)
-        result.append("\n----\n\n")
 
         // If there are any extended properties, let's write those.
         if (issue.extendedProperties.size() > 0) {
+            result.append("\n----\n\n")
             def extOutput = [:]
             def maxKeyLen = 0
             def maxValLen = 0
@@ -169,7 +169,9 @@ public class FileIssue extends Issue {
             result.append("=".multiply(maxKeyLen + 1))
             result.append(" ")
             result.append("=".multiply(maxValLen))
-            result.append("\n") }}
+            result.append("\n") }
+
+         return result.toString()}
 
     protected void writeFile() {
         try { source.write(formatIssue(this)) }
