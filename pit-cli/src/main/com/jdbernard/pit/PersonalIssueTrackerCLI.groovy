@@ -3,6 +3,7 @@ package com.jdbernard.pit
 import com.jdbernard.pit.file.*
 
 import org.joda.time.DateMidnight
+import org.joda.time.DateTime
 
 import static java.lang.Math.max
 import static java.lang.Math.min
@@ -28,16 +29,26 @@ cli.p(argName: 'priority', longOpt: 'priority', args: 1,
 cli.r(argName: 'project', longOpt: 'project', args: 1,
     'Filter issues by project (relative to the current directory). Accepts a '
     + 'comma-delimited list.')
+cli.e(argName: 'extended-property', args: 1, 'Filter for issues by extended ' +
+    'property. Format is "-e <propname>=<propvalue>".')
 /*cli.s(longOpt: 'show-subprojects',
     'Include sup projects in listing (default behaviour)')
 cli.S(longOpt: 'no-subprojects', 'Do not list subprojects.')*/ // TODO: figure out better flags for these options.
 cli.P(argName: 'new-priority', longOpt: 'set-priority', args: 1,
-    required: false, 'Modify the priority of the selected issues.')
+    'Modify the priority of the selected issues.')
 cli.C(argName: 'new-category', longOpt: 'set-category', args: 1,
-    required: false, 'Modify the category of the selected issues.')
+    'Modify the category of the selected issues.')
 cli.S(argName: 'new-status', longOpt: 'set-status', args: 1,
-    required: false, 'Modify the status of the selected issues.')
+    'Modify the status of the selected issues.')
+cli.E(argName: 'new-extended-property', args: 1, 'Modify the extended ' +
+    'property of the selected issues. Format is "-E <propname>=<propvalue>"')
 cli.n(longOpt: 'new-issue', 'Create a new issue.')
+cli._(longOpt: 'title', args: 1, argName: 'title', 'Give the title for a new' +
+    ' issue or modify the title for an existing issue. By default the title' +
+    ' for a new issue is expected on stanard input.')
+cli._(longOpt: 'text', args: 1, argName: 'text', 'Give the text for a new' +
+    ' issue or modify the text for an exising issue. By default the text for' +
+    ' a new issue is expected on standard input.')
 cli.o(longOpt: 'order', argName: 'order', args: 1, required: false,
     'Order (sort) the results by the given properties. Provide a comma-' +
     'seperated list of property names to sort by in order of importance. The' +
@@ -72,7 +83,7 @@ cli._(longOpt: 'version', 'Display PIT version information.')
 // ======== Parse CLI Options ======== //
 // =================================== //
 
-def VERSION = "3.1.0"
+def VERSION = "3.2.0"
 def opts = cli.parse(args)
 def issuedb = [:]
 def workingDir = new File('.')
@@ -85,14 +96,11 @@ def selectOpts = [
     priority:   9,
     projects:   [],
     ids:        [],
+    extendedProperties: [:],
     acceptProjects: true]
 
-// defaults for changing properties of issue(s)
-def assignOpts = [
-    category:   Category.TASK,
-    status:     Status.NEW,
-    priority:   5,
-    text:       "New issue."]
+// options for changing properties of issue(s)
+def assignOpts = [:]
 
 if (!opts) opts.l = true; // default to 'list'
 
@@ -157,6 +165,13 @@ if (opts.o) {
             case ~/^c$/: return { issue -> issue.category }
             default: return { issue -> issue[prop] } }}}
     
+// read and parse extended property selection criteria
+if (opts.e) {
+    opts.es.each { option ->
+        def parts = option.split("=")
+        selectOpts.extendedProperties[parts[0]] =
+            ExtendedPropertyHelp.parse(parts[1]) }}
+
 // TODO: accept projects value from input
 
 // read and parse the category to assign
@@ -182,9 +197,16 @@ catch (NumberFormatException nfe) {
     println "Valid values are: 0-9"
     System.exit(1) }
 
-// look for assignment text
-if (opts.getArgs().length > 0) {
-    assignOpts.text = opts.getArgs()[0] }
+if (opts.E) {
+    opts.Es.each { option ->
+        def parts = option.split("=")
+        assignOpts[parts[0]] = ExtendedPropertyHelp.parse(parts[1]) }}
+
+// Read the title if given.
+if (opts.title) { assignOpts.title = opts.title }
+
+// Read the text if given
+if (opts.text) { assignOpts.text = opts.text }
 
 // set the project working directory
 if (opts.d) {
@@ -192,6 +214,7 @@ if (opts.d) {
     if (!workingDir.exists()) {
         println "Directory '${workingDir}' does not exist."
         return -1 } }
+
 def EOL = System.getProperty('line.separator')
 
 
@@ -222,7 +245,10 @@ if (opts.l) {
         if (opts.v) {
             println ""
             issue.text.eachLine { println "${offset}  ${it}" }
-            println "" } }
+            issue.extendedProperties.each { name, value ->
+                def formattedValue = ExtendedPropertyHelp.format(value)
+                println "${offset}  * ${name}: ${formattedValue}"}
+            println ""}}
 
     // local function (closure) to print a project and all visible subprojects
     def printProject
@@ -336,62 +362,78 @@ else if (opts.D) {
 
 // new issues fourth
 else if (opts.n) {
-    def cat, priority
-    String text = ""
     Issue issue
     def sin = System.in.newReader()
 
-    if (opts.C) { cat = assignOpts.category }
-    else while(true) {
-            try {
-                print "Category (bug, feature, task): "
-                cat = Category.toCategory(sin.readLine())
-                break }
-            catch (e) {
-                println "Invalid category: " + e.getLocalizedMessage()
-                println "Valid options are: \n${Category.values().join(', ')}"
-                println " (abbreviations are accepted)." } }
+    // Set the created extended property
+    assignOpts.created = new DateTime()
 
-    if (opts.P) { priority = assignOpts.priority }
-    else while (true) {
+    // Prompt for the different options if they were not given on the command
+    // line. We will loop until they have entered a valid value. How it works: 
+    // In the body of the loop we will try to read the input, parse it and
+    // assign it to a variable. If the input is invalid it will throw as
+    // exception before the assignment happens, the variable will still be
+    // null, and we will prompt the user again.
+
+    // Prompt for category.
+    while(!assignOpts.category) {
+        try {
+            print "Category (bug, feature, task): "
+            assignOpts.category = Category.toCategory(sin.readLine())
+            break }
+        catch (e) {
+            println "Invalid category: " + e.getLocalizedMessage()
+            println "Valid options are: \n${Category.values().join(', ')}"
+            println " (abbreviations are accepted)." } }
+
+    // Prompt for the priority.
+    while (!assignOpts.priority) {
         try {
             print "Priority (0-9): "
-            priority = max(0, min(9, sin.readLine().toInteger()))
+            assignOpts.priority = max(0, min(9, sin.readLine().toInteger()))
             break }
         catch (e) { println "Not a valid value." } }
 
-    if (opts.getArgs().length  > 0) { text = assignOpts.text }
-    else {
-        println "Enter issue (use EOF): "
+    // Prompt for the issue title. No need to loop as the input does not need
+    // to be validated.
+    if (!assignOpts.title) {
+        println "Issue title: "
+        assignOpts.title = sin.readLine().trim() }
+
+    // Prompt for the issue text.
+    if (!assignOpts.text) {
+        assignOpts.text = ""
+        println "Enter issue text (use EOF to stop): "
         try {
             def line = ""
             while(true) {
                 line = sin.readLine()
 
-                if (line =~ /EOF/) break
+                // Stop when they enter EOF
+                if (line ==~ /^EOF$/) break
 
-                text += line + EOL
-            } }
+                assignOpts.text += line + EOL } }
         catch (e) {} }
 
-    issue = issuedb.createNewIssue(category: cat, priority: priority, text: text)
+    issue = issuedb.createNewIssue(assignOpts)
     
     println "New issue created: "
     println issue }
     
 // last, changes to existing issues
-else {
-    // change priority 
-    if (opts.P) issuedb.walkProject(filter) { 
-        it.priority = assignOpts.priority
-        println "[${it}] -- set priority to ${assignOpts.priority}"}
+else if (assignOpts.size() > 0) {
 
-    // change category
-    else if (opts.C) issuedb.walkProject(filter) {
-        it.category = assignOpts.cat
-        println "[${it}] -- set category to ${assignOpts.category}"}
+    // We are going to add some extra properties if the status is being changed,
+    // because we are nice like that.
+    if (assignOpts.status) { switch (assignOpts.status)  {
+        case Status.RESOLVED: assignOpts.resolved = new DateTime(); break
+        case Status.REJECTED: assignOpts.rejected = new DateTime(); break
+        default: break }}
 
-    // change status
-    else if (opts.S) issuedb.walkProject(filter) {
-        it.status = assignOpts.status 
-        println "[${it}] -- set status to ${assignOpts.status}"} }}
+    issuedb.walkProject(filter) { issue ->
+        println issue
+        assignOpts.each { propName, value ->
+            issue[propName] = value
+            println "  set ${propName} to ${value}" } }}
+            
+else { cli.usage(); return -1 }}
