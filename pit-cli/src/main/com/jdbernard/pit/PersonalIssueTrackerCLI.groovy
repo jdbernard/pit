@@ -83,7 +83,7 @@ cli._(longOpt: 'version', 'Display PIT version information.')
 // ======== Parse CLI Options ======== //
 // =================================== //
 
-def VERSION = "3.2.0"
+def VERSION = "3.2.1"
 def opts = cli.parse(args)
 def issuedb = [:]
 def workingDir = new File('.')
@@ -434,6 +434,7 @@ else if (assignOpts.size() > 0) {
         println issue
         assignOpts.each { propName, value ->
             issue[propName] = value
-            println "  set ${propName} to ${value}" } }}
+            def formattedValue = ExtendedPropertyHelp.format(value)
+            println "  set ${propName} to ${formattedValue}" } }}
             
 else { cli.usage(); return -1 }}
