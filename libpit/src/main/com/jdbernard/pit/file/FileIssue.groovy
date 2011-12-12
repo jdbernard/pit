@@ -61,43 +61,45 @@ public class FileIssue extends Issue {
     }
 
     public void setCategory(Category c) throws IOException {
-        boolean renamed
-        renamed = source.renameTo(new File(source.canonicalFile.parentFile,
-            makeFilename(id, c, status, priority)))
 
-        if (!renamed)
-            throw new IOException("I was unable to set the category. "
+        File newSource = new File(source.canonicalFile.parentFile,
+            makeFilename(id, c, status, priority))
+
+        if (source.renameTo(newSource)) {
+            source = newSource
+            super.setCategory(c) }
+        else { throw new IOException("I was unable to set the category. "
                 + "I need to rename the file for this issue, but something is "
                 + "preventing me from doing so (maybe the path to the file is "
                 + "no longer valid, or maybe the file is currently open in "
-                + "some other program).")
-        else super.setCategory(c) }
+                + "some other program).") }}
 
     public void setStatus(Status s) throws IOException {
-        boolean renamed
-        renamed = source.renameTo(new File(source.canonicalFile.parentFile,
-            makeFilename(id, category, s, priority)))
+        File newSource = new File(source.canonicalFile.parentFile,
+            makeFilename(id, category, s, priority))
             
-        if (!renamed)
-            throw new IOException("I was unable to set the status. "
+        if (source.renameTo(newSource)) {
+            source = newSource
+            super.setStatus(s)  }
+        else { throw new IOException("I was unable to set the status. "
                 + "I need to rename the file for this issue, but something is "
                 + "preventing me from doing so (maybe the path to the file is "
                 + "no longer valid, or maybe the file is currently open in "
-                + "some other program).")
-        else super.setStatus(s) }
+                + "some other program).") }}
 
     public void setPriority(int p) throws IOException {
-        boolean renamed
-        renamed = source.renameTo(new File(source.canonicalFile.parentFile,
-            makeFilename(id, category, status, p)))
 
-        if (!renamed)
-            throw new IOException("I was unable to set the priority. "
+        File newSource = new File(source.canonicalFile.parentFile,
+            makeFilename(id, category, status, p))
+
+        if (source.renameTo(newSource)) {
+            source = newSource
+            super.setPriority(p) }
+        else { throw new IOException("I was unable to set the priority. "
                 + "I need to rename the file for this issue, but something is "
                 + "preventing me from doing so (maybe the path to the file is "
                 + "no longer valid, or maybe the file is currently open in "
-                + "some other program).")
-        else super.setPriority(p) }
+                + "some other program).") }}
 
     public String getFilename() {
         return makeFilename(id, category, status, priority) }
