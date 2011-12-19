@@ -13,8 +13,7 @@ import static java.lang.Math.min
 def cli = new CliBuilder(usage: 'pit-cli [options]')
 cli.h(longOpt: 'help', 'Show help information.')
 cli.v(longOpt: 'verbose', 'Show verbose task information')
-cli.l(longOpt: 'list', 'List issues. Unless otherwise specified it lists all '
-    + 'sub projects and all unclosed issue categories.')
+cli.l(longOpt: 'list', 'List issues in the current project.')
 cli.i(argName: 'id', longOpt: 'id', args: 1,
     'Filter issues by id. Accepts a comma-delimited list.')
 cli.c(argName: 'category', longOpt: 'category', args: 1,
@@ -29,6 +28,7 @@ cli.p(argName: 'priority', longOpt: 'priority', args: 1,
 cli.r(argName: 'project', longOpt: 'project', args: 1,
     'Filter issues by project (relative to the current directory). Accepts a '
     + 'comma-delimited list.')
+cli.R(longOpt: 'recursive', 'Include subprojects.')
 cli.e(argName: 'extended-property', args: 1, 'Filter for issues by extended ' +
     'property. Format is "-e <propname>=<propvalue>".')
 /*cli.s(longOpt: 'show-subprojects',
@@ -83,7 +83,7 @@ cli._(longOpt: 'version', 'Display PIT version information.')
 // ======== Parse CLI Options ======== //
 // =================================== //
 
-def VERSION = "3.2.3"
+def VERSION = "3.3.0"
 def opts = cli.parse(args)
 def issuedb = [:]
 def workingDir = new File('.')
@@ -260,8 +260,10 @@ if (opts.l) {
 
     // print all the issues in the root of this db
     issuedb.eachIssue(filter) { printIssue(it, "") }
-    // print all projects
-    issuedb.eachProject(filter) { printProject(it, "") } } 
+
+    if (opts.R) {
+        // print all projects
+        issuedb.eachProject(filter) { printProject(it, "") }} } 
 
 // daily list second
 else if (opts.D) {
@@ -294,7 +296,11 @@ else if (opts.D) {
     if (!opts.o) { filter.issueSorter = [ {it.due}, {it.priority}, {it.id} ] }
 
     // Get our issues
-    def allIssues = issuedb.getAllIssues(filter)
+    def allIssues = opts.R ?
+        // If -R passed, get all issues, including subprojects.
+        issuedb.getAllIssues(filter) :
+        // Otherwise, just use the issues for this project.
+        issuedb.issues.values().findAll { filter ? filter.accept(it) : true }
 
     // Set up our time interval.
     def today = new DateMidnight()
@@ -430,11 +436,16 @@ else if (assignOpts.size() > 0) {
         case Status.REJECTED: assignOpts.rejected = new DateTime(); break
         default: break }}
 
-    issuedb.walkProject(filter) { issue ->
+    def processIssue = { issue ->
         println issue
         assignOpts.each { propName, value ->
             issue[propName] = value
             def formattedValue = ExtendedPropertyHelp.format(value)
-            println "  set ${propName} to ${formattedValue}" } }}
-            
+            println "  set ${propName} to ${formattedValue}" } }
+
+    if (opts.R) { issuedb.walkProject(filter, processIssue) }
+    else {
+        issuedb.issues.values()
+            .findAll { filter ? filter.accept(it) : true }
+            .each(processIssue) }}
 else { cli.usage(); return -1 }}

@@ -11,6 +11,10 @@
         <echo message="GROOVY_HOME: ${env.GROOVY_HOME}"/>
     </target>
 
+    <target name="clean-all" depends="clean">
+        <delete dir="${release.dir}"/>
+    </target>
+
     <target name="release" depends="build">
         <mkdir dir="${release.dir}/lib"/>
         <copy file="${build.dir}/${name}-${version}.${build.number}.jar"

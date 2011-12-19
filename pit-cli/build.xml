@@ -20,6 +20,10 @@
         </fail>
     </target>
 
+    <target name="clean-all">
+        <delete dir="${release.dir}"/>
+    </target>
+
     <target name="lib">
         <copy todir="${build.dir}/lib/compile/jar"
               file="${basedir}/../libpit/release/libpit-${version}.jar"/>
