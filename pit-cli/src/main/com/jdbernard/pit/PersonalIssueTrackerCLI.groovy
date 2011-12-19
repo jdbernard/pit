@@ -83,7 +83,7 @@ cli._(longOpt: 'version', 'Display PIT version information.')
 // ======== Parse CLI Options ======== //
 // =================================== //
 
-def VERSION = "3.3.0"
+def VERSION = "3.3.1"
 def opts = cli.parse(args)
 def issuedb = [:]
 def workingDir = new File('.')
@@ -245,6 +245,7 @@ if (opts.l) {
         if (opts.v) {
             println ""
             issue.text.eachLine { println "${offset}  ${it}" }
+            println ""
             issue.extendedProperties.each { name, value ->
                 def formattedValue = ExtendedPropertyHelp.format(value)
                 println "${offset}  * ${name}: ${formattedValue}"}
@@ -315,6 +316,14 @@ else if (opts.D) {
         if (issue.due) println "${issue.due.toString('EEE, MM/dd')} -- ${issue}"
         else println "           -- ${issue}" }
 
+    def priorityDateSorter = { i1, i2 ->
+        if (i1.priority == i2.priority) {
+            def d1 = i1.due ?: new DateTime()
+            def d2 = i2.due ?: new DateTime()
+
+            return d1.compareTo(d2) }
+        else { return i1.priority - i2.priority }}
+            
     // Sort the issues into seperate lists based on their due dates and
     // reminders.
     allIssues.each { issue ->
@@ -338,7 +347,7 @@ else if (opts.D) {
         println "Tasks Scheduled for Today"
         println "-------------------------"
 
-        scheduledToday.each { printIssue(it) }
+        scheduledToday.sort(priorityDateSorter).each { printIssue(it) }
 
         println "" }
 
@@ -346,7 +355,7 @@ else if (opts.D) {
         println "Tasks Due Today"
         println "---------------"
 
-        dueToday.each { printIssue(it) }
+        dueToday.sort(priorityDateSorter).each { printIssue(it) }
 
         println ""}
 
@@ -354,7 +363,7 @@ else if (opts.D) {
         println "Upcoming Tasks"
         println "--------------"
 
-        reminderToday.each { printIssue(it) }
+        reminderToday.sort(priorityDateSorter).each { printIssue(it) }
 
         println ""}
 
@@ -362,7 +371,7 @@ else if (opts.D) {
         println "Other Open Issues"
         println "-----------------"
 
-        notDueOrReminder.each { printIssue(it) }
+        notDueOrReminder.sort(priorityDateSorter).each { printIssue(it) }
 
         println "" }}
 

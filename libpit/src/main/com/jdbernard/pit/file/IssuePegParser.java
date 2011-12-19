@@ -27,8 +27,8 @@ public class IssuePegParser extends BaseParser<Object> {
 
     Rule PropertyBlock() {
         return Sequence(push(makeNode()),
-            HorizontalRule(), OneOrMore(EOL), TableSeparator(), EOL,
-            OneOrMore(PropertyDefinition()), TableSeparator(),
+            EOL, HorizontalRule(), OneOrMore(EOL), TableSeparator(),
+            EOL, OneOrMore(PropertyDefinition()), TableSeparator(),
             addToNode("extProperties", pop())); }
 
     Rule PropertyDefinition() {
