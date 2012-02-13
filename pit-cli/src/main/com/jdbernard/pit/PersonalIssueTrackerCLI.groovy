@@ -4,9 +4,12 @@ import com.jdbernard.pit.file.*
 
 import org.joda.time.DateMidnight
 import org.joda.time.DateTime
+import org.slf4j.LoggerFactory
 
 import static java.lang.Math.max
 import static java.lang.Math.min
+
+def log = LoggerFactory.getLogger(getClass())
 
 // -------- command-line interface specification -------- //
 
@@ -83,7 +86,9 @@ cli._(longOpt: 'version', 'Display PIT version information.')
 // ======== Parse CLI Options ======== //
 // =================================== //
 
-def VERSION = "3.3.1"
+log.trace("Parsing options.")
+
+def VERSION = "3.3.2"
 def opts = cli.parse(args)
 def issuedb = [:]
 def workingDir = new File('.')
@@ -102,9 +107,7 @@ def selectOpts = [
 // options for changing properties of issue(s)
 def assignOpts = [:]
 
-if (!opts) opts.l = true; // default to 'list'
-
-if (opts.h) {
+if (!opts || opts.h) {
     cli.usage()
     System.exit(0) }
 
@@ -217,6 +220,8 @@ if (opts.d) {
 
 def EOL = System.getProperty('line.separator')
 
+log.debug("Finished parsing options:\nworkingDir: {}\nselectOpts: {}\nassignOpts: {}",
+    workingDir.canonicalPath, selectOpts, assignOpts)
 
 // ========================= //
 // ======== Actions ======== //
@@ -231,13 +236,17 @@ if (opts.version) {
 else {
 
 // build issue list
+log.trace("Building issue database.")
 issuedb = new FileProject(workingDir)
 
 // build filter from options
+log.trace("Defining the filter.")
 def filter = new Filter(selectOpts)
  
 // list second
 if (opts.l) {
+
+    log.trace("Listing issues.")
 
     // local function (closure) to print a single issue
     def printIssue = { issue, offset ->
@@ -268,6 +277,8 @@ if (opts.l) {
 
 // daily list second
 else if (opts.D) {
+
+    log.trace("Showing a daily list.")
 
     // Parse daily list specific display options
     def visibleSections = []
@@ -377,6 +388,9 @@ else if (opts.D) {
 
 // new issues fourth
 else if (opts.n) {
+
+    log.trace("Creating a new issue.")
+
     Issue issue
     def sin = System.in.newReader()
 
@@ -438,6 +452,8 @@ else if (opts.n) {
 // last, changes to existing issues
 else if (assignOpts.size() > 0) {
 
+    log.trace("Changing existing issues.")
+
     // We are going to add some extra properties if the status is being changed,
     // because we are nice like that.
     if (assignOpts.status) { switch (assignOpts.status)  {
@@ -457,4 +473,6 @@ else if (assignOpts.size() > 0) {
         issuedb.issues.values()
             .findAll { filter ? filter.accept(it) : true }
             .each(processIssue) }}
-else { cli.usage(); return -1 }}
+else {
+    log.trace("Unknown request.")
+    cli.usage(); return -1 }}
