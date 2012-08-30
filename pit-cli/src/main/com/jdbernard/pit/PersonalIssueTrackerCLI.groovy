@@ -319,7 +319,7 @@ catch (Exception e) {
 if (opts.S) try { assignOpts.status = Status.toStatus(opts.S) }
 catch (Exception e) {
     println "Invalid status option: '-S ${e.localizedMessage}'."
-    println "Valid stasus options are: \n{Status.values().join(', ')}"
+    println "Valid stasus options are: \n${Status.values().join(', ')}"
     println " (abbreviations are accepted)."
     System.exit(1) }
 

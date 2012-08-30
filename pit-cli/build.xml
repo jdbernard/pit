@@ -20,7 +20,7 @@
         </fail>
     </target>
 
-    <target name="clean-all">
+    <target name="clean-all" depends="clean">
         <delete dir="${release.dir}"/>
     </target>
 
