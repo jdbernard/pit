@@ -86,7 +86,7 @@
         </propertyfile>
     </target>
 
-    <target name="set-version" depends="-init">
+    <target name="set-version" depends="-common-init">
         <input
             message="The current version is ${version}. Enter a new version: "
             addproperty="new-version"/>

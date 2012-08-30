@@ -20,6 +20,7 @@ def log = LoggerFactory.getLogger(getClass())
 
 /// ## Command Line Options ##
 /// --------------------------
+/// @org cli-options
 def cli = new CliBuilder(usage: 'pit-cli [options]')
 
 /// -h,--help
@@ -169,9 +170,9 @@ cli._(longOpt: 'dl-scheduled', 'Show scheduled tasks in the daily list (all' +
 cli._(longOpt: 'dl-due', 'Show due tasks in the daily list (all are shown by' +
     ' default).')
 
-/// --dl-reminder
+/// --dl-upcoming
 /// :   Show upcoming tasks in the daily list (all are shown by default).
-cli._(longOpt: 'dl-reminder', 'Show upcoming tasks in the daily list (all ' +
+cli._(longOpt: 'dl-upcoming', 'Show upcoming tasks in the daily list (all ' +
     ' are shown by default).')
 
 /// --dl-open
@@ -189,15 +190,26 @@ cli._(longOpt: 'dl-hide-scheduled', 'Hide scheduled tasks in the daily list' +
 cli._(longOpt: 'dl-hide-due', 'Show due tasks in the daily list (all are' +
     ' shown by default).')
 
-/// --dl-hide-reminder
+/// --dl-hide-upcoming
 /// :   Show upcoming tasks in the daily list (all  are shown by default).
-cli._(longOpt: 'dl-hide-reminder', 'Show upcoming tasks in the daily list' +
+cli._(longOpt: 'dl-hide-upcoming', 'Show upcoming tasks in the daily list' +
     ' (all  are shown by default).')
 
 /// --dl-hide-open
 /// :   Show open tasks in the daily list (all are shown  by default).
 cli._(longOpt: 'dl-hide-open', 'Show open tasks in the daily list (all are' +
     ' shown  by default).')
+
+/// --dl-upcoming-days
+/// :   The upcoming tasks section in the daily list includes any tasks due 
+///     within the next seven days by default. This option overrides that 
+///     default and allows you to specify the number of days ahead the upcoming
+///     section looks.
+cli._(longOpt: 'dl-upcoming-days', argName: 'num-days', args:1, required: false,
+    'The upcoming tasks section in the daily list includes any tasks due ' +
+    'within the next seven days by default. This option overrides that ' +
+    'default and allows you to specify the number of days ahead the upcoming ' +
+    'section looks.')
 
 /// --version
 /// :   Display PIT version information.
@@ -208,7 +220,7 @@ cli._(longOpt: 'version', 'Display PIT version information.')
 
 log.trace("Parsing options.")
 
-def VERSION = "3.3.2"
+def VERSION = "3.3.3"
 def opts = cli.parse(args)
 def issuedb = [:]
 def workingDir = new File('.')
@@ -400,24 +412,34 @@ else if (opts.D) {
 
     log.trace("Showing a daily list.")
 
+    /// Set up our time intervals.
+    def today = new DateMidnight()
+    def tomorrow = today.plusDays(1)
+
     /// #### Parse daily list specific display options.
     def visibleSections = []
     def suppressedSections
+    def upcomingCutoff = today.plusDays(7)
+
+    /// Check for a custom upcoming section cutoff date.
+    if (opts.'dl-upcoming-days') {
+        int numDays = opts.'dl-upcoming-days' as int
+        upcomingCutoff = today.plusDays(numDays) }
 
     /// Parse the additive options first.
     if (opts.'dl-scheduled') { visibleSections << 'scheduled' }
     if (opts.'dl-due') { visibleSections << 'due' }
-    if (opts.'dl-reminder') { visibleSections << 'reminder' }
+    if (opts.'dl-upcoming') { visibleSections << 'upcoming' }
     if (opts.'dl-open') { visibleSections << 'open' }
 
     /// If the user did not add any sections assume they want them all.
     if (visibleSections.size() == 0) {
-        visibleSections = ['scheduled', 'due', 'reminder', 'open'] }
+        visibleSections = ['scheduled', 'due', 'upcoming', 'open'] }
 
     /// Now go through the negative options.
     if (opts.'dl-hide-scheduled') { visibleSections -= 'scheduled' }
     if (opts.'dl-hide-due') { visibleSections -= 'due' }
-    if (opts.'dl-hide-reminder') { visibleSections -= 'reminder' }
+    if (opts.'dl-hide-upcoming') { visibleSections -= 'upcoming' }
     if (opts.'dl-hide-open') { visibleSections -= 'open' }
 
     /// If the user did not specifically ask for a status filter, we want a
@@ -435,15 +457,11 @@ else if (opts.D) {
         /// Otherwise, just use the issues for this project.
         issuedb.issues.values().findAll { filter ? filter.accept(it) : true }
 
-    /// Set up our time intervals.
-    def today = new DateMidnight()
-    def tomorrow = today.plusDays(1)
-
     /// We are going to sort the issues into these buckets based on when they are
-    /// scheduled, when they are duem and if they have a reminder set. 
+    /// scheduled, when they are due and if they have a reminder set. 
     def scheduledToday = []
     def dueToday = []
-    def reminderToday = []
+    def upcoming = []
     def notDueOrReminder = []
 
     /// Helper closure to print an issue.
@@ -471,10 +489,12 @@ else if (opts.D) {
         /// * Find the issues that are due today or are past due.
         else if (issue.due && issue.due < tomorrow) { dueToday << issue }
 
-        /// * Find the issues that are not yet due but have a reminder for today or
-        ///   days past.
-        else if (issue.reminder && issue.reminder < tomorrow) {
-            reminderToday << issue }
+        /// * Find the issues that are not yet due but have a reminder for
+        ///   today or days past as well as issues that are due before the
+        ///   `upcomingCutoff` date.
+        else if ((issue.reminder && issue.reminder < tomorrow) ||
+                 (issue.due && issue.due < upcomingCutoff)) {
+            upcoming << issue }
 
         /// * All the others (not due and no reminder).
         else notDueOrReminder << issue }
@@ -496,11 +516,11 @@ else if (opts.D) {
 
         println ""}
 
-    if (visibleSections.contains('reminder') && reminderToday.size() > 0) {
+    if (visibleSections.contains('upcoming') && upcoming.size() > 0) {
         println "Upcoming Tasks"
         println "--------------"
 
-        reminderToday.sort(priorityDateSorter).each { printIssue(it) }
+        upcoming.sort(priorityDateSorter).each { printIssue(it) }
 
         println ""}
 
