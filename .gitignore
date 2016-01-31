@@ -1,3 +1,4 @@
 release/
 *.sw*
 */build/
+pit-cli/lib/libpit-*.jar

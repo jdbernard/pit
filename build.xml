@@ -4,7 +4,7 @@
 
     <property
         name="libpit.jar"
-        value="libpit/release/pit-${application.version}.jar"/>
+        value="libpit/release/libpit-${application.version}.jar"/>
 
     <target name="clean">
         <ant dir="libpit" target="clean" inheritAll="false"/>
@@ -29,9 +29,9 @@
     <!-- <target name="package" depends="libpit,pit-cli,pit-swing"> -->
     <target name="package" depends="libpit,pit-cli">
         <mkdir dir="release/lib"/>
-        <copy file="pit-cli/release/pit-clii-${application.version}.jar" todir="release"/>
+        <copy file="pit-cli/release/pit-cli-${application.version}.jar" todir="release"/>
         <!-- <copy file="pit-swing/dist/jar/pit-swing.jar"
                    tofile="release/pit-swing-${application.version}.jar"/> -->
-        <copy file="libpit/release/pit-${application.version}.jar" todir="release/lib"/>
+        <copy file="${libpit.jar}" todir="release/lib"/>
     </target>
 </project>
