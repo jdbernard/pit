@@ -17,6 +17,8 @@ type
     Todo = "todo"
 
 const ISO8601Format* = "yyyy:MM:dd'T'HH:mm:sszzz"
+const DONE_FOLDER_FORMAT* = "yyyy-MM"
+
 let ISSUE_FILE_PATTERN = re"[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}\.txt"
 
 proc displayName*(s: IssueState): string =

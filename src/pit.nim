@@ -13,6 +13,7 @@ type
     tasksDir*: string
     contexts*: TableRef[string, string]
     issues*: TableRef[IssueState, seq[Issue]]
+    termWidth*: int
     cfg*: CombinedConfig
 
 proc initContext(args: Table[string, Value]): CliContext =
@@ -46,7 +47,8 @@ proc initContext(args: Table[string, Value]): CliContext =
     cfg: cfg,
     tasksDir: cfg.getVal("tasks-dir", ""),
     contexts: newTable[string,string](),
-    issues: newTable[IssueState, seq[Issue]]())
+    issues: newTable[IssueState, seq[Issue]](),
+    termWidth: parseInt(cfg.getVal("term-width", "80")))
 
   if cfgJson.hasKey("contexts"):
     for k, v in cfgJson["contexts"]:
@@ -75,7 +77,8 @@ proc formatIssue(ctx: CliContext, issue: Issue, state: IssueState,
 
   if state == Pending and issue.properties.hasKey("pending"):
     let startIdx = "Pending: ".len
-    var pendingText = issue["pending"].wordWrap(width - startIdx - 2).indent(startIdx)
+    var pendingText = issue["pending"].wordWrap(width - startIdx - 2)
+                                      .indent(startIdx)
     pendingText = ("Pending: " & pendingText[startIdx..^1]).indent(indent.len + 2)
     lines.add(pendingText)
 
@@ -84,16 +87,15 @@ proc formatIssue(ctx: CliContext, issue: Issue, state: IssueState,
   return lines.join("\n")
 
 proc formatSection(ctx: CliContext, issues: seq[Issue], state: IssueState,
-                   width = 80, indent = "  "): string =
-  let innerWidth = width - (indent.len * 2)
+                   indent = ""): string =
+  let innerWidth = ctx.termWidth - (indent.len * 2)
   var lines: seq[string] = @[]
 
   lines.add(indent & ".".repeat(innerWidth))
-  lines.add(state.displayName.center(width))
+  lines.add(state.displayName.center(ctx.termWidth))
   lines.add("")
 
   var topPadded = true
-  var showDetails = false
 
   let issuesByContext = issues.groupBy("context")
 
@@ -116,15 +118,22 @@ proc formatSection(ctx: CliContext, issues: seq[Issue], state: IssueState,
   lines.add("")
   return lines.join("\n")
 
-proc loadIssues(ctx: CliContext, state: IssueState): seq[Issue] =
-  result = loadIssues(joinPath(ctx.tasksDir, $state))
+proc loadIssues(ctx: CliContext, state: IssueState) =
+  ctx.issues[state] = loadIssues(joinPath(ctx.tasksDir, $state))
 
 proc loadAllIssues(ctx: CliContext) =
-  for state in IssueState:
-    ctx.issues[state] = loadIssues(ctx, state)
+  for state in IssueState: ctx.loadIssues(state)
 
 proc sameDay(a, b: DateTime): bool =
   result = a.year == b.year and a.yearday == b.yearday
+
+proc formatHeader(ctx: CliContext, header: string): string =
+  var lines: seq[string] = @[]
+  lines.add('_'.repeat(ctx.termWidth))
+  lines.add(header.center(ctx.termWidth))
+  lines.add('~'.repeat(ctx.termWidth))
+  lines.add("")
+  return lines.join("\n")
 
 when isMainModule:
 
@@ -146,9 +155,11 @@ Options:
   -C, --config <cfgFile>    Location of the config file (defaults to $HOME/.pitrc)
   -h, --help                Print this usage information.
   -T, --today               Limit to today's issues.
+  -F, --future              Limit to future issues.
   -E, --echo-args           Echo arguments (for debug purposes).
   --tasks-dir               Path to the tasks directory (defaults to the value
                             configured in the .pitrc file)
+  --term-width              Manually set the terminal width to use.
 """
 
   logging.addHandler(newConsoleLogger())
@@ -169,33 +180,40 @@ Options:
   ## Actual command runners
   if args["list"]:
 
-    ctx.loadAllIssues()
+    # Specific state request
+    if args["<state>"]:
+      let state = parseEnum[IssueState]($args["<state>"])
+      ctx.loadIssues(state)
+      echo ctx.formatSection(ctx.issues[state], state)
 
-    let fullWidth = 80
-    let innerWidth = fullWidth - 4
+    else:
 
-    # Today's items
-    echo '_'.repeat(fullWidth)
-    echo "Today".center(fullWidth)
-    echo '~'.repeat(fullWidth)
-    echo ""
+      let showBoth = args["--today"] == args["--future"]
+      let indent = if showBoth: "  " else: ""
+      ctx.loadAllIssues()
 
-    for s in [Current, TodoToday]:
-      echo ctx.formatSection(ctx.issues[s], s)
+      # Today's items
+      if args["--today"] or showBoth:
+        if showBoth: echo ctx.formatHeader("Today")
 
-    echo ctx.formatSection(
-      ctx.issues[Done].filterIt(
-        it.properties.hasKey("completed") and
-        sameDay(now, it.getDateTime("completed"))), Done)
+        for s in [Current, TodoToday]:
+          if ctx.issues.hasKey(s) and ctx.issues[s].len > 0:
+            echo ctx.formatSection(ctx.issues[s], s, indent)
 
-    # Future items
-    echo '_'.repeat(fullWidth)
-    echo "Future".center(fullWidth)
-    echo '~'.repeat(fullWidth)
-    echo ""
+        if ctx.issues.hasKey(Done):
+            let doneIssues = ctx.issues[Done].filterIt(
+              it.properties.hasKey("completed") and
+              sameDay(now, it.getDateTime("completed")))
+            if doneIssues.len > 0:
+              echo ctx.formatSection(doneIssues, Done, indent)
 
-    for s in [Pending, Todo]:
-      echo ctx.formatSection(ctx.issues[s], s)
+      # Future items
+      if args["--future"] or showBoth:
+        if showBoth: echo ctx.formatHeader("Future")
+
+        for s in [Pending, Todo]:
+          if ctx.issues.hasKey(s) and ctx.issues[s].len > 0:
+            echo ctx.formatSection(ctx.issues[s], s, indent)
 
  except:
   fatal "pit: " & getCurrentExceptionMsg()
