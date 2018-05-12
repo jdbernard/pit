@@ -3,7 +3,7 @@
 ## 
 
 import cliutils, docopt, json, logging, os, ospaths, sequtils, strutils,
-  tables, times, uuids
+  tables, times, unicode, uuids
 
 import pit/private/libpit
 export libpit
