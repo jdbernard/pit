@@ -1,4 +1,4 @@
-import cliutils, options, os, ospaths, sequtils, strutils, tables, times, uuids
+import cliutils, options, os, ospaths, sequtils, strutils, tables, times, timeutils, uuids
 
 from nre import re, match
 type
@@ -16,7 +16,10 @@ type
     Done = "done",
     Todo = "todo"
 
-const ISO8601Format* = "yyyy:MM:dd'T'HH:mm:sszzz"
+  IssueFilter* = ref object
+    properties*: TableRef[string, string]
+    completedRange*: tuple[b, e: DateTime]
+
 const DONE_FOLDER_FORMAT* = "yyyy-MM"
 
 let ISSUE_FILE_PATTERN = re"[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}\.txt"
@@ -36,11 +39,37 @@ proc `[]`*(issue: Issue, key: string): string =
 proc `[]=`*(issue: Issue, key: string, value: string) =
   issue.properties[key] = value
 
+proc hasProp*(issue: Issue, key: string): bool =
+  return issue.properties.hasKey(key)
+
 proc getDateTime*(issue: Issue, key: string): DateTime =
-  return parse(issue.properties[key], ISO8601Format)
+  return issue.properties[key].parseIso8601
+
+proc getDateTime*(issue: Issue, key: string, default: DateTime): DateTime =
+  if issue.properties.hasKey(key): return issue.properties[key].parseIso8601
+  else: return default
 
 proc setDateTime*(issue: Issue, key: string, dt: DateTime) =
-  issue.properties[key] = format(dt, ISO8601Format)
+  issue.properties[key] = dt.formatIso8601
+
+proc initFilter*(): IssueFilter =
+  result = IssueFilter(
+    properties: newTable[string,string](),
+    completedRange: (fromUnix(0).local, fromUnix(253400659199).local))
+
+proc initFilter*(props: TableRef[string, string]): IssueFilter =
+  if isNil(props):
+    raise newException(ValueError,
+      "cannot initialize property filter without properties")
+
+  result = IssueFilter(
+    properties: props,
+    completedRange: (fromUnix(0).local, fromUnix(253400659199).local))
+
+proc initFilter*(range: tuple[b, e: DateTime]): IssueFilter =
+  result = IssueFilter(
+    properties: newTable[string, string](),
+    completedRange: range)
 
 ## Parse and format issues
 proc fromStorageFormat*(id: string, issueTxt: string): Issue =
@@ -86,24 +115,44 @@ proc fromStorageFormat*(id: string, issueTxt: string): Issue =
 
   result.details = if detailLines.len > 0: detailLines.join("\n") else: ""
 
-proc toStorageFormat*(issue: Issue): string =
-  var lines = @[issue.summary]
+proc toStorageFormat*(issue: Issue, withComments = false): string =
+  var lines: seq[string] = @[]
+  if withComments: lines.add("# Summary (one line):")
+  lines.add(issue.summary)
+  if withComments: lines.add("# Properties (\"key:value\" per line):")
   for key, val in issue.properties: lines.add(key & ": " & val)
   if issue.tags.len > 0: lines.add("tags: " & issue.tags.join(","))
-  if not isNilOrWhitespace(issue.details):
+  if not isNilOrWhitespace(issue.details) or withComments:
+    if withComments: lines.add("# Details go below the \"--------\"")
     lines.add("--------")
     lines.add(issue.details)
 
   result = lines.join("\n")
-  
+
 ## Load and store from filesystem
 proc loadIssue*(filePath: string): Issue =
   result = fromStorageFormat(splitFile(filePath).name, readFile(filePath))
   result.filepath = filePath
 
-proc storeIssue*(dirPath: string, issue: Issue) =
-  issue.filepath = joinPath(dirPath, $issue.id & ".txt")
-  writeFile(issue.filepath, toStorageFormat(issue))
+proc loadIssueById*(tasksDir, id: string): Issue =
+  for path in walkDirRec(tasksDir):
+    if path.splitFile.name.startsWith(id):
+      return loadIssue(path)
+  raise newException(KeyError, "cannot find issue for id: " & id)
+
+proc store*(issue: Issue, withComments = false) =
+  writeFile(issue.filepath, toStorageFormat(issue, withComments))
+
+proc store*(tasksDir: string, issue: Issue, state: IssueState, withComments = false) =
+  let stateDir = tasksDir / $state
+  let filename = $issue.id & ".txt"
+  if state == Done:
+    let monthPath = issue.getDateTime("completed", getTime().local).format(DONE_FOLDER_FORMAT)
+    issue.filepath = stateDir / monthPath / filename
+  else:
+    issue.filepath = stateDir / filename
+
+  issue.store()
 
 proc loadIssues*(path: string): seq[Issue] =
   result = @[]
@@ -111,12 +160,27 @@ proc loadIssues*(path: string): seq[Issue] =
     if extractFilename(path).match(ISSUE_FILE_PATTERN).isSome():
       result.add(loadIssue(path))
 
+proc moveIssue*(tasksDir: string, issue: Issue, newState: IssueState) =
+  removeFile(issue.filepath)
+  if newState == Done: issue.setDateTime("completed", getTime().local)
+  tasksDir.store(issue, newState)
+
 ## Utilities for working with issue collections.
 proc groupBy*(issues: seq[Issue], propertyKey: string): TableRef[string, seq[Issue]] =
   result = newTable[string, seq[Issue]]()
   for i in issues:
-    let key = if i.properties.hasKey(propertyKey): i[propertyKey] else: ""
+    let key = if i.hasProp(propertyKey): i[propertyKey] else: ""
     if not result.hasKey(key): result[key] = newSeq[Issue]()
     result[key].add(i)
 
+proc filter*(issues: seq[Issue], filter: IssueFilter): seq[Issue] =
+  result = issues
+
+  for k,v in filter.properties:
+    result = result.filterIt(it.hasProp(k) and it[k] == v)
+
+  result = result.filterIt(not it.hasProp("completed") or
+           it.getDateTime("completed").between(
+             filter.completedRange.b,
+             filter.completedRange.e))
 
