@@ -15,6 +15,7 @@ type
     Pending = "pending",
     Done = "done",
     Todo = "todo"
+    Dormant = "dormant"
 
   IssueFilter* = ref object
     properties*: TableRef[string, string]
@@ -27,8 +28,9 @@ let ISSUE_FILE_PATTERN = re"[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f
 proc displayName*(s: IssueState): string =
   case s
   of Current: result = "Current"
-  of Pending: result = "Pending"
   of Done: result = "Done"
+  of Dormant: result = "Dormant"
+  of Pending: result = "Pending"
   of Todo: result = "Todo"
   of TodoToday: result = "Todo"
 
@@ -161,9 +163,10 @@ proc loadIssues*(path: string): seq[Issue] =
       result.add(loadIssue(path))
 
 proc changeState*(issue: Issue, tasksDir: string, newState: IssueState) =
-  removeFile(issue.filepath)
+  let oldFilepath = issue.filepath
   if newState == Done: issue.setDateTime("completed", getTime().local)
   tasksDir.store(issue, newState)
+  removeFile(oldFilepath)
 
 proc delete*(issue: Issue) = removeFile(issue.filepath)
 

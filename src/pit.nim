@@ -227,7 +227,7 @@ when isMainModule:
 Usage:
   pit ( new | add) <summary> [<state>] [options]
   pit list [<state>] [options]
-  pit ( start | done | pending | do-today | todo ) <id>...
+  pit ( start | done | pending | do-today | todo | suspend ) <id>...
   pit edit <id>
   pit delete <id>...
 
@@ -261,7 +261,7 @@ Options:
   logging.addHandler(newConsoleLogger())
 
   # Parse arguments
-  let args = docopt(doc, version = "pit 4.0.2")
+  let args = docopt(doc, version = "pit 4.0.3")
 
   if args["--echo-args"]: stderr.writeLine($args)
 
@@ -270,6 +270,11 @@ Options:
     quit()
 
   let ctx = initContext(args)
+
+  # Create our tasks directory structure if needed
+  for s in IssueState:
+    if not existsDir(ctx.tasksDir / $s):
+      (ctx.tasksDir / $s).createDir
 
   ## Actual command runners
   if args["new"] or args["add"]:
@@ -295,7 +300,7 @@ Options:
     edit(ctx.tasksDir.loadIssueById(issueId))
 
   elif args["start"] or args["do-today"] or args["done"] or
-       args["pending"] or args["todo"]:
+       args["pending"] or args["todo"] or args["suspend"]:
 
     var targetState: IssueState
     if args["done"]: targetState = Done
@@ -303,6 +308,7 @@ Options:
     elif args["pending"]: targetState = Todo
     elif args["start"]: targetState = Current
     elif args["todo"]: targetState = Todo
+    elif args["suspend"]: targetState = Dormant
 
     for id in @(args["<id>"]):
       ctx.tasksDir.loadIssueById(id).changeState(ctx.tasksDir, targetState)
