@@ -3,7 +3,7 @@
 ##
 
 import cliutils, docopt, json, logging, options, os, ospaths, sequtils,
-  tables, terminal, times, unicode, uuids
+  tables, terminal, times, timeutils, unicode, uuids
 
 import strutils except capitalize, toUpper, toLower
 import pitpkg/private/libpit
@@ -266,7 +266,7 @@ Options:
   logging.addHandler(newConsoleLogger())
 
   # Parse arguments
-  let args = docopt(doc, version = "pit 4.0.6")
+  let args = docopt(doc, version = "pit 4.0.7")
 
   if args["--echo-args"]: stderr.writeLine($args)
 
@@ -298,10 +298,13 @@ Options:
       if args["<state>"]: parseEnum[IssueState]($args["<state>"])
       else: TodoToday
 
+    var issueProps = propertiesOption.get(newTable[string,string]())
+    if not issueProps.hasKey("created"): issueProps["created"] = getTime().local.formatIso8601
+
     var issue = Issue(
       id: genUUID(),
       summary: $args["<summary>"],
-      properties: propertiesOption.get(newTable[string,string]()),
+      properties: issueProps,
       tags:
         if args["--tags"]: ($args["tags"]).split(",").mapIt(it.strip)
         else: newSeq[string]())
