@@ -5,7 +5,7 @@
 import cliutils, docopt, json, logging, options, os, ospaths, sequtils,
   tables, terminal, times, unicode, uuids
 
-import strutils except capitalize
+import strutils except capitalize, toUpper, toLower
 import pit/private/libpit
 export libpit
 
@@ -225,10 +225,11 @@ when isMainModule:
  try:
   let doc = """
 Usage:
-  pit new <summary> [<state>] [options]
+  pit ( new | add) <summary> [<state>] [options]
   pit list [<state>] [options]
   pit ( start | done | pending | do-today | todo ) <id>...
   pit edit <id>
+  pit delete <id>...
 
 Options:
 
@@ -245,6 +246,8 @@ Options:
 
   -F, --future              Limit to future issues.
 
+  -y, --yes                 Automatically answer "yes" to any prompts.
+
   -C, --config <cfgFile>    Location of the config file (defaults to $HOME/.pitrc)
 
   -E, --echo-args           Echo arguments (for debug purposes).
@@ -258,7 +261,7 @@ Options:
   logging.addHandler(newConsoleLogger())
 
   # Parse arguments
-  let args = docopt(doc, version = "pit 4.0.0")
+  let args = docopt(doc, version = "pit 4.0.1")
 
   if args["--echo-args"]: stderr.writeLine($args)
 
@@ -269,7 +272,7 @@ Options:
   let ctx = initContext(args)
 
   ## Actual command runners
-  if args["new"]:
+  if args["new"] or args["add"]:
     let state =
       if args["<state>"]: parseEnum[IssueState]($args["<state>"])
       else: TodoToday
@@ -302,7 +305,7 @@ Options:
     elif args["todo"]: targetState = Todo
 
     for id in @(args["<id>"]):
-      ctx.tasksDir.moveIssue(ctx.tasksDir.loadIssueById(id), targetState)
+      ctx.tasksDir.loadIssueById(id).changeState(ctx.tasksDir, targetState)
 
     if ctx.triggerPtk:
       if targetState == Current:
@@ -312,6 +315,18 @@ Options:
         cmd &= " \"" & issue.summary & "\""
         discard execShellCmd(cmd)
       elif targetState == Done: discard execShellCmd("ptk stop")
+
+  elif args["delete"]:
+    for id in @(args["<id>"]):
+
+      let issue = ctx.tasksDir.loadIssueById(id)
+
+      if not args["--yes"]:
+        stderr.write("Delete '" & issue.summary & "' (y/n)? ")
+        if not "yes".startsWith(stdin.readLine.toLower):
+          continue
+
+      issue.delete
 
   elif args["list"]:
 

@@ -160,10 +160,12 @@ proc loadIssues*(path: string): seq[Issue] =
     if extractFilename(path).match(ISSUE_FILE_PATTERN).isSome():
       result.add(loadIssue(path))
 
-proc moveIssue*(tasksDir: string, issue: Issue, newState: IssueState) =
+proc changeState*(issue: Issue, tasksDir: string, newState: IssueState) =
   removeFile(issue.filepath)
   if newState == Done: issue.setDateTime("completed", getTime().local)
   tasksDir.store(issue, newState)
+
+proc delete*(issue: Issue) = removeFile(issue.filepath)
 
 ## Utilities for working with issue collections.
 proc groupBy*(issues: seq[Issue], propertyKey: string): TableRef[string, seq[Issue]] =
