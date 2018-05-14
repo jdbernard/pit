@@ -6,7 +6,7 @@ import cliutils, docopt, json, logging, options, os, ospaths, sequtils,
   tables, terminal, times, unicode, uuids
 
 import strutils except capitalize, toUpper, toLower
-import pit/private/libpit
+import pitpkg/private/libpit
 export libpit
 
 type
@@ -261,7 +261,7 @@ Options:
   logging.addHandler(newConsoleLogger())
 
   # Parse arguments
-  let args = docopt(doc, version = "pit 4.0.1")
+  let args = docopt(doc, version = "pit 4.0.2")
 
   if args["--echo-args"]: stderr.writeLine($args)
 
