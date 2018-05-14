@@ -68,9 +68,9 @@ proc getIssueContextDisplayName(ctx: CliContext, context: string): string =
     else: return context.capitalize()
   return ctx.contexts[context]
 
-proc writeIssue(ctx: CliContext, issue: Issue, state: IssueState,
-                 width: int, indent: string, topPadded: bool) =
-  var showDetails = not issue.details.isNilOrWhitespace
+proc writeIssue(ctx: CliContext, issue: Issue, width: int, indent = "",
+                verbose = false, topPadded = false) =
+  var showDetails = not issue.details.isNilOrWhitespace and verbose
 
   if showDetails and not topPadded: stdout.writeLine("")
 
@@ -92,7 +92,7 @@ proc writeIssue(ctx: CliContext, issue: Issue, state: IssueState,
   else: stdout.writeLine("")
   stdout.resetAttributes
 
-  if state == Pending and issue.hasProp("pending"):
+  if issue.hasProp("pending"):
     let startIdx = "Pending: ".len
     var pendingText = issue["pending"].wordWrap(width - startIdx - 2)
                                       .indent(startIdx)
@@ -103,7 +103,7 @@ proc writeIssue(ctx: CliContext, issue: Issue, state: IssueState,
 
 
 proc writeSection(ctx: CliContext, issues: seq[Issue], state: IssueState,
-                   indent = "") =
+                   indent = "", verbose = false) =
   let innerWidth = ctx.termWidth - (indent.len * 2)
 
   stdout.setForegroundColor(fgBlue, true)
@@ -125,15 +125,15 @@ proc writeSection(ctx: CliContext, issues: seq[Issue], state: IssueState,
       stdout.resetAttributes
 
       for i in ctxIssues:
-        ctx.writeIssue(i, state, innerWidth - 2, indent & "  ", topPadded)
-        topPadded = not i.details.isNilOrWhitespace
+        ctx.writeIssue(i, innerWidth - 2, indent & "  ", verbose, topPadded)
+        topPadded = not i.details.isNilOrWhitespace and verbose
 
       if not topPadded: stdout.writeLine("")
 
   else:
     for i in issues:
-      ctx.writeIssue(i, state, innerWidth, indent, topPadded)
-      topPadded = not i.details.isNilOrWhitespace
+      ctx.writeIssue(i, innerWidth, indent, verbose, topPadded)
+      topPadded = not i.details.isNilOrWhitespace and verbose
 
   stdout.writeLine("")
 
@@ -185,12 +185,12 @@ proc edit(issue: Issue) =
       getCurrentExceptionMsg()
     issue.store()
 
-proc list(ctx: CliContext, filter: Option[IssueFilter], state: Option[IssueState], today, future: bool) =
+proc list(ctx: CliContext, filter: Option[IssueFilter], state: Option[IssueState], today, future, verbose: bool) =
 
   if state.isSome:
     ctx.loadIssues(state.get)
     if filter.isSome: ctx.filterIssues(filter.get)
-    ctx.writeSection(ctx.issues[state.get], state.get)
+    ctx.writeSection(ctx.issues[state.get], state.get, "", verbose)
     return
 
   ctx.loadAllIssues()
@@ -204,14 +204,14 @@ proc list(ctx: CliContext, filter: Option[IssueFilter], state: Option[IssueState
 
     for s in [Current, TodoToday]:
       if ctx.issues.hasKey(s) and ctx.issues[s].len > 0:
-        ctx.writeSection(ctx.issues[s], s, indent)
+        ctx.writeSection(ctx.issues[s], s, indent, verbose)
 
     if ctx.issues.hasKey(Done):
         let doneIssues = ctx.issues[Done].filterIt(
           it.hasProp("completed") and
           sameDay(getTime().local, it.getDateTime("completed")))
         if doneIssues.len > 0:
-          ctx.writeSection(doneIssues, Done, indent)
+          ctx.writeSection(doneIssues, Done, indent, verbose)
 
   # Future items
   if future:
@@ -219,7 +219,7 @@ proc list(ctx: CliContext, filter: Option[IssueFilter], state: Option[IssueState
 
     for s in [Pending, Todo]:
       if ctx.issues.hasKey(s) and ctx.issues[s].len > 0:
-        ctx.writeSection(ctx.issues[s], s, indent)
+        ctx.writeSection(ctx.issues[s], s, indent, verbose)
 
 when isMainModule:
 
@@ -227,7 +227,7 @@ when isMainModule:
   let doc = """
 Usage:
   pit ( new | add) <summary> [<state>] [options]
-  pit list [<state>] [options]
+  pit list [<listable>] [options]
   pit ( start | done | pending | do-today | todo | suspend ) <id>...
   pit edit <id>
   pit ( delete | rm ) <id>...
@@ -236,16 +236,20 @@ Options:
 
   -h, --help                Print this usage information.
 
-  -t, --tags <tags>         Specify tags for an issue.
-
   -p, --properties <props>  Specify properties. Formatted as "key:val;key:val"
                             When used with the list command this option applies
                             a filter to the issues listed, only allowing those
                             which have all of the given properties.
 
+  -c, --context <ctxName>   Shorthand for '-p context:<ctxName>'
+
+  -t, --tags <tags>         Specify tags for an issue.
+
   -T, --today               Limit to today's issues.
 
   -F, --future              Limit to future issues.
+
+  -v, --verbose             Show issue details when listing issues.
 
   -y, --yes                 Automatically answer "yes" to any prompts.
 
@@ -262,7 +266,7 @@ Options:
   logging.addHandler(newConsoleLogger())
 
   # Parse arguments
-  let args = docopt(doc, version = "pit 4.0.5")
+  let args = docopt(doc, version = "pit 4.0.6")
 
   if args["--echo-args"]: stderr.writeLine($args)
 
@@ -277,6 +281,17 @@ Options:
     if not existsDir(ctx.tasksDir / $s):
       (ctx.tasksDir / $s).createDir
 
+  var propertiesOption = none(TableRef[string,string])
+
+  if args["--properties"] or args["--context"]:
+
+    var props =
+      if args["--properties"]: parsePropertiesOption($args["--properties"])
+      else: newTable[string,string]()
+
+    if args["--context"]: props["context"] = $args["--context"]
+    propertiesOption = some(props)
+
   ## Actual command runners
   if args["new"] or args["add"]:
     let state =
@@ -286,9 +301,7 @@ Options:
     var issue = Issue(
       id: genUUID(),
       summary: $args["<summary>"],
-      properties:
-        if args["--properties"]: parsePropertiesOption($args["--properties"])
-        else: newTable[string,string](),
+      properties: propertiesOption.get(newTable[string,string]()),
       tags:
         if args["--tags"]: ($args["tags"]).split(",").mapIt(it.strip)
         else: newSeq[string]())
@@ -339,21 +352,31 @@ Options:
 
     let filter = initFilter()
     var filterOption = none(IssueFilter)
-    if args["--properties"]:
-      filter.properties = parsePropertiesOption($args["--properties"])
+    if propertiesOption.isSome:
+      filter.properties = propertiesOption.get
       filterOption = some(filter)
 
-    let stateOption =
-      if args["<state>"]: some(parseEnum[IssueState]($args["<state>"]))
-      else: none(IssueState)
+    var stateOption = none(IssueState)
+    var issueIdOption = none(string)
+    if args["<listable>"]:
+      try: stateOption = some(parseEnum[IssueState]($args["<listable>"]))
+      except: issueIdOption = some($args["<listable>"])
 
-    let showBoth = args["--today"] == args["--future"]
-    ctx.list(filterOption, stateOption, showBoth or args["--today"],
-                                             showBoth or args["--future"])
+    # List a specific issue
+    if issueIdOption.isSome:
+      let issue = ctx.tasksDir.loadIssueById(issueIdOption.get)
+      ctx.writeIssue(issue, ctx.termWidth, "", true, true)
+
+    # List all issues
+    else:
+      let showBoth = args["--today"] == args["--future"]
+      ctx.list(filterOption, stateOption, showBoth or args["--today"],
+                                          showBoth or args["--future"],
+                                          args["--verbose"])
 
   if ctx.autoList and not args["list"]:
     ctx.loadAllIssues()
-    ctx.list(none(IssueFilter), none(IssueState), true, true)
+    ctx.list(none(IssueFilter), none(IssueState), true, true, false)
 
  except:
   fatal "pit: " & getCurrentExceptionMsg()
