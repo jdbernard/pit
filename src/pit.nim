@@ -230,7 +230,7 @@ Usage:
   pit list [<state>] [options]
   pit ( start | done | pending | do-today | todo | suspend ) <id>...
   pit edit <id>
-  pit delete <id>...
+  pit ( delete | rm ) <id>...
 
 Options:
 
@@ -262,7 +262,7 @@ Options:
   logging.addHandler(newConsoleLogger())
 
   # Parse arguments
-  let args = docopt(doc, version = "pit 4.0.4")
+  let args = docopt(doc, version = "pit 4.0.5")
 
   if args["--echo-args"]: stderr.writeLine($args)
 
@@ -323,7 +323,7 @@ Options:
         discard execShellCmd(cmd)
       elif targetState == Done: discard execShellCmd("ptk stop")
 
-  elif args["delete"]:
+  elif args["delete"] or args["rm"]:
     for id in @(args["<id>"]):
 
       let issue = ctx.tasksDir.loadIssueById(id)
