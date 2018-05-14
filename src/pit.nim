@@ -112,12 +112,13 @@ proc writeSection(ctx: CliContext, issues: seq[Issue], state: IssueState,
   stdout.writeLine("")
   stdout.resetAttributes
 
-  var topPadded = true
-
   let issuesByContext = issues.groupBy("context")
+
+  var topPadded = true
 
   if issues.len > 5 and issuesByContext.len > 1:
     for context, ctxIssues in issuesByContext:
+      topPadded = true
       stdout.setForegroundColor(fgYellow, false)
       stdout.writeLine(indent & ctx.getIssueContextDisplayName(context) & ":")
       stdout.writeLine("")
@@ -261,7 +262,7 @@ Options:
   logging.addHandler(newConsoleLogger())
 
   # Parse arguments
-  let args = docopt(doc, version = "pit 4.0.3")
+  let args = docopt(doc, version = "pit 4.0.4")
 
   if args["--echo-args"]: stderr.writeLine($args)
 
