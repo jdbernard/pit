@@ -258,7 +258,7 @@ Options:
   logging.addHandler(newConsoleLogger())
 
   # Parse arguments
-  let args = docopt(doc, version = "ptk 0.12.1")
+  let args = docopt(doc, version = "pit 4.0.0")
 
   if args["--echo-args"]: stderr.writeLine($args)
 
