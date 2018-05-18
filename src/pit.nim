@@ -1,6 +1,5 @@
-## Personal Issue Tracker
-## ======================
-##
+## Personal Issue Tracker CLI interface
+## ====================================
 
 import cliutils, docopt, json, logging, options, os, ospaths, sequtils,
   tables, terminal, times, timeutils, unicode, uuids
@@ -9,58 +8,35 @@ import strutils except capitalize, toUpper, toLower
 import pitpkg/private/libpit
 export libpit
 
+include "pitpkg/private/version.nim"
+
 type
   CliContext = ref object
-    autoList, triggerPtk: bool
-    tasksDir*: string
+    autoList, triggerPtk, verbose: bool
+    cfg*: PitConfig
     contexts*: TableRef[string, string]
+    defaultContext*, tasksDir*: string
     issues*: TableRef[IssueState, seq[Issue]]
     termWidth*: int
 
 proc initContext(args: Table[string, Value]): CliContext =
-  let pitrcLocations = @[
-    if args["--config"]: $args["--config"] else: "",
-    ".pitrc", $getEnv("PITRC"), $getEnv("HOME") & "/.pitrc"]
+  let pitCfg = loadConfig(args)
 
-  var pitrcFilename: string =
-    foldl(pitrcLocations, if len(a) > 0: a elif existsFile(b): b else: "")
+  let cliJson =
+    if pitCfg.cfg.json.hasKey("cli"): pitCfg.cfg.json["cli"]
+    else: newJObject()
 
-  if not existsFile(pitrcFilename):
-    warn "pit: could not find .pitrc file: " & pitrcFilename
-    if isNilOrWhitespace(pitrcFilename):
-      pitrcFilename = $getEnv("HOME") & "/.pitrc"
-    var cfgFile: File
-    try:
-      cfgFile = open(pitrcFilename, fmWrite)
-      cfgFile.write("{\"tasksDir\": \"/path/to/tasks\"}")
-    except: warn "pit: could not write default .pitrc to " & pitrcFilename
-    finally: close(cfgFile)
-
-  var cfgJson: JsonNode
-  try: cfgJson = parseFile(pitrcFilename)
-  except: raise newException(IOError,
-    "unable to read config file: " & pitrcFilename &
-    "\x0D\x0A" & getCurrentExceptionMsg())
-
-  let cfg = CombinedConfig(docopt: args, json: cfgJson)
+  let cliCfg = CombinedConfig(docopt: args, json: cliJson)
 
   result = CliContext(
-    autoList: cfgJson.getOrDefault("autoList").getBool(false),
-    contexts: newTable[string,string](),
+    autoList: cliJson.getOrDefault("autoList").getBool(false),
+    contexts: pitCfg.contexts,
+    defaultContext: cliJson.getOrDefault("defaultContext").getStr(""),
+    verbose: parseBool(cliCfg.getVal("verbose", "false")) and not args["--quiet"],
     issues: newTable[IssueState, seq[Issue]](),
-    tasksDir: cfg.getVal("tasks-dir", ""),
-    termWidth: parseInt(cfg.getVal("term-width", "80")),
-    triggerPtk: cfgJson.getOrDefault("triggerPtk").getBool(false))
-
-  if cfgJson.hasKey("contexts"):
-    for k, v in cfgJson["contexts"]:
-      result.contexts[k] = v.getStr()
-
-  if isNilOrWhitespace(result.tasksDir):
-    raise newException(Exception, "no tasks directory configured")
-
-  if not existsDir(result.tasksDir):
-    raise newException(Exception, "cannot find tasks dir: " & result.tasksDir)
+    tasksDir: pitCfg.tasksDir,
+    termWidth: parseInt(cliCfg.getVal("term-width", "80")),
+    triggerPtk: cliJson.getOrDefault("triggerPtk").getBool(false))
 
 proc getIssueContextDisplayName(ctx: CliContext, context: string): string =
   if not ctx.contexts.hasKey(context):
@@ -79,7 +55,7 @@ proc writeIssue(ctx: CliContext, issue: Issue, width: int, indent = "",
   wrappedSummary = wrappedSummary[(6 + indent.len)..^1]
   stdout.setForegroundColor(fgBlack, true)
   stdout.write(indent & ($issue.id)[0..<6])
-  stdout.setForegroundColor(fgCyan, false)
+  stdout.setForegroundColor(fgWhite, false)
   stdout.write(wrappedSummary)
 
   if issue.tags.len > 0:
@@ -90,17 +66,20 @@ proc writeIssue(ctx: CliContext, issue: Issue, width: int, indent = "",
     else:
       stdout.writeLine("\n" & indent & "  " & tagsStr)
   else: stdout.writeLine("")
-  stdout.resetAttributes
 
   if issue.hasProp("pending"):
     let startIdx = "Pending: ".len
     var pendingText = issue["pending"].wordWrap(width - startIdx - 2)
                                       .indent(startIdx)
     pendingText = ("Pending: " & pendingText[startIdx..^1]).indent(indent.len + 2)
+    stdout.setForegroundColor(fgCyan, false)
     stdout.writeLine(pendingText)
 
-  if showDetails: stdout.writeLine(issue.details.indent(indent.len + 2))
+  if showDetails:
+    stdout.setForegroundColor(fgCyan, false)
+    stdout.writeLine(issue.details.indent(indent.len + 2))
 
+  stdout.resetAttributes
 
 proc writeSection(ctx: CliContext, issues: seq[Issue], state: IssueState,
                    indent = "", verbose = false) =
@@ -228,7 +207,7 @@ when isMainModule:
 Usage:
   pit ( new | add) <summary> [<state>] [options]
   pit list [<listable>] [options]
-  pit ( start | done | pending | do-today | todo | suspend ) <id>...
+  pit ( start | done | pending | do-today | todo | suspend ) <id>... [options]
   pit edit <id>
   pit ( delete | rm ) <id>...
 
@@ -243,7 +222,7 @@ Options:
 
   -c, --context <ctxName>   Shorthand for '-p context:<ctxName>'
 
-  -t, --tags <tags>         Specify tags for an issue.
+  -g, --tags <tags>         Specify tags for an issue.
 
   -T, --today               Limit to today's issues.
 
@@ -251,22 +230,24 @@ Options:
 
   -v, --verbose             Show issue details when listing issues.
 
+  -q, --quiet               Suppress verbose output.
+
   -y, --yes                 Automatically answer "yes" to any prompts.
 
   -C, --config <cfgFile>    Location of the config file (defaults to $HOME/.pitrc)
 
   -E, --echo-args           Echo arguments (for debug purposes).
 
-  --tasks-dir               Path to the tasks directory (defaults to the value
+  -d, --tasks-dir           Path to the tasks directory (defaults to the value
                             configured in the .pitrc file)
 
-  --term-width              Manually set the terminal width to use.
+  --term-width <width>      Manually set the terminal width to use.
 """
 
   logging.addHandler(newConsoleLogger())
 
   # Parse arguments
-  let args = docopt(doc, version = "pit 4.0.7")
+  let args = docopt(doc, version = PIT_VERSION)
 
   if args["--echo-args"]: stderr.writeLine($args)
 
@@ -276,20 +257,21 @@ Options:
 
   let ctx = initContext(args)
 
-  # Create our tasks directory structure if needed
-  for s in IssueState:
-    if not existsDir(ctx.tasksDir / $s):
-      (ctx.tasksDir / $s).createDir
-
   var propertiesOption = none(TableRef[string,string])
 
-  if args["--properties"] or args["--context"]:
+  if args["--properties"] or args["--context"] or
+     not ctx.defaultContext.isNilOrWhitespace:
 
     var props =
       if args["--properties"]: parsePropertiesOption($args["--properties"])
       else: newTable[string,string]()
 
-    if args["--context"]: props["context"] = $args["--context"]
+    if args["--context"] and $args["--context"] != "all":
+      props["context"] = $args["--context"]
+    elif not args["--context"] and not ctx.defaultContext.isNilOrWhitespace:
+      stderr.writeLine("Limiting to default context: " & ctx.defaultContext)
+      props["context"] = ctx.defaultContext
+
     propertiesOption = some(props)
 
   ## Actual command runners
@@ -306,7 +288,7 @@ Options:
       summary: $args["<summary>"],
       properties: issueProps,
       tags:
-        if args["--tags"]: ($args["tags"]).split(",").mapIt(it.strip)
+        if args["--tags"]: ($args["--tags"]).split(",").mapIt(it.strip)
         else: newSeq[string]())
 
     ctx.tasksDir.store(issue, state)
@@ -322,13 +304,17 @@ Options:
     var targetState: IssueState
     if args["done"]: targetState = Done
     elif args["do-today"]: targetState = TodoToday
-    elif args["pending"]: targetState = Todo
+    elif args["pending"]: targetState = Pending
     elif args["start"]: targetState = Current
     elif args["todo"]: targetState = Todo
     elif args["suspend"]: targetState = Dormant
 
     for id in @(args["<id>"]):
-      ctx.tasksDir.loadIssueById(id).changeState(ctx.tasksDir, targetState)
+      var issue = ctx.tasksDir.loadIssueById(id)
+      if propertiesOption.isSome:
+        for k,v in propertiesOption.get:
+          issue[k] = v
+      issue.changeState(ctx.tasksDir, targetState)
 
     if ctx.triggerPtk:
       if targetState == Current:
@@ -337,7 +323,8 @@ Options:
         if issue.tags.len > 0: cmd &= "-g \"" & issue.tags.join(",") & "\""
         cmd &= " \"" & issue.summary & "\""
         discard execShellCmd(cmd)
-      elif targetState == Done: discard execShellCmd("ptk stop")
+      elif targetState == Done or targetState == Pending:
+        discard execShellCmd("ptk stop")
 
   elif args["delete"] or args["rm"]:
     for id in @(args["<id>"]):
@@ -375,7 +362,7 @@ Options:
       let showBoth = args["--today"] == args["--future"]
       ctx.list(filterOption, stateOption, showBoth or args["--today"],
                                           showBoth or args["--future"],
-                                          args["--verbose"])
+                                          ctx.verbose)
 
   if ctx.autoList and not args["list"]:
     ctx.loadAllIssues()

@@ -1,4 +1,5 @@
-import cliutils, options, os, ospaths, sequtils, strutils, tables, times, timeutils, uuids
+import cliutils, docopt, json, logging, options, os, ospaths, sequtils,
+  strutils, tables, times, timeutils, uuids
 
 from nre import re, match
 type
@@ -20,6 +21,11 @@ type
   IssueFilter* = ref object
     properties*: TableRef[string, string]
     completedRange*: tuple[b, e: DateTime]
+
+  PitConfig* = ref object
+    tasksDir*: string
+    contexts*: TableRef[string, string]
+    cfg*: CombinedConfig
 
 const DONE_FOLDER_FORMAT* = "yyyy-MM"
 
@@ -188,4 +194,53 @@ proc filter*(issues: seq[Issue], filter: IssueFilter): seq[Issue] =
            it.getDateTime("completed").between(
              filter.completedRange.b,
              filter.completedRange.e))
+
+### Configuration utilities
+proc loadConfig*(args: Table[string, Value] = initTable[string, Value]()): PitConfig =
+  let pitrcLocations = @[
+    if args["--config"]: $args["--config"] else: "",
+    ".pitrc", $getEnv("PITRC"), $getEnv("HOME") & "/.pitrc"]
+
+  var pitrcFilename: string =
+    foldl(pitrcLocations, if len(a) > 0: a elif existsFile(b): b else: "")
+
+  if not existsFile(pitrcFilename):
+    warn "pit: could not find .pitrc file: " & pitrcFilename
+    if isNilOrWhitespace(pitrcFilename):
+      pitrcFilename = $getEnv("HOME") & "/.pitrc"
+    var cfgFile: File
+    try:
+      cfgFile = open(pitrcFilename, fmWrite)
+      cfgFile.write("{\"tasksDir\": \"/path/to/tasks\"}")
+    except: warn "pit: could not write default .pitrc to " & pitrcFilename
+    finally: close(cfgFile)
+
+  var cfgJson: JsonNode
+  try: cfgJson = parseFile(pitrcFilename)
+  except: raise newException(IOError,
+    "unable to read config file: " & pitrcFilename &
+    "\x0D\x0A" & getCurrentExceptionMsg())
+
+  let cfg = CombinedConfig(docopt: args, json: cfgJson)
+
+  result = PitConfig(
+    cfg: cfg,
+    contexts: newTable[string,string](),
+    tasksDir: cfg.getVal("tasks-dir", ""))
+
+  if cfgJson.hasKey("contexts"):
+    for k, v in cfgJson["contexts"]:
+      result.contexts[k] = v.getStr()
+
+  if isNilOrWhitespace(result.tasksDir):
+    raise newException(Exception, "no tasks directory configured")
+
+  if not existsDir(result.tasksDir):
+    raise newException(Exception, "cannot find tasks dir: " & result.tasksDir)
+
+  # Create our tasks directory structure if needed
+  for s in IssueState:
+    if not existsDir(result.tasksDir / $s):
+      (result.tasksDir / $s).createDir
+
 
