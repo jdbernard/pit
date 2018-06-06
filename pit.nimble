@@ -1,6 +1,6 @@
 # Package
 
-include "src/pitpkg/private/version.nim"
+include "src/pitpkg/version.nim"
 
 version       = PIT_VERSION
 author        = "Jonathan Bernard"

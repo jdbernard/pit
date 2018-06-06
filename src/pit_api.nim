@@ -6,7 +6,7 @@ import nre except toSeq
 
 import pitpkg/private/libpit
 
-include "pitpkg/private/version.nim"
+include "pitpkg/version.nim"
 
 type
   PitApiCfg* = object

@@ -8,7 +8,7 @@ import strutils except capitalize, toUpper, toLower
 import pitpkg/private/libpit
 export libpit
 
-include "pitpkg/private/version.nim"
+include "pitpkg/version.nim"
 
 type
   CliContext = ref object
@@ -226,7 +226,7 @@ Usage:
   pit ( new | add) <summary> [<state>] [options]
   pit list [<listable>] [options]
   pit ( start | done | pending | todo-today | todo | suspend ) <id>... [options]
-  pit edit <id>...
+  pit edit <ref>...
   pit ( delete | rm ) <id>...
 
 Options:
@@ -315,8 +315,19 @@ Options:
     stdout.writeLine ctx.formatIssue(issue)
 
   elif args["edit"]:
-    for id in @(args["<id>"]):
-      edit(ctx.tasksDir.loadIssueById(id))
+    for editRef in @(args["<ref>"]):
+
+      var stateOption = none(IssueState)
+
+      try: stateOption = some(parseEnum[IssueState](editRef))
+      except: discard
+
+      if stateOption.isSome:
+        let state = stateOption.get
+        ctx.loadIssues(state)
+        for issue in ctx.issues[state]: edit(issue)
+
+      else: edit(ctx.tasksDir.loadIssueById(editRef))
 
   elif args["start"] or args["todo-today"] or args["done"] or
        args["pending"] or args["todo"] or args["suspend"]:
