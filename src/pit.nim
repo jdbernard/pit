@@ -21,6 +21,11 @@ type
     termWidth*: int
     triggerPtk*, verbose*: bool
 
+let EDITOR =
+  if existsEnv("EDITOR"): getEnv("EDITOR")
+  else: "vi"
+
+
 proc initContext(args: Table[string, Value]): CliContext =
   let pitCfg = loadConfig(args)
 
@@ -163,16 +168,18 @@ proc writeHeader(ctx: CliContext, header: string) =
   stdout.writeLine('~'.repeat(ctx.termWidth))
   stdout.resetAttributes
 
+proc reorder(ctx: CliContext, state: IssueState) =
+
+  # load the issues to make sure the order file contains all issues in the state.
+  ctx.loadIssues(state)
+  discard os.execShellCmd(EDITOR & " '" & (ctx.tasksDir / $state / "order.txt") & "' </dev/tty >/dev/tty")
+
 proc edit(issue: Issue) =
 
   # Write format comments (to help when editing)
   writeFile(issue.filepath, toStorageFormat(issue, true))
 
-  let editor =
-    if existsEnv("EDITOR"): getEnv("EDITOR")
-    else: "vi"
-
-  discard os.execShellCmd(editor & " " & issue.filepath & " </dev/tty >/dev/tty")
+  discard os.execShellCmd(EDITOR & " '" & issue.filepath & "' </dev/tty >/dev/tty")
 
   try:
     # Try to parse the newly-edited issue to make sure it was successful.
@@ -234,6 +241,7 @@ Usage:
   pit list [<listable>] [options]
   pit ( start | done | pending | todo-today | todo | suspend ) <id>... [options]
   pit edit <ref>...
+  pit reorder <state>
   pit ( delete | rm ) <id>...
 
 Options:
@@ -326,6 +334,9 @@ Options:
     ctx.tasksDir.store(issue, state)
 
     stdout.writeLine ctx.formatIssue(issue)
+
+  elif args["reorder"]:
+    ctx.reorder(parseEnum[IssueState]($args["<state>"]))
 
   elif args["edit"]:
     for editRef in @(args["<ref>"]):

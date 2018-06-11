@@ -1,5 +1,5 @@
-import cliutils, docopt, json, logging, options, os, ospaths, sequtils,
-  strutils, tables, times, timeutils, uuids
+import cliutils, docopt, json, logging, langutils, options, os, ospaths,
+  sequtils, strutils, tables, times, timeutils, uuids
 
 from nre import find, match, re, Regex
 
@@ -89,6 +89,14 @@ proc fullMatchFilter*(pattern: string): IssueFilter =
   result = initFilter()
   result.fullMatch = some(re("(?i)" & pattern))
 
+proc groupBy*(issues: seq[Issue], propertyKey: string): TableRef[string, seq[Issue]] =
+  result = newTable[string, seq[Issue]]()
+  for i in issues:
+    let key = if i.hasProp(propertyKey): i[propertyKey] else: ""
+    if not result.hasKey(key): result[key] = newSeq[Issue]()
+    result[key].add(i)
+
+
 ## Parse and format issues
 proc fromStorageFormat*(id: string, issueTxt: string): Issue =
   type ParseState = enum ReadingSummary, ReadingProps, ReadingDetails
@@ -172,11 +180,51 @@ proc store*(tasksDir: string, issue: Issue, state: IssueState, withComments = fa
 
   issue.store()
 
+proc storeOrder*(issues: seq[Issue], path: string) =
+  var orderLines = newSeq[string]()
+
+  for context, issues in issues.groupBy("context"):
+    orderLines.add("> " & context)
+    for issue in issues: orderLines.add($issue.id & " " & issue.summary)
+    orderLines.add("")
+
+  let orderFile = path / "order.txt"
+  orderFile.writeFile(orderLines.join("\n"))
+
 proc loadIssues*(path: string): seq[Issue] =
-  result = @[]
+  let orderFile = path / "order.txt"
+
+  let orderedIds =
+    if fileExists(orderFile):
+      toSeq(orderFile.lines)
+        .mapIt(it.split(' ')[0])
+        .deduplicate
+        .filterIt(not it.startsWith("> ") and not it.isNilOrWhitespace)
+    else: newSeq[string]()
+
+  type TaggedIssue = tuple[issue: Issue, ordered: bool]
+  var unorderedIssues: seq[TaggedIssue] = @[]
+
   for path in walkDirRec(path):
     if extractFilename(path).match(ISSUE_FILE_PATTERN).isSome():
-      result.add(loadIssue(path))
+      unorderedIssues.add((loadIssue(path), false))
+
+  result = @[]
+
+  # Add all ordered issues in order
+  for id in orderedIds:
+    let idx = unorderedIssues.indexOf(($it.issue.id).startsWith(id))
+    if idx > 0:
+      result.add(unorderedIssues[idx].issue)
+      unorderedIssues[idx].ordered = true
+
+  # Add all remaining, unordered issues in the order they were loaded
+  for taggedIssue in unorderedIssues:
+    if taggedIssue.ordered: continue
+    result.add(taggedIssue.issue)
+
+  # Finally, save current order
+  result.storeOrder(path)
 
 proc changeState*(issue: Issue, tasksDir: string, newState: IssueState) =
   let oldFilepath = issue.filepath
@@ -187,13 +235,6 @@ proc changeState*(issue: Issue, tasksDir: string, newState: IssueState) =
 proc delete*(issue: Issue) = removeFile(issue.filepath)
 
 ## Utilities for working with issue collections.
-proc groupBy*(issues: seq[Issue], propertyKey: string): TableRef[string, seq[Issue]] =
-  result = newTable[string, seq[Issue]]()
-  for i in issues:
-    let key = if i.hasProp(propertyKey): i[propertyKey] else: ""
-    if not result.hasKey(key): result[key] = newSeq[Issue]()
-    result[key].add(i)
-
 proc filter*(issues: seq[Issue], filter: IssueFilter): seq[Issue] =
   result = issues
 
