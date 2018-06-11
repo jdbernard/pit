@@ -1,7 +1,8 @@
 import cliutils, docopt, json, logging, options, os, ospaths, sequtils,
   strutils, tables, times, timeutils, uuids
 
-from nre import re, match
+from nre import find, match, re, Regex
+
 type
   Issue* = ref object
     id*: UUID
@@ -19,8 +20,9 @@ type
     Dormant = "dormant"
 
   IssueFilter* = ref object
+    completedRange*: Option[tuple[b, e: DateTime]]
+    fullMatch*, summaryMatch*: Option[Regex]
     properties*: TableRef[string, string]
-    completedRange*: tuple[b, e: DateTime]
 
   PitConfig* = ref object
     tasksDir*: string
@@ -62,22 +64,30 @@ proc setDateTime*(issue: Issue, key: string, dt: DateTime) =
 
 proc initFilter*(): IssueFilter =
   result = IssueFilter(
-    properties: newTable[string,string](),
-    completedRange: (fromUnix(0).local, fromUnix(253400659199).local))
+    completedRange: none(tuple[b, e: DateTime]),
+    fullMatch: none(Regex),
+    summaryMatch: none(Regex),
+    properties: newTable[string, string]())
 
-proc initFilter*(props: TableRef[string, string]): IssueFilter =
+proc propsFilter*(props: TableRef[string, string]): IssueFilter =
   if isNil(props):
     raise newException(ValueError,
       "cannot initialize property filter without properties")
 
-  result = IssueFilter(
-    properties: props,
-    completedRange: (fromUnix(0).local, fromUnix(253400659199).local))
+  result = initFilter()
+  result.properties = props
 
-proc initFilter*(range: tuple[b, e: DateTime]): IssueFilter =
-  result = IssueFilter(
-    properties: newTable[string, string](),
-    completedRange: range)
+proc dateFilter*(range: tuple[b, e: DateTime]): IssueFilter =
+  result = initFilter()
+  result.completedRange = some(range)
+
+proc summaryMatchFilter*(pattern: string): IssueFilter =
+  result = initFilter()
+  result.summaryMatch = some(re("(?i)" & pattern))
+
+proc fullMatchFilter*(pattern: string): IssueFilter =
+  result = initFilter()
+  result.fullMatch = some(re("(?i)" & pattern))
 
 ## Parse and format issues
 proc fromStorageFormat*(id: string, issueTxt: string): Issue =
@@ -190,10 +200,19 @@ proc filter*(issues: seq[Issue], filter: IssueFilter): seq[Issue] =
   for k,v in filter.properties:
     result = result.filterIt(it.hasProp(k) and it[k] == v)
 
-  result = result.filterIt(not it.hasProp("completed") or
-           it.getDateTime("completed").between(
-             filter.completedRange.b,
-             filter.completedRange.e))
+  if filter.completedRange.isSome:
+    let range = filter.completedRange.get
+    result = result.filterIt(
+             not it.hasProp("completed") or
+             it.getDateTime("completed").between(range.b, range.e))
+
+  if filter.summaryMatch.isSome:
+    let p = filter.summaryMatch.get
+    result = result.filterIt(it.summary.find(p).isSome)
+
+  if filter.fullMatch.isSome:
+    let p = filter.fullMatch.get
+    result = result.filterIt( it.summary.find(p).isSome or it.details.find(p).isSome)
 
 ### Configuration utilities
 proc loadConfig*(args: Table[string, Value] = initTable[string, Value]()): PitConfig =

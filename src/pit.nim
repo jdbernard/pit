@@ -4,6 +4,7 @@
 import cliutils, docopt, json, logging, options, os, ospaths, sequtils,
   tables, terminal, times, timeutils, unicode, uuids
 
+from nre import re
 import strutils except capitalize, toUpper, toLower
 import pitpkg/private/libpit
 export libpit
@@ -182,7 +183,7 @@ proc edit(issue: Issue) =
       getCurrentExceptionMsg()
     issue.store()
 
-proc list(ctx: CliContext, filter: Option[IssueFilter], state: Option[IssueState], today, future, verbose: bool) =
+proc list(ctx: CliContext, filter: Option[IssueFilter], state: Option[IssueState], showToday, showFuture, verbose: bool) =
 
   if state.isSome:
     ctx.loadIssues(state.get)
@@ -192,6 +193,12 @@ proc list(ctx: CliContext, filter: Option[IssueFilter], state: Option[IssueState
 
   ctx.loadAllIssues()
   if filter.isSome: ctx.filterIssues(filter.get)
+
+  let today = showToday and [Current, TodoToday].anyIt(
+    ctx.issues.hasKey(it) and ctx.issues[it].len > 0)
+
+  let future = showFuture and [Pending, Todo].anyIt(
+    ctx.issues.hasKey(it) and ctx.issues[it].len > 0)
 
   let indent = if today and future: "  " else: ""
 
@@ -245,6 +252,12 @@ Options:
   -T, --today               Limit to today's issues.
 
   -F, --future              Limit to future issues.
+
+  -m, --match <pattern>     Limit to issues whose summaries match the given
+                            pattern (PCRE regex supported).
+
+  -M, --match-all <pat>     Limit to the issues whose summaries or details
+                            match the given pattern (PCRE regex supported).
 
   -v, --verbose             Show issue details when listing issues.
 
@@ -378,6 +391,15 @@ Options:
     # Initialize filter with properties (if given)
     if propertiesOption.isSome:
       filter.properties = propertiesOption.get
+      filterOption = some(filter)
+
+    # If they supplied text matches, add that to the filter.
+    if args["--match"]:
+      filter.summaryMatch = some(re("(?i)" & $args["--match"]))
+      filterOption = some(filter)
+
+    if args["--match-all"]:
+      filter.fullMatch = some(re("(?i)" & $args["--match-all"]))
       filterOption = some(filter)
 
     # If no "context" property is given, use the default (if we have one)
