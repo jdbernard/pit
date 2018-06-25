@@ -230,7 +230,7 @@ proc changeState*(issue: Issue, tasksDir: string, newState: IssueState) =
   let oldFilepath = issue.filepath
   if newState == Done: issue.setDateTime("completed", getTime().local)
   tasksDir.store(issue, newState)
-  removeFile(oldFilepath)
+  if oldFilePath != issue.filepath: removeFile(oldFilepath)
 
 proc delete*(issue: Issue) = removeFile(issue.filepath)
 
