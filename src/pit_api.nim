@@ -94,6 +94,19 @@ proc start*(cfg: PitApiCfg) =
     post "/issues":
       checkAuth(cfg); if not authed: return true
 
+    get "/issue/@issueId":
+      checkAuth(cfg); if not authed: return true
+
+      var (hasColor, args) = paramsToArgs(request.params)
+      args = @["list", issueId] & args
+
+      info "args: \n" & args.join(" ")
+      let execResult = execWithOutput("pit", ".", args)
+      if execResult[2] != 0: resp(Http500, stripAnsi($execResult[0] & "\n" & $execResult[1]), TXT)
+      else:
+        if hasColor: resp(stripAnsi(execResult[0]), TXT)
+        else: resp(execResult[0], TXT)
+
   waitFor(stopFuture)
 
 proc loadApiConfig(args: Table[string, Value]): PitApiCfg =
