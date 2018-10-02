@@ -46,25 +46,6 @@ template checkAuth(cfg: PitApiCfg) =
     response.data[2]["Content-Type"] = TXT
     response.data[3] = getCurrentExceptionMsg()
 
-proc paramsToArgs(params: StringTableRef): tuple[stripAnsi: bool, args: seq[string]] =
-  result = (false, @[])
-
-  if params.hasKey("color"):
-    if params["color"] != "true":
-      result[0] = true
-
-  for k,v in params:
-    if k == "color": continue
-    elif k.startsWith("arg"): result[1].add(v) # support ?arg1=val1&arg2=val2 -> cmd val1 val2
-    else :
-      result[1].add("--" & k)
-      if v != "true": result[1].add(v) # support things like ?verbose=true -> cmd --verbose
-
-let STRIP_ANSI_REGEX = re"\x1B\[([0-9]{1,2}(;[0-9]{1,2})?)?[m|K]"
-
-proc stripAnsi(str: string): string =
-  return str.replace(STRIP_ANSI_REGEX, "")
-
 proc start*(cfg: PitApiCfg) =
 
   var stopFuture = newFuture[void]()
@@ -81,15 +62,13 @@ proc start*(cfg: PitApiCfg) =
     get "/issues":
       checkAuth(cfg); if not authed: return true
 
-      var (hasColor, args) = paramsToArgs(request.params)
+      var args = queryParamsToCliArgs(request.params)
       args = @["list"] & args
 
       info "args: \n" & args.join(" ")
       let execResult = execWithOutput("pit", ".", args)
       if execResult[2] != 0: resp(Http500, stripAnsi($execResult[0] & "\n" & $execResult[1]), TXT)
-      else:
-        if hasColor: resp(stripAnsi(execResult[0]), TXT)
-        else: resp(execResult[0], TXT)
+      else: resp(stripAnsi(execResult[0]), TXT)
 
     post "/issues":
       checkAuth(cfg); if not authed: return true
@@ -97,15 +76,13 @@ proc start*(cfg: PitApiCfg) =
     get "/issue/@issueId":
       checkAuth(cfg); if not authed: return true
 
-      var (hasColor, args) = paramsToArgs(request.params)
-      args = @["list", issueId] & args
+      var args = queryParamsToCliArgs(request.params)
+      args = @["list", @"issueId"] & args
 
       info "args: \n" & args.join(" ")
       let execResult = execWithOutput("pit", ".", args)
       if execResult[2] != 0: resp(Http500, stripAnsi($execResult[0] & "\n" & $execResult[1]), TXT)
-      else:
-        if hasColor: resp(stripAnsi(execResult[0]), TXT)
-        else: resp(execResult[0], TXT)
+      else: resp(stripAnsi(execResult[0]), TXT)
 
   waitFor(stopFuture)
 
