@@ -1,7 +1,7 @@
 ## Personal Issue Tracker API Interface
 ## ====================================
 
-import asyncdispatch, cliutils, docopt, jester, json, logging, sequtils, strutils
+import asyncdispatch, cliutils, docopt, jester, json, logging, options, sequtils, strutils
 import nre except toSeq
 
 import pitpkg/private/libpit
@@ -17,6 +17,20 @@ type
 const TXT = "text/plain"
 
 proc raiseEx(reason: string): void = raise newException(Exception, reason)
+
+template halt(code: HttpCode,
+              headers: RawHeaders,
+              content: string): typed =
+  ## Immediately replies with the specified request. This means any further
+  ## code will not be executed after calling this template in the current
+  ## route.
+  bind TCActionSend, newHttpHeaders
+  result[0] = CallbackAction.TCActionSend
+  result[1] = code
+  result[2] = some(headers)
+  result[3] = content
+  result.matched = true
+  break allRoutes
 
 template checkAuth(cfg: PitApiCfg) =
   ## Check this request for authentication and authorization information.
@@ -40,11 +54,10 @@ template checkAuth(cfg: PitApiCfg) =
 
   except:
     stderr.writeLine "Auth failed: " & getCurrentExceptionMsg()
-    response.data[0] = CallbackAction.TCActionSend
-    response.data[1] = Http401
-    response.data[2]["WWW-Authenticate"] = "Bearer"
-    response.data[2]["Content-Type"] = TXT
-    response.data[3] = getCurrentExceptionMsg()
+    halt(
+      Http401,
+      headers & @{"Content-Type": TXT},
+      getCurrentExceptionMsg())
 
 proc start*(cfg: PitApiCfg) =
 
