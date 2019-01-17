@@ -56,7 +56,7 @@ template checkAuth(cfg: PitApiCfg) =
     stderr.writeLine "Auth failed: " & getCurrentExceptionMsg()
     halt(
       Http401,
-      headers & @{"Content-Type": TXT},
+      @{"Content-Type": TXT},
       getCurrentExceptionMsg())
 
 proc start*(cfg: PitApiCfg) =
@@ -73,7 +73,7 @@ proc start*(cfg: PitApiCfg) =
       resp("pong", TXT)
 
     get "/issues":
-      checkAuth(cfg); if not authed: return true
+      checkAuth(cfg)
 
       var args = queryParamsToCliArgs(request.params)
       args = @["list"] & args
@@ -84,10 +84,10 @@ proc start*(cfg: PitApiCfg) =
       else: resp(stripAnsi(execResult[0]), TXT)
 
     post "/issues":
-      checkAuth(cfg); if not authed: return true
+      checkAuth(cfg)
 
     get "/issue/@issueId":
-      checkAuth(cfg); if not authed: return true
+      checkAuth(cfg)
 
       var args = queryParamsToCliArgs(request.params)
       args = @["list", @"issueId"] & args
