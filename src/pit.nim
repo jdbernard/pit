@@ -76,11 +76,21 @@ proc formatSectionIssue(ctx: CliContext, issue: Issue, width: int, indent = "",
 
   var showDetails = not issue.details.isNilOrWhitespace and verbose
 
-  # Wrap and write the summary.
-  var wrappedSummary = (" ".repeat(5) & issue.summary).wordWrap(width - 2).indent(2 + indent.len)
-  wrappedSummary = wrappedSummary[(6 + indent.len)..^1]
+  var prefixLen = 0
+  var summaryIndentLen = indent.len + 7
 
-  result = (indent & ($issue.id)[0..<6]).withColor(fgBlack, true)
+  if issue.hasProp("delegated-to"): prefixLen += issue["delegated-to"].len + 2 # space for the ':' and ' '
+
+  # Wrap and write the summary.
+  var wrappedSummary = ("+".repeat(prefixLen) & issue.summary).wordWrap(width - summaryIndentLen).indent(summaryIndentLen)
+
+  wrappedSummary = wrappedSummary[(prefixLen + summaryIndentLen)..^1]
+
+  result = (indent & ($issue.id)[0..<6]).withColor(fgBlack, true) & " "
+
+  if issue.hasProp("delegated-to"):
+    result &= (issue["delegated-to"] & ": ").withColor(fgGreen)
+
   result &= wrappedSummary.withColor(fgWhite)
 
   if issue.tags.len > 0:
@@ -92,9 +102,9 @@ proc formatSectionIssue(ctx: CliContext, issue: Issue, width: int, indent = "",
 
   if issue.hasProp("pending"):
     let startIdx = "Pending: ".len
-    var pendingText = issue["pending"].wordWrap(width - startIdx - 2)
+    var pendingText = issue["pending"].wordWrap(width - startIdx - summaryIndentLen)
                                       .indent(startIdx)
-    pendingText = ("Pending: " & pendingText[startIdx..^1]).indent(indent.len + 2)
+    pendingText = ("Pending: " & pendingText[startIdx..^1]).indent(summaryIndentLen)
     result &= "\n" & pendingText.withColor(fgCyan)
 
   if showDetails:
@@ -106,16 +116,9 @@ proc formatSectionIssueList(ctx: CliContext, issues: seq[Issue], width: int,
         indent: string, verbose: bool): string =
 
   result = ""
-  var topPadded = true
   for i in issues:
     var issueText = ctx.formatSectionIssue(i, width, indent, verbose)
-    if issueText.splitLines.len > 1:
-      if topPadded: result &= issueText & "\n\n"
-      else: result &= "\n" & issueText & "\n\n"
-      topPadded = true
-    else:
-      result &= issueText & "\n"
-      topPadded = false
+    result &= issueText & "\n"
 
 proc formatSection(ctx: CliContext, issues: seq[Issue], state: IssueState,
                    indent = "", verbose = false): string =
@@ -242,6 +245,7 @@ Usage:
   pit ( start | done | pending | todo-today | todo | suspend ) <id>... [options]
   pit edit <ref>...
   pit reorder <state>
+  pit delegate <id> <delegated-to>
   pit ( delete | rm ) <id>...
 
 Options:
@@ -381,6 +385,13 @@ Options:
         discard execShellCmd(cmd)
       elif targetState == Done or targetState == Pending:
         discard execShellCmd("ptk stop")
+
+  elif args["delegate"]:
+
+    let issue = ctx.tasksDir.loadIssueById($(args["<id>"]))
+    issue["delegated-to"] = $args["<delegated-to>"]
+
+    issue.store()
 
   elif args["delete"] or args["rm"]:
     for id in @(args["<id>"]):
