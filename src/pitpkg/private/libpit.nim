@@ -146,7 +146,8 @@ proc toStorageFormat*(issue: Issue, withComments = false): string =
   if withComments: lines.add("# Summary (one line):")
   lines.add(issue.summary)
   if withComments: lines.add("# Properties (\"key:value\" per line):")
-  for key, val in issue.properties: lines.add(key & ": " & val)
+  for key, val in issue.properties:
+    if not val.isNilOrWhitespace: lines.add(key & ": " & val)
   if issue.tags.len > 0: lines.add("tags: " & issue.tags.join(","))
   if not isNilOrWhitespace(issue.details) or withComments:
     if withComments: lines.add("# Details go below the \"--------\"")
