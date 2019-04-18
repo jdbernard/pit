@@ -5,7 +5,7 @@ import cliutils, docopt, json, logging, options, os, ospaths, sequtils,
   tables, terminal, times, timeutils, unicode, uuids
 
 from nre import re
-import strutils except capitalize, toUpper, toLower
+import strutils except capitalize, strip, toUpper, toLower
 import pitpkg/private/libpit
 export libpit
 
@@ -244,6 +244,8 @@ Usage:
   pit list [<listable>] [options]
   pit ( start | done | pending | todo-today | todo | suspend ) <id>... [options]
   pit edit <ref>...
+  pit tag <id>... [options]
+  pit untag <id>... [options]
   pit reorder <state>
   pit delegate <id> <delegated-to>
   pit ( delete | rm ) <id>...
@@ -356,6 +358,29 @@ Options:
         for issue in ctx.issues[state]: edit(issue)
 
       else: edit(ctx.tasksDir.loadIssueById(editRef))
+
+  elif args["tag"]:
+    if not args["--tags"]: raise newException(Exception, "no tags given")
+
+    let newTags = ($args["--tags"]).split(",").mapIt(it.strip)
+
+    for id in @(args["<id>"]):
+      var issue = ctx.tasksDir.loadIssueById(id)
+      issue.tags = deduplicate(issue.tags & newTags)
+      issue.store()
+
+  elif args["untag"]:
+    let tagsToRemove: seq[string] =
+      if args["--tags"]: ($args["--tags"]).split(",").mapIt(it.strip)
+      else: @[]
+
+    for id in @(args["<id>"]):
+      var issue = ctx.tasksDir.loadIssueById(id)
+      if tagsToRemove.len > 0:
+        issue.tags = issue.tags.filter(
+          proc (tag: string): bool = not tagsToRemove.anyIt(it == tag))
+      else: issue.tags = @[]
+      issue.store()
 
   elif args["start"] or args["todo-today"] or args["done"] or
        args["pending"] or args["todo"] or args["suspend"]:

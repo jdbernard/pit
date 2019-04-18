@@ -179,7 +179,7 @@ proc store*(tasksDir: string, issue: Issue, state: IssueState, withComments = fa
   else:
     issue.filepath = stateDir / filename
 
-  issue.store()
+  issue.store(withComments)
 
 proc storeOrder*(issues: seq[Issue], path: string) =
   var orderLines = newSeq[string]()
