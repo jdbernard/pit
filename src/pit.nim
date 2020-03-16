@@ -1,7 +1,7 @@
 ## Personal Issue Tracker CLI interface
 ## ====================================
 
-import cliutils, docopt, json, logging, options, os, ospaths, sequtils,
+import cliutils, docopt, json, logging, options, os, sequtils,
   tables, terminal, times, timeutils, unicode, uuids
 
 from nre import re
@@ -404,8 +404,15 @@ Options:
     if ctx.triggerPtk:
       if targetState == Current:
         let issue = ctx.tasksDir.loadIssueById($(args["<id>"][0]))
-        var cmd = "ptk start "
-        if issue.tags.len > 0: cmd &= "-g \"" & issue.tags.join(",") & "\""
+        var cmd = "ptk start"
+        if issue.tags.len > 0 or issue.properties.hasKey("context"):
+          let tags = concat(
+            issue.tags,
+            if issue.properties.hasKey("context"): @[issue.properties["context"]]
+            else: @[]
+          )
+          cmd &= " -g \"" & tags.join(",") & "\""
+        cmd &= " -n \"pit-id: " & $issue.id & "\""
         cmd &= " \"" & issue.summary & "\""
         discard execShellCmd(cmd)
       elif targetState == Done or targetState == Pending:
