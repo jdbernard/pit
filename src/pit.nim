@@ -36,6 +36,7 @@ proc initContext(args: Table[string, Value]): CliContext =
   let cliCfg = CombinedConfig(docopt: args, json: cliJson)
 
   result = CliContext(
+    cfg: pitCfg,
     contexts: pitCfg.contexts,
     defaultContext:
       if not cliJson.hasKey("defaultContext"): none(string)
@@ -43,7 +44,7 @@ proc initContext(args: Table[string, Value]): CliContext =
     verbose: parseBool(cliCfg.getVal("verbose", "false")) and not args["--quiet"],
     issues: newTable[IssueState, seq[Issue]](),
     tasksDir: pitCfg.tasksDir,
-    termWidth: parseInt(cliCfg.getVal("term-width", "80")),
+    termWidth: parseInt(cliCfg.getVal("termWidth", "80")),
     triggerPtk: cliJson.getOrDefault("triggerPtk").getBool(false))
 
 proc getIssueContextDisplayName(ctx: CliContext, context: string): string =
