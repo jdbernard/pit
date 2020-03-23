@@ -1,6 +1,6 @@
 # Package
 
-version       = "4.7.0"
+version       = "4.7.1"
 author        = "Jonathan Bernard"
 description   = "Personal issue tracker."
 license       = "MIT"
@@ -15,7 +15,7 @@ requires @[
   "jester 0.4.1",
   "uuids 0.1.10",
 
-  "https://git.jdb-labs.com/jdb/nim-cli-utils.git >= 0.6.1",
+  "https://git.jdb-labs.com/jdb/nim-cli-utils.git >= 0.6.4",
   "https://git.jdb-labs.com/jdb/nim-lang-utils.git >= 0.4.0",
   "https://git.jdb-labs.com/jdb/nim-time-utils.git >= 0.4.0",
   "https://git.jdb-labs.com/jdb/update-nim-package-version"
