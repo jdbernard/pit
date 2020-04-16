@@ -288,6 +288,8 @@ Options:
                             configured in the .pitrc file)
 
   --term-width <width>      Manually set the terminal width to use.
+
+  --ptk                     Enable PTK integration for this command.
 """
 
   logging.addHandler(newConsoleLogger())
@@ -402,7 +404,7 @@ Options:
       if targetState == Done: issue["completed"] = getTime().local.formatIso8601
       issue.changeState(ctx.tasksDir, targetState)
 
-    if ctx.triggerPtk:
+    if ctx.triggerPtk or args["--ptk"]:
       if targetState == Current:
         let issue = ctx.tasksDir.loadIssueById($(args["<id>"][0]))
         var cmd = "ptk start"
