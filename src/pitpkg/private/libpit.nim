@@ -1,4 +1,4 @@
-import cliutils, docopt, json, logging, langutils, options, os, ospaths,
+import cliutils, docopt, json, logging, langutils, options, os,
   sequtils, strutils, tables, times, timeutils, uuids
 
 from nre import find, match, re, Regex
@@ -49,6 +49,7 @@ proc `[]`*(issue: Issue, key: string): string =
 proc `[]=`*(issue: Issue, key: string, value: string) =
   issue.properties[key] = value
 
+## Issue property accessors
 proc hasProp*(issue: Issue, key: string): bool =
   return issue.properties.hasKey(key)
 
@@ -62,6 +63,7 @@ proc getDateTime*(issue: Issue, key: string, default: DateTime): DateTime =
 proc setDateTime*(issue: Issue, key: string, dt: DateTime) =
   issue.properties[key] = dt.formatIso8601
 
+## Issue filtering
 proc initFilter*(): IssueFilter =
   result = IssueFilter(
     completedRange: none(tuple[b, e: DateTime]),

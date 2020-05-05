@@ -5,7 +5,7 @@ import cliutils, docopt, json, logging, options, os, sequtils,
   tables, terminal, times, timeutils, unicode, uuids
 
 from nre import re
-import strutils except capitalize, strip, toUpper, toLower
+import strutils except alignLeft, capitalize, strip, toUpper, toLower
 import pitpkg/private/libpit
 export libpit
 
@@ -490,7 +490,13 @@ Options:
           if issue.hasProp("context") and not uniqContexts.contains(issue["context"]):
             uniqContexts.add(issue["context"])
 
-      for c in uniqContexts: stdout.writeLine(c)
+      let maxLen = foldl(uniqContexts,
+        if a.len > b.len: a
+        else: b
+      ).len
+
+      for c in uniqContexts:
+        stdout.writeLine(c.alignLeft(maxLen+2) & ctx.getIssueContextDisplayName(c))
 
     # List a specific issue
     elif issueIdOption.isSome:
