@@ -2,7 +2,7 @@
 ## ====================================
 
 import cliutils, docopt, json, logging, options, os, sequtils,
-  tables, terminal, times, timeutils, unicode, uuids
+  std/wordwrap, tables, terminal, times, timeutils, unicode, uuids
 
 from nre import re
 import strutils except alignLeft, capitalize, strip, toUpper, toLower
@@ -49,7 +49,7 @@ proc initContext(args: Table[string, Value]): CliContext =
 
 proc getIssueContextDisplayName(ctx: CliContext, context: string): string =
   if not ctx.contexts.hasKey(context):
-    if context.isNilOrWhitespace: return "<default>"
+    if context.isEmptyOrWhitespace: return "<default>"
     else: return context.capitalize()
   return ctx.contexts[context]
 
@@ -67,7 +67,7 @@ proc formatIssue(ctx: CliContext, issue: Issue): string =
 
 
   result &= "--------".withColor(fgBlack, true) & "\n"
-  if not issue.details.isNilOrWhitespace:
+  if not issue.details.isEmptyOrWhitespace:
     result &= issue.details.strip.withColor(fgCyan) & "\n"
 
 proc formatSectionIssue(ctx: CliContext, issue: Issue, width: int, indent = "",
@@ -75,7 +75,7 @@ proc formatSectionIssue(ctx: CliContext, issue: Issue, width: int, indent = "",
 
   result = ""
 
-  var showDetails = not issue.details.isNilOrWhitespace and verbose
+  var showDetails = not issue.details.isEmptyOrWhitespace and verbose
 
   var prefixLen = 0
   var summaryIndentLen = indent.len + 7
@@ -83,7 +83,7 @@ proc formatSectionIssue(ctx: CliContext, issue: Issue, width: int, indent = "",
   if issue.hasProp("delegated-to"): prefixLen += issue["delegated-to"].len + 2 # space for the ':' and ' '
 
   # Wrap and write the summary.
-  var wrappedSummary = ("+".repeat(prefixLen) & issue.summary).wordWrap(width - summaryIndentLen).indent(summaryIndentLen)
+  var wrappedSummary = ("+".repeat(prefixLen) & issue.summary).wrapWords(width - summaryIndentLen).indent(summaryIndentLen)
 
   wrappedSummary = wrappedSummary[(prefixLen + summaryIndentLen)..^1]
 
@@ -103,7 +103,7 @@ proc formatSectionIssue(ctx: CliContext, issue: Issue, width: int, indent = "",
 
   if issue.hasProp("pending"):
     let startIdx = "Pending: ".len
-    var pendingText = issue["pending"].wordWrap(width - startIdx - summaryIndentLen)
+    var pendingText = issue["pending"].wrapWords(width - startIdx - summaryIndentLen)
                                       .indent(startIdx)
     pendingText = ("Pending: " & pendingText[startIdx..^1]).indent(summaryIndentLen)
     result &= "\n" & pendingText.withColor(fgCyan)

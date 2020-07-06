@@ -122,7 +122,7 @@ proc fromStorageFormat*(id: string, issueTxt: string): Issue =
 
     of ReadingProps:
       # Ignore empty lines
-      if line.isNilOrWhitespace: continue
+      if line.isEmptyOrWhitespace: continue
 
       # Look for the sentinal to start parsing as detail lines
       if line == "--------":
@@ -149,9 +149,9 @@ proc toStorageFormat*(issue: Issue, withComments = false): string =
   lines.add(issue.summary)
   if withComments: lines.add("# Properties (\"key:value\" per line):")
   for key, val in issue.properties:
-    if not val.isNilOrWhitespace: lines.add(key & ": " & val)
+    if not val.isEmptyOrWhitespace: lines.add(key & ": " & val)
   if issue.tags.len > 0: lines.add("tags: " & issue.tags.join(","))
-  if not isNilOrWhitespace(issue.details) or withComments:
+  if not isEmptyOrWhitespace(issue.details) or withComments:
     if withComments: lines.add("# Details go below the \"--------\"")
     lines.add("--------")
     lines.add(issue.details)
@@ -202,7 +202,7 @@ proc loadIssues*(path: string): seq[Issue] =
       toSeq(orderFile.lines)
         .mapIt(it.split(' ')[0])
         .deduplicate
-        .filterIt(not it.startsWith("> ") and not it.isNilOrWhitespace)
+        .filterIt(not it.startsWith("> ") and not it.isEmptyOrWhitespace)
     else: newSeq[string]()
 
   type TaggedIssue = tuple[issue: Issue, ordered: bool]
@@ -269,7 +269,7 @@ proc loadConfig*(args: Table[string, Value] = initTable[string, Value]()): PitCo
 
   if not existsFile(pitrcFilename):
     warn "pit: could not find .pitrc file: " & pitrcFilename
-    if isNilOrWhitespace(pitrcFilename):
+    if isEmptyOrWhitespace(pitrcFilename):
       pitrcFilename = $getEnv("HOME") & "/.pitrc"
     var cfgFile: File
     try:
@@ -295,7 +295,7 @@ proc loadConfig*(args: Table[string, Value] = initTable[string, Value]()): PitCo
     for k, v in cfgJson["contexts"]:
       result.contexts[k] = v.getStr()
 
-  if isNilOrWhitespace(result.tasksDir):
+  if isEmptyOrWhitespace(result.tasksDir):
     raise newException(Exception, "no tasks directory configured")
 
   if not existsDir(result.tasksDir):
