@@ -170,6 +170,7 @@ proc loadIssueById*(tasksDir, id: string): Issue =
   raise newException(KeyError, "cannot find issue for id: " & id)
 
 proc store*(issue: Issue, withComments = false) =
+  discard existsOrCreateDir(issue.filePath.parentDir)
   writeFile(issue.filepath, toStorageFormat(issue, withComments))
 
 proc store*(tasksDir: string, issue: Issue, state: IssueState, withComments = false) =
