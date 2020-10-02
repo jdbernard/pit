@@ -1,7 +1,7 @@
 ## Personal Issue Tracker CLI interface
 ## ====================================
 
-import cliutils, docopt, json, logging, options, os, sequtils,
+import algorithm, cliutils, docopt, json, logging, options, os, sequtils,
   std/wordwrap, tables, terminal, times, timeutils, unicode, uuids
 
 from nre import re
@@ -242,7 +242,8 @@ when isMainModule:
   let doc = """
 Usage:
   pit ( new | add) <summary> [<state>] [options]
-  pit list [<listable>] [options]
+  pit list contexts
+  pit list [<stateOrId>] [options]
   pit ( start | done | pending | todo-today | todo | suspend ) <id>... [options]
   pit edit <ref>...
   pit tag <id>... [options]
@@ -475,11 +476,10 @@ Options:
     var stateOption = none(IssueState)
     var issueIdOption = none(string)
 
-    if args["<listable>"]:
-      if $args["<listable>"] == "contexts": listContexts = true
-      else:
-        try: stateOption = some(parseEnum[IssueState]($args["<listable>"]))
-        except: issueIdOption = some($args["<listable>"])
+    if args["contexts"]: listContexts = true
+    elif args["<stateOrId>"]:
+      try: stateOption = some(parseEnum[IssueState]($args["<stateOrId>"]))
+      except: issueIdOption = some($args["<stateOrId>"])
 
     # List the known contexts
     if listContexts:
@@ -495,7 +495,7 @@ Options:
         else: b
       ).len
 
-      for c in uniqContexts:
+      for c in uniqContexts.sorted:
         stdout.writeLine(c.alignLeft(maxLen+2) & ctx.getIssueContextDisplayName(c))
 
     # List a specific issue
