@@ -46,7 +46,7 @@ Some other common properties I use are:
 
 - `resolution`: for short notes about why an issue was moved to `done`,
   especially if it the action wasn't taken or if it is not completely clear
-  that this issue was completed. 
+  that this issue was completed.
 
 ## Configuration Options
 
@@ -107,7 +107,7 @@ in the configuration file. All options are optional unless stated otherwise.
   - `defaultContext`: if present all invokations to the CLI will
     be in this context. This is like adding a `--context <defaultContext>`
     parameter to every CLI invocation. Any actual `--context` parameter will
-    override this value. 
+    override this value.
 
   - `verbose`: Show issue details when listing issues (same as
     `--verbose` flag).
@@ -135,7 +135,4 @@ in the configuration file. All options are optional unless stated otherwise.
   "Personal"; it does not need an alternate display name.
 
 * `tasksDir` **required**: a file path to the root directory for the issue
-  repository (same as `--tasks-dir` CLI parameter). 
-
-  - CLI parameter: *cannot be specified via CLI*
-  - config file key: `contexts`
+  repository (same as `--tasks-dir` CLI parameter).
