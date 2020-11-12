@@ -1,6 +1,6 @@
 # Package
 
-version       = "4.9.3"
+version       = "4.9.4"
 author        = "Jonathan Bernard"
 description   = "Personal issue tracker."
 license       = "MIT"
@@ -10,9 +10,9 @@ bin           = @["pit", "pit_api"]
 # Dependencies
 
 requires @[
-  "nim >= 0.19.0",
+  "nim >= 1.4.0",
   "docopt 0.6.8",
-  "jester 0.4.1",
+  "jester 0.5.0",
   "uuids 0.1.10",
 
   "https://git.jdb-labs.com/jdb/nim-cli-utils.git >= 0.6.4",

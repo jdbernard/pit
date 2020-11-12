@@ -1,1 +1,1 @@
-const PIT_VERSION* = "4.9.3"
+const PIT_VERSION* = "4.9.4"

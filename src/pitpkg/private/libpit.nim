@@ -266,9 +266,9 @@ proc loadConfig*(args: Table[string, Value] = initTable[string, Value]()): PitCo
     ".pitrc", $getEnv("PITRC"), $getEnv("HOME") & "/.pitrc"]
 
   var pitrcFilename: string =
-    foldl(pitrcLocations, if len(a) > 0: a elif existsFile(b): b else: "")
+    foldl(pitrcLocations, if len(a) > 0: a elif fileExists(b): b else: "")
 
-  if not existsFile(pitrcFilename):
+  if not fileExists(pitrcFilename):
     warn "pit: could not find .pitrc file: " & pitrcFilename
     if isEmptyOrWhitespace(pitrcFilename):
       pitrcFilename = $getEnv("HOME") & "/.pitrc"
@@ -299,12 +299,10 @@ proc loadConfig*(args: Table[string, Value] = initTable[string, Value]()): PitCo
   if isEmptyOrWhitespace(result.tasksDir):
     raise newException(Exception, "no tasks directory configured")
 
-  if not existsDir(result.tasksDir):
+  if not dirExists(result.tasksDir):
     raise newException(Exception, "cannot find tasks dir: " & result.tasksDir)
 
   # Create our tasks directory structure if needed
   for s in IssueState:
-    if not existsDir(result.tasksDir / $s):
+    if not dirExists(result.tasksDir / $s):
       (result.tasksDir / $s).createDir
-
-
