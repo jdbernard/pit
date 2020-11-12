@@ -466,6 +466,10 @@ Options:
       filter.properties["context"] = ctx.defaultContext.get
       filterOption = some(filter)
 
+    if args["--tags"]:
+      filter.hasTags = ($args["--tags"]).split(',')
+      filterOption = some(filter)
+
     # Finally, if the "context" is "all", don't filter on context
     if filter.properties.hasKey("context") and
        filter.properties["context"] == "all":

@@ -22,6 +22,7 @@ type
   IssueFilter* = ref object
     completedRange*: Option[tuple[b, e: DateTime]]
     fullMatch*, summaryMatch*: Option[Regex]
+    hasTags*: seq[string]
     properties*: TableRef[string, string]
 
   PitConfig* = ref object
@@ -69,6 +70,7 @@ proc initFilter*(): IssueFilter =
     completedRange: none(tuple[b, e: DateTime]),
     fullMatch: none(Regex),
     summaryMatch: none(Regex),
+    hasTags: @[],
     properties: newTable[string, string]())
 
 proc propsFilter*(props: TableRef[string, string]): IssueFilter =
@@ -90,6 +92,10 @@ proc summaryMatchFilter*(pattern: string): IssueFilter =
 proc fullMatchFilter*(pattern: string): IssueFilter =
   result = initFilter()
   result.fullMatch = some(re("(?i)" & pattern))
+
+proc hasTagsFilter*(tags: seq[string]): IssueFilter =
+  result = initFilter()
+  result.hasTags = tags
 
 proc groupBy*(issues: seq[Issue], propertyKey: string): TableRef[string, seq[Issue]] =
   result = newTable[string, seq[Issue]]()
@@ -258,6 +264,9 @@ proc filter*(issues: seq[Issue], filter: IssueFilter): seq[Issue] =
   if filter.fullMatch.isSome:
     let p = filter.fullMatch.get
     result = result.filterIt( it.summary.find(p).isSome or it.details.find(p).isSome)
+
+  for tag in filter.hasTags:
+    result = result.filterIt(it.tags.find(tag) >= 0)
 
 ### Configuration utilities
 proc loadConfig*(args: Table[string, Value] = initTable[string, Value]()): PitConfig =
