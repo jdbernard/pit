@@ -199,6 +199,10 @@ proc list(ctx: CliContext, filter: Option[IssueFilter], state: Option[IssueState
   if state.isSome:
     ctx.loadIssues(state.get)
     if filter.isSome: ctx.filterIssues(filter.get)
+    if state.get == Done and showToday:
+      ctx.issues[Done] = ctx.issues[Done].filterIt(
+        it.hasProp("completed") and
+        sameDay(getTime().local, it.getDateTime("completed")))
     stdout.write ctx.formatSection(ctx.issues[state.get], state.get, "", verbose)
     return
 
@@ -220,13 +224,6 @@ proc list(ctx: CliContext, filter: Option[IssueFilter], state: Option[IssueState
     for s in [Current, TodoToday]:
       if ctx.issues.hasKey(s) and ctx.issues[s].len > 0:
         stdout.write ctx.formatSection(ctx.issues[s], s, indent, verbose)
-
-    if ctx.issues.hasKey(Done):
-        let doneIssues = ctx.issues[Done].filterIt(
-          it.hasProp("completed") and
-          sameDay(getTime().local, it.getDateTime("completed")))
-        if doneIssues.len > 0:
-          stdout.write ctx.formatSection(doneIssues, Done, indent, verbose)
 
   # Future items
   if future:
