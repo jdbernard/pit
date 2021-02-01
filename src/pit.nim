@@ -70,6 +70,8 @@ proc formatIssue(ctx: CliContext, issue: Issue): string =
   if not issue.details.isEmptyOrWhitespace:
     result &= issue.details.strip.withColor(fgCyan) & "\n"
 
+  result &= termReset
+
 proc formatSectionIssue(ctx: CliContext, issue: Issue, width: int, indent = "",
                 verbose = false): string =
 
