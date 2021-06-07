@@ -20,7 +20,7 @@ proc raiseEx(reason: string): void = raise newException(Exception, reason)
 
 template halt(code: HttpCode,
               headers: RawHeaders,
-              content: string): typed =
+              content: string): void =
   ## Immediately replies with the specified request. This means any further
   ## code will not be executed after calling this template in the current
   ## route.

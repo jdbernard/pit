@@ -1,8 +1,8 @@
 ## Personal Issue Tracker CLI interface
 ## ====================================
 
-import algorithm, cliutils, docopt, json, logging, options, os, sequtils,
-  std/wordwrap, tables, terminal, times, timeutils, unicode, uuids
+import algorithm, cliutils, data_uri, docopt, json, logging, options, os,
+  sequtils, std/wordwrap, tables, terminal, times, timeutils, unicode, uuids
 
 from nre import re
 import strutils except alignLeft, capitalize, strip, toUpper, toLower
@@ -250,6 +250,8 @@ Usage:
   pit reorder <state>
   pit delegate <id> <delegated-to>
   pit ( delete | rm ) <id>...
+  pit add-binary-property <id> <propName> <propSource>
+  pit get-binary-property <id> <propName> <propDest>
 
 Options:
 
@@ -512,6 +514,33 @@ Options:
       ctx.list(filterOption, stateOption, showBoth or args["--today"],
                                           showBoth or args["--future"],
                                           ctx.verbose)
+
+  elif args["add-binary-property"]:
+    let issue = ctx.tasksDir.loadIssueById($(args["<id>"]))
+
+    let propIn =
+      if $(args["<propSource>"]) == "-": stdin
+      else: open($(args["<propSource>"]))
+
+    try: issue[$(args["<propName>"])] = encodeAsDataUri(readAll(propIn))
+    finally: close(propIn)
+
+    issue.store()
+
+  elif args["get-binary-property"]:
+    let issue = ctx.tasksDir.loadIssueById($(args["<id>"]))
+
+    if not issue.hasProp($(args["<propName>"])):
+      raise newException(Exception,
+        "issue " & ($issue.id)[0..<6] & " has no property name '" &
+        $(args["<propName>"]) & "'")
+
+    let propOut =
+      if $(args["<propDest>"]) == "-": stdout
+      else: open($(args["<propDest>"]), fmWrite)
+
+    try: write(propOut, decodeDataUri(issue[$(args["<propName>"])]))
+    finally: close(propOut)
 
  except:
   fatal "pit: " & getCurrentExceptionMsg()

@@ -1,6 +1,6 @@
 # Package
 
-version       = "4.11.1"
+version       = "4.12.0"
 author        = "Jonathan Bernard"
 description   = "Personal issue tracker."
 license       = "MIT"
@@ -15,10 +15,11 @@ requires @[
   "jester 0.5.0",
   "uuids 0.1.10",
 
-  "https://git.jdb-labs.com/jdb/nim-cli-utils.git >= 0.6.4",
-  "https://git.jdb-labs.com/jdb/nim-lang-utils.git >= 0.4.0",
-  "https://git.jdb-labs.com/jdb/nim-time-utils.git >= 0.4.0",
-  "https://git.jdb-labs.com/jdb/update-nim-package-version"
+  "https://git.jdb-software.com/jdb/nim-cli-utils.git >= 0.6.4",
+  "https://git.jdb-software.com/jdb/nim-lang-utils.git >= 0.4.0",
+  "https://git.jdb-software.com/jdb/nim-time-utils.git >= 0.4.0",
+  "https://git.jdb-software.com/jdb/nim-data-uri.git >= 1.0.0",
+  "https://git.jdb-software.com/jdb/update-nim-package-version"
 ]
 
 task updateVersion, "Update the version of this package.":
