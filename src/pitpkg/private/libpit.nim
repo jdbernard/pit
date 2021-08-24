@@ -105,6 +105,23 @@ proc groupBy*(issues: seq[Issue], propertyKey: string): TableRef[string, seq[Iss
     result[key].add(i)
 
 
+## Parse and format dates
+const DATE_FORMATS = [
+  "MM/dd",
+  "MM-dd",
+  "yyyy-MM-dd",
+  "yyyy/MM/dd",
+  "yyyy-MM-dd'T'hh:mm:ss"
+]
+proc parseDate*(d: string): DateTime =
+  var errMsg = ""
+  for df in DATE_FORMATS:
+    try: return d.parse(df)
+    except:
+      errMsg &= "\n\tTried " & df & " with " & d
+      continue
+  raise newException(ValueError, "Unable to parse input as a date: " & d & errMsg)
+
 ## Parse and format issues
 proc fromStorageFormat*(id: string, issueTxt: string): Issue =
   type ParseState = enum ReadingSummary, ReadingProps, ReadingDetails

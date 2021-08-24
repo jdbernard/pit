@@ -233,7 +233,11 @@ proc list(ctx: CliContext, filter: Option[IssueFilter], state: Option[IssueState
 
     for s in [Pending, Todo]:
       if ctx.issues.hasKey(s) and ctx.issues[s].len > 0:
-        stdout.write ctx.formatSection(ctx.issues[s], s, indent, verbose)
+        let visibleIssues = ctx.issues[s].filterIt(
+          not (it.hasProp("hide-until") and
+               it.getDateTime("hide-until") > getTime().local))
+
+        stdout.write ctx.formatSection(visibleIssues, s, indent, verbose)
 
 when isMainModule:
 
@@ -241,17 +245,18 @@ when isMainModule:
   let doc = """
 Usage:
   pit ( new | add) <summary> [<state>] [options]
-  pit list contexts
+  pit list contexts [options]
   pit list [<stateOrId>] [options]
   pit ( start | done | pending | todo-today | todo | suspend ) <id>... [options]
-  pit edit <ref>...
+  pit edit <ref>... [options]
   pit tag <id>... [options]
   pit untag <id>... [options]
-  pit reorder <state>
+  pit reorder <state> [options]
   pit delegate <id> <delegated-to>
-  pit ( delete | rm ) <id>...
-  pit add-binary-property <id> <propName> <propSource>
-  pit get-binary-property <id> <propName> <propDest>
+  pit hide-until <id> <date> [options]
+  pit ( delete | rm ) <id>... [options]
+  pit add-binary-property <id> <propName> <propSource> [options]
+  pit get-binary-property <id> <propName> <propDest> [options]
 
 Options:
 
@@ -422,6 +427,13 @@ Options:
         discard execShellCmd(cmd)
       elif targetState == Done or targetState == Pending:
         discard execShellCmd("ptk stop")
+
+  elif args["hide-until"]:
+
+    let issue = ctx.tasksDir.loadIssueById($(args["<id>"]))
+    issue.setDateTime("hide-until", parseDate($args["<date>"]))
+
+    issue.store()
 
   elif args["delegate"]:
 
