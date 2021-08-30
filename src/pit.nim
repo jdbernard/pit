@@ -196,22 +196,23 @@ proc edit(issue: Issue) =
       getCurrentExceptionMsg()
     issue.store()
 
-proc list(ctx: CliContext, filter: Option[IssueFilter], state: Option[IssueState], showToday, showFuture, verbose: bool) =
+proc list(ctx: CliContext, filter: Option[IssueFilter], states: Option[seq[IssueState]], showToday, showFuture, verbose: bool) =
 
-  if state.isSome:
-    ctx.loadIssues(state.get)
-    if filter.isSome: ctx.filterIssues(filter.get)
-    if state.get == Done and showToday:
-      ctx.issues[Done] = ctx.issues[Done].filterIt(
-        it.hasProp("completed") and
-        sameDay(getTime().local, it.getDateTime("completed")))
-    stdout.write ctx.formatSection(ctx.issues[state.get], state.get, "", verbose)
+  if states.isSome:
+    for state in states.get:
+      ctx.loadIssues(state)
+      if filter.isSome: ctx.filterIssues(filter.get)
+      if state == Done and showToday:
+        ctx.issues[Done] = ctx.issues[Done].filterIt(
+          it.hasProp("completed") and
+          sameDay(getTime().local, it.getDateTime("completed")))
+      stdout.write ctx.formatSection(ctx.issues[state], state, "", verbose)
     return
 
   ctx.loadAllIssues()
   if filter.isSome: ctx.filterIssues(filter.get)
 
-  let today = showToday and [Current, TodoToday].anyIt(
+  let today = showToday and [Current, TodoToday, Pending].anyIt(
     ctx.issues.hasKey(it) and ctx.issues[it].len > 0)
 
   let future = showFuture and [Pending, Todo].anyIt(
@@ -223,7 +224,7 @@ proc list(ctx: CliContext, filter: Option[IssueFilter], state: Option[IssueState
   if today:
     if future: ctx.writeHeader("Today")
 
-    for s in [Current, TodoToday]:
+    for s in [Current, TodoToday, Pending]:
       if ctx.issues.hasKey(s) and ctx.issues[s].len > 0:
         stdout.write ctx.formatSection(ctx.issues[s], s, indent, verbose)
 
@@ -246,7 +247,7 @@ when isMainModule:
 Usage:
   pit ( new | add) <summary> [<state>] [options]
   pit list contexts [options]
-  pit list [<stateOrId>] [options]
+  pit list [<stateOrId>...] [options]
   pit ( start | done | pending | todo-today | todo | suspend ) <id>... [options]
   pit edit <ref>... [options]
   pit tag <id>... [options]
@@ -490,13 +491,13 @@ Options:
       filter.properties.del("context")
 
     var listContexts = false
-    var stateOption = none(IssueState)
-    var issueIdOption = none(string)
+    var statesOption = none(seq[IssueState])
+    var issueIdsOption = none(seq[string])
 
     if args["contexts"]: listContexts = true
     elif args["<stateOrId>"]:
-      try: stateOption = some(parseEnum[IssueState]($args["<stateOrId>"]))
-      except: issueIdOption = some($args["<stateOrId>"])
+      try: statesOption = some(args["<stateOrId>"].mapIt(parseEnum[IssueState]($it)))
+      except: issueIdsOption = some(args["<stateOrId>"].mapIt($it))
 
     # List the known contexts
     if listContexts:
@@ -516,14 +517,15 @@ Options:
         stdout.writeLine(c.alignLeft(maxLen+2) & ctx.getIssueContextDisplayName(c))
 
     # List a specific issue
-    elif issueIdOption.isSome:
-      let issue = ctx.tasksDir.loadIssueById(issueIdOption.get)
-      stdout.writeLine ctx.formatIssue(issue)
+    elif issueIdsOption.isSome:
+      for issueId in issueIdsOption.get:
+        let issue = ctx.tasksDir.loadIssueById(issueId)
+        stdout.writeLine ctx.formatIssue(issue)
 
     # List all issues
     else:
       let showBoth = args["--today"] == args["--future"]
-      ctx.list(filterOption, stateOption, showBoth or args["--today"],
+      ctx.list(filterOption, statesOption, showBoth or args["--today"],
                                           showBoth or args["--future"],
                                           ctx.verbose)
 
