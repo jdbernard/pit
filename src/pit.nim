@@ -243,7 +243,7 @@ proc list(ctx: CliContext, filter: Option[IssueFilter], states: Option[seq[Issue
 when isMainModule:
 
  try:
-  let doc = """
+  let usage = """
 Usage:
   pit ( new | add) <summary> [<state>] [options]
   pit list contexts [options]
@@ -261,7 +261,7 @@ Usage:
 
 Options:
 
-  -h, --help                Print this usage information.
+  -h, --help                Print this usage and help information.
 
   -p, --properties <props>  Specify properties. Formatted as "key:val;key:val"
                             When used with the list command this option applies
@@ -298,17 +298,84 @@ Options:
   --term-width <width>      Manually set the terminal width to use.
 
   --ptk                     Enable PTK integration for this command.
+
+"""
+
+  let onlineHelp = """
+Issue States
+
+  PIT organizes issues around their state, which is one of:
+
+    current     - issues actively being worked
+    todo-today  - issues planned for today
+    pending     - issues that are blocked by some third-party
+    done        - issues that have been completely resolved
+    todo        - issues that need to be done in the future
+    dormant     - issues that are low-priority, to be tracked, but hidden
+                  by default
+
+Issue Properties
+
+  PIT supports adding arbitrary properties to any issue to track any metadata
+  about the issue the user may wish. There are several properties that have
+  special behavior attached to them. They are:
+
+    created
+
+      If present, expected to be an ISO 8601-formatted date that represents the
+      time when the issue was created.
+
+    completed
+
+      If present, expected to be an ISO 8601-formatted date that represents the
+      time when the issue moved to the "done" state.  PIT will add this
+      property automatically when you use the "done" command, and can filter on
+      this value.
+
+    context
+
+      Allows issues to be organized into contexts. The -c option is short-hand
+      for '-p context:<context-name>' and the 'list contexts' command will show
+      all values of 'context' set in existing issues.
+
+    delegated-to
+
+      When an issue now belongs to someone else, but needs to be monitored for
+      completion, this allows you to keep the issue in its current state but
+      note how it has been delegated. When present PIT will prepend this value
+      to the issue summary with an accent color.
+
+    hide-until
+
+      When present, expected to be an ISO 8601-formatted date and used to
+      supress the display of the issue until on or after the given date.
+
+    pending
+
+      When an issue is blocked by a third party, this property can be used to
+      capture details about the dependency When present PIT will display this
+      value after the issue summary.
+
+    recurrence
+
+      TODO, not yet implemented.
+
+    tags
+
+      If present, expected to be a comma-delimited list of text tags. The -g
+      option is a short-hand for '-p tags:<tags-value>'.
 """
 
   logging.addHandler(newConsoleLogger())
 
   # Parse arguments
-  let args = docopt(doc, version = PIT_VERSION)
+  let args = docopt(usage, version = PIT_VERSION)
 
   if args["--echo-args"]: stderr.writeLine($args)
 
   if args["--help"]:
-    stderr.writeLine(doc)
+    stderr.writeLine(usage)
+    stderr.writeLine(onlineHelp)
     quit()
 
   let ctx = initContext(args)
