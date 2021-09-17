@@ -149,6 +149,10 @@ proc formatSection(ctx: CliContext, issues: seq[Issue], state: IssueState,
 proc loadIssues(ctx: CliContext, state: IssueState) =
   ctx.issues[state] = loadIssues(ctx.tasksDir / $state)
 
+proc loadOpenIssues(ctx: CliContext) =
+  ctx.issues = newTable[IssueState, seq[Issue]]()
+  for state in [Current, TodoToday, Todo, Pending, Todo]: ctx.loadIssues(state)
+
 proc loadAllIssues(ctx: CliContext) =
   ctx.issues = newTable[IssueState, seq[Issue]]()
   for state in IssueState: ctx.loadIssues(state)
@@ -192,13 +196,14 @@ proc edit(issue: Issue) =
     let editedIssue = loadIssue(issue.filepath)
     editedIssue.store()
   except:
-    fatal "pit: updated issue is invalid (ignoring edits): \n\t" &
+    fatal "updated issue is invalid (ignoring edits): \n\t" &
       getCurrentExceptionMsg()
     issue.store()
 
 proc list(ctx: CliContext, filter: Option[IssueFilter], states: Option[seq[IssueState]], showToday, showFuture, verbose: bool) =
 
   if states.isSome:
+    trace "listing issues for " & $states.get
     for state in states.get:
       ctx.loadIssues(state)
       if filter.isSome: ctx.filterIssues(filter.get)
@@ -207,10 +212,13 @@ proc list(ctx: CliContext, filter: Option[IssueFilter], states: Option[seq[Issue
           it.hasProp("completed") and
           sameDay(getTime().local, it.getDateTime("completed")))
       stdout.write ctx.formatSection(ctx.issues[state], state, "", verbose)
+    trace "listing complete"
     return
 
-  ctx.loadAllIssues()
-  if filter.isSome: ctx.filterIssues(filter.get)
+  ctx.loadOpenIssues()
+  if filter.isSome:
+    ctx.filterIssues(filter.get)
+    trace "filtered issues"
 
   let today = showToday and [Current, TodoToday, Pending].anyIt(
     ctx.issues.hasKey(it) and ctx.issues[it].len > 0)
@@ -240,145 +248,34 @@ proc list(ctx: CliContext, filter: Option[IssueFilter], states: Option[seq[Issue
 
         stdout.write ctx.formatSection(visibleIssues, s, indent, verbose)
 
+  trace "listing complete"
+
 when isMainModule:
-
  try:
-  let usage = """
-Usage:
-  pit ( new | add) <summary> [<state>] [options]
-  pit list contexts [options]
-  pit list [<stateOrId>...] [options]
-  pit ( start | done | pending | todo-today | todo | suspend ) <id>... [options]
-  pit edit <ref>... [options]
-  pit tag <id>... [options]
-  pit untag <id>... [options]
-  pit reorder <state> [options]
-  pit delegate <id> <delegated-to>
-  pit hide-until <id> <date> [options]
-  pit ( delete | rm ) <id>... [options]
-  pit add-binary-property <id> <propName> <propSource> [options]
-  pit get-binary-property <id> <propName> <propDest> [options]
+  const usage = readFile("src/usage.txt")
+  const onlineHelp = readFile("src/online-help.txt")
 
-Options:
-
-  -h, --help                Print this usage and help information.
-
-  -p, --properties <props>  Specify properties. Formatted as "key:val;key:val"
-                            When used with the list command this option applies
-                            a filter to the issues listed, only allowing those
-                            which have all of the given properties.
-
-  -c, --context <ctxName>   Shorthand for '-p context:<ctxName>'
-
-  -g, --tags <tags>         Specify tags for an issue.
-
-  -T, --today               Limit to today's issues.
-
-  -F, --future              Limit to future issues.
-
-  -m, --match <pattern>     Limit to issues whose summaries match the given
-                            pattern (PCRE regex supported).
-
-  -M, --match-all <pat>     Limit to the issues whose summaries or details
-                            match the given pattern (PCRE regex supported).
-
-  -v, --verbose             Show issue details when listing issues.
-
-  -q, --quiet               Suppress verbose output.
-
-  -y, --yes                 Automatically answer "yes" to any prompts.
-
-  -C, --config <cfgFile>    Location of the config file (defaults to $HOME/.pitrc)
-
-  -E, --echo-args           Echo arguments (for debug purposes).
-
-  -d, --tasks-dir           Path to the tasks directory (defaults to the value
-                            configured in the .pitrc file)
-
-  --term-width <width>      Manually set the terminal width to use.
-
-  --ptk                     Enable PTK integration for this command.
-
-"""
-
-  let onlineHelp = """
-Issue States
-
-  PIT organizes issues around their state, which is one of:
-
-    current     - issues actively being worked
-    todo-today  - issues planned for today
-    pending     - issues that are blocked by some third-party
-    done        - issues that have been completely resolved
-    todo        - issues that need to be done in the future
-    dormant     - issues that are low-priority, to be tracked, but hidden
-                  by default
-
-Issue Properties
-
-  PIT supports adding arbitrary properties to any issue to track any metadata
-  about the issue the user may wish. There are several properties that have
-  special behavior attached to them. They are:
-
-    created
-
-      If present, expected to be an ISO 8601-formatted date that represents the
-      time when the issue was created.
-
-    completed
-
-      If present, expected to be an ISO 8601-formatted date that represents the
-      time when the issue moved to the "done" state.  PIT will add this
-      property automatically when you use the "done" command, and can filter on
-      this value.
-
-    context
-
-      Allows issues to be organized into contexts. The -c option is short-hand
-      for '-p context:<context-name>' and the 'list contexts' command will show
-      all values of 'context' set in existing issues.
-
-    delegated-to
-
-      When an issue now belongs to someone else, but needs to be monitored for
-      completion, this allows you to keep the issue in its current state but
-      note how it has been delegated. When present PIT will prepend this value
-      to the issue summary with an accent color.
-
-    hide-until
-
-      When present, expected to be an ISO 8601-formatted date and used to
-      supress the display of the issue until on or after the given date.
-
-    pending
-
-      When an issue is blocked by a third party, this property can be used to
-      capture details about the dependency When present PIT will display this
-      value after the issue summary.
-
-    recurrence
-
-      TODO, not yet implemented.
-
-    tags
-
-      If present, expected to be a comma-delimited list of text tags. The -g
-      option is a short-hand for '-p tags:<tags-value>'.
-"""
-
-  logging.addHandler(newConsoleLogger())
+  let consoleLogger = newConsoleLogger(
+    levelThreshold=lvlInfo,
+    fmtStr="$app - $levelname: ")
+  logging.addHandler(consoleLogger)
 
   # Parse arguments
   let args = docopt(usage, version = PIT_VERSION)
 
+  if args["--debug"]:
+    consoleLogger.levelThreshold = lvlDebug
+
   if args["--echo-args"]: stderr.writeLine($args)
 
-  if args["--help"]:
-    stderr.writeLine(usage)
+  if args["help"]:
+    stderr.writeLine(usage & "\n")
     stderr.writeLine(onlineHelp)
     quit()
 
   let ctx = initContext(args)
+
+  trace "context initiated"
 
   var propertiesOption = none(TableRef[string,string])
   var tagsOption = none(seq[string])
@@ -476,17 +373,22 @@ Issue Properties
       if propertiesOption.isSome:
         for k,v in propertiesOption.get:
           issue[k] = v
-      if targetState == Done: issue["completed"] = getTime().local.formatIso8601
+      if targetState == Done:
+        issue["completed"] = getTime().local.formatIso8601
+        if issue.hasProp("recurrence") and issue.getRecurrence.isSome:
+          let nextIssue = ctx.tasksDir.nextRecurrence(issue.getRecurrence.get, issue)
+          ctx.tasksDir.store(nextIssue, Todo)
+
       issue.changeState(ctx.tasksDir, targetState)
 
     if ctx.triggerPtk or args["--ptk"]:
       if targetState == Current:
         let issue = ctx.tasksDir.loadIssueById($(args["<id>"][0]))
         var cmd = "ptk start"
-        if issue.tags.len > 0 or issue.properties.hasKey("context"):
+        if issue.tags.len > 0 or issue.hasProp("context"):
           let tags = concat(
             issue.tags,
-            if issue.properties.hasKey("context"): @[issue.properties["context"]]
+            if issue.hasProp("context"): @[issue.properties["context"]]
             else: @[]
           )
           cmd &= " -g \"" & tags.join(",") & "\""
@@ -591,6 +493,7 @@ Issue Properties
 
     # List all issues
     else:
+      trace "listing all issues"
       let showBoth = args["--today"] == args["--future"]
       ctx.list(filterOption, statesOption, showBoth or args["--today"],
                                           showBoth or args["--future"],
@@ -624,6 +527,6 @@ Issue Properties
     finally: close(propOut)
 
  except:
-  fatal "pit: " & getCurrentExceptionMsg()
+  fatal getCurrentExceptionMsg()
   #raise getCurrentException()
   quit(QuitFailure)

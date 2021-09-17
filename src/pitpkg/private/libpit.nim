@@ -1,7 +1,7 @@
 import cliutils, docopt, json, logging, langutils, options, os,
-  sequtils, strutils, tables, times, timeutils, uuids
+  sequtils, strformat, strutils, tables, times, timeutils, uuids
 
-from nre import find, match, re, Regex
+import nre except toSeq
 
 type
   Issue* = ref object
@@ -30,9 +30,28 @@ type
     contexts*: TableRef[string, string]
     cfg*: CombinedConfig
 
+  Recurrence* = object
+    cloneId*: Option[string]
+    interval*: TimeInterval
+    isFromCompletion*: bool
+
 const DONE_FOLDER_FORMAT* = "yyyy-MM"
 
 let ISSUE_FILE_PATTERN = re"[A-Fa-f0-9]{8}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{4}-[A-Fa-f0-9]{12}\.txt"
+let RECURRENCE_PATTERN = re"(every|after) ((\d+) )?((hour|day|week|month|year)s?)(, ([0-9a-fA-F]+))?"
+
+let traceStartTime = cpuTime()
+var lastTraceTime = traceStartTime
+
+proc trace*(msg: string, diffFromLast = false) =
+  let curTraceTime = cpuTime()
+
+  if diffFromLast:
+    debug &"{(curTraceTime - lastTraceTime) * 1000:6.2f}ms {msg}"
+  else:
+    debug &"{cpuTime() - traceStartTime:08.4f} {msg}"
+
+  lastTraceTime = curTraceTime
 
 proc displayName*(s: IssueState): string =
   case s
@@ -63,6 +82,30 @@ proc getDateTime*(issue: Issue, key: string, default: DateTime): DateTime =
 
 proc setDateTime*(issue: Issue, key: string, dt: DateTime) =
   issue.properties[key] = dt.formatIso8601
+
+proc getRecurrence*(issue: Issue): Option[Recurrence] =
+  if not issue.hasProp("recurrence"): return none[Recurrence]()
+
+  let m = issue["recurrence"].match(RECURRENCE_PATTERN)
+
+  if not m.isSome:
+    warn "not a valid recurrence value: '" & issue["recurrence"] & "'"
+    return none[Recurrence]()
+
+  let c = nre.toSeq(m.get.captures)
+  let timeVal = if c[2].isSome: c[2].get.parseInt
+                else: 1
+  return some(Recurrence(
+    isFromCompletion: c[0].get == "after",
+    interval:
+      case c[4].get:
+        of "hour": hours(timeVal)
+        of "day": days(timeVal)
+        of "week": weeks(timeVal)
+        of "month": months(timeVal)
+        of "year": years(timeVal)
+        else: weeks(1),
+    cloneId: c[6]))
 
 ## Issue filtering
 proc initFilter*(): IssueFilter =
@@ -221,6 +264,8 @@ proc storeOrder*(issues: seq[Issue], path: string) =
 proc loadIssues*(path: string): seq[Issue] =
   let orderFile = path / "order.txt"
 
+  trace "loading issues under " & path
+
   let orderedIds =
     if fileExists(orderFile):
       toSeq(orderFile.lines)
@@ -236,6 +281,7 @@ proc loadIssues*(path: string): seq[Issue] =
     if extractFilename(path).match(ISSUE_FILE_PATTERN).isSome():
       unorderedIssues.add((loadIssue(path), false))
 
+  trace "loaded " & $unorderedIssues.len & " issues", true
   result = @[]
 
   # Add all ordered issues in order
@@ -250,6 +296,8 @@ proc loadIssues*(path: string): seq[Issue] =
     if taggedIssue.ordered: continue
     result.add(taggedIssue.issue)
 
+  trace "ordered the loaded issues", true
+
   # Finally, save current order
   result.storeOrder(path)
 
@@ -260,6 +308,37 @@ proc changeState*(issue: Issue, tasksDir: string, newState: IssueState) =
   if oldFilePath != issue.filepath: removeFile(oldFilepath)
 
 proc delete*(issue: Issue) = removeFile(issue.filepath)
+
+proc nextRecurrence*(tasksDir: string, rec: Recurrence, defaultIssue: Issue): Issue =
+  let baseIssue = if rec.cloneId.isSome: tasksDir.loadIssueById(rec.cloneId.get)
+                  else: defaultIssue
+
+  let newProps = newTable[string,string]()
+  for k, v in baseIssue.properties:
+    if k != "created" and k != "completed":
+      newProps[k] = v
+
+  result = Issue(
+    id: genUUID(),
+    summary: baseIssue.summary,
+    properties: newProps,
+    tags: baseIssue.tags)
+
+  let now = getTime().local
+
+  let startDate =
+    if rec.isFromCompletion:
+      if baseIssue.hasProp("completed"): baseIssue.getDateTime("completed")
+      else: now
+    else:
+      if baseIssue.hasProp("created"): baseIssue.getDateTime("created")
+      else: now
+
+  # walk the calendar until the next recurrence that is after the current time.
+  var nextTime = startDate + rec.interval
+  while now > nextTime: nextTime += rec.interval
+
+  result.setDateTime("hide-until", nextTime)
 
 ## Utilities for working with issue collections.
 proc filter*(issues: seq[Issue], filter: IssueFilter): seq[Issue] =
@@ -295,14 +374,14 @@ proc loadConfig*(args: Table[string, Value] = initTable[string, Value]()): PitCo
     foldl(pitrcLocations, if len(a) > 0: a elif fileExists(b): b else: "")
 
   if not fileExists(pitrcFilename):
-    warn "pit: could not find .pitrc file: " & pitrcFilename
+    warn "could not find .pitrc file: " & pitrcFilename
     if isEmptyOrWhitespace(pitrcFilename):
       pitrcFilename = $getEnv("HOME") & "/.pitrc"
     var cfgFile: File
     try:
       cfgFile = open(pitrcFilename, fmWrite)
       cfgFile.write("{\"tasksDir\": \"/path/to/tasks\"}")
-    except: warn "pit: could not write default .pitrc to " & pitrcFilename
+    except: warn "could not write default .pitrc to " & pitrcFilename
     finally: close(cfgFile)
 
   var cfgJson: JsonNode

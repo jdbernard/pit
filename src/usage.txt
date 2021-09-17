@@ -1,0 +1,57 @@
+Usage:
+  pit ( new | add) <summary> [<state>] [options]
+  pit list contexts [options]
+  pit list [<stateOrId>...] [options]
+  pit ( start | done | pending | todo-today | todo | suspend ) <id>... [options]
+  pit edit <ref>... [options]
+  pit tag <id>... [options]
+  pit untag <id>... [options]
+  pit reorder <state> [options]
+  pit delegate <id> <delegated-to>
+  pit hide-until <id> <date> [options]
+  pit ( delete | rm ) <id>... [options]
+  pit add-binary-property <id> <propName> <propSource> [options]
+  pit get-binary-property <id> <propName> <propDest> [options]
+  pit help
+
+Options:
+
+  -h, --help                Print this usage and help information.
+
+  -p, --properties <props>  Specify properties. Formatted as "key:val;key:val"
+                            When used with the list command this option applies
+                            a filter to the issues listed, only allowing those
+                            which have all of the given properties.
+
+  -c, --context <ctxName>   Shorthand for '-p context:<ctxName>'
+
+  -g, --tags <tags>         Specify tags for an issue.
+
+  -T, --today               Limit to today's issues.
+
+  -F, --future              Limit to future issues.
+
+  -m, --match <pattern>     Limit to issues whose summaries match the given
+                            pattern (PCRE regex supported).
+
+  -M, --match-all <pat>     Limit to the issues whose summaries or details
+                            match the given pattern (PCRE regex supported).
+
+  -v, --verbose             Show issue details when listing issues.
+
+  -q, --quiet               Suppress verbose output.
+
+  -y, --yes                 Automatically answer "yes" to any prompts.
+
+  -C, --config <cfgFile>    Location of the config file (defaults to $HOME/.pitrc)
+
+  -E, --echo-args           Echo arguments (for debug purposes).
+
+  -d, --tasks-dir           Path to the tasks directory (defaults to the value
+                            configured in the .pitrc file)
+
+  --term-width <width>      Manually set the terminal width to use.
+
+  --ptk                     Enable PTK integration for this command.
+
+  --debug                   Enable debug-level log output.

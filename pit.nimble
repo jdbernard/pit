@@ -1,6 +1,6 @@
 # Package
 
-version       = "4.14.0"
+version       = "4.16.0"
 author        = "Jonathan Bernard"
 description   = "Personal issue tracker."
 license       = "MIT"

@@ -1,0 +1,93 @@
+Issue States:
+
+  PIT organizes issues around their state, which is one of:
+
+    current     - issues actively being worked
+    todo-today  - issues planned for today
+    pending     - issues that are blocked by some third-party
+    done        - issues that have been completely resolved
+    todo        - issues that need to be done in the future
+    dormant     - issues that are low-priority, to be tracked, but hidden
+                  by default
+
+Issue Properties:
+
+  PIT supports adding arbitrary properties to any issue to track any metadata
+  about the issue the user may wish. There are several properties that have
+  special behavior attached to them. They are:
+
+    created
+
+      If present, expected to be an ISO 8601-formatted date that represents the
+      time when the issue was created.
+
+    completed
+
+      If present, expected to be an ISO 8601-formatted date that represents the
+      time when the issue moved to the "done" state.  PIT will add this
+      property automatically when you use the "done" command, and can filter on
+      this value.
+
+    context
+
+      Allows issues to be organized into contexts. The -c option is short-hand
+      for '-p context:<context-name>' and the 'list contexts' command will show
+      all values of 'context' set in existing issues.
+
+    delegated-to
+
+      When an issue now belongs to someone else, but needs to be monitored for
+      completion, this allows you to keep the issue in its current state but
+      note how it has been delegated. When present PIT will prepend this value
+      to the issue summary with an accent color.
+
+    hide-until
+
+      When present, expected to be an ISO 8601-formatted date and used to
+      supress the display of the issue until on or after the given date.
+
+    pending
+
+      When an issue is blocked by a third party, this property can be used to
+      capture details about the dependency When present PIT will display this
+      value after the issue summary.
+
+    recurrence
+
+      When an issue is moved to the "done" state, if the issue has a valid
+      "recurrence" property, PIT will create a new issue and set the
+      "hide-until" property for that new issue depending on the recurrence
+      definition.
+
+      A valid recurrence value has a time value and optionally has an source
+      issue ID. For example:
+
+        every 5 days, 10a544
+
+      The first word, "every", is expected to be either "every" or "after".
+
+      The second portion is expected to be a time period. Supported time units
+      are "hour", "day", "week", "month", an "year", along with the plural
+      forms (e.g. "5 days", "8 hours", etc.).
+
+      The final portion is the source issue ID. This is optional. When a source
+      issue ID is given, the new issue is created as a clone of the given
+      issue. When not given, the issue being closed is used for cloning.
+
+      The "every" and "after" keywords allow the user to choose whether the new
+      issue is created based on the creation time ("every") or the completion
+      time ("after") of the issue being closed based.
+
+      Examples:
+
+        every day
+        every 2 days
+        after 2 days
+        every week
+        after 12 hours
+        every 2 weeks, 10a544
+
+    tags
+
+      If present, expected to be a comma-delimited list of text tags. The -g
+      option is a short-hand for '-p tags:<tags-value>'.
