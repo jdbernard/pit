@@ -207,10 +207,13 @@ proc list(ctx: CliContext, filter: Option[IssueFilter], states: Option[seq[Issue
     for state in states.get:
       ctx.loadIssues(state)
       if filter.isSome: ctx.filterIssues(filter.get)
+
+      # Show Done for just today if requested
       if state == Done and showToday:
         ctx.issues[Done] = ctx.issues[Done].filterIt(
           it.hasProp("completed") and
           sameDay(getTime().local, it.getDateTime("completed")))
+
       stdout.write ctx.formatSection(ctx.issues[state], state, "", verbose)
     trace "listing complete"
     return
@@ -378,6 +381,9 @@ when isMainModule:
         if issue.hasProp("recurrence") and issue.getRecurrence.isSome:
           let nextIssue = ctx.tasksDir.nextRecurrence(issue.getRecurrence.get, issue)
           ctx.tasksDir.store(nextIssue, Todo)
+          info "created the next recurrence:"
+          stdout.writeLine ctx.formatIssue(nextIssue)
+
 
       issue.changeState(ctx.tasksDir, targetState)
 

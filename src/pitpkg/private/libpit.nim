@@ -315,8 +315,8 @@ proc nextRecurrence*(tasksDir: string, rec: Recurrence, defaultIssue: Issue): Is
 
   let newProps = newTable[string,string]()
   for k, v in baseIssue.properties:
-    if k != "created" and k != "completed":
-      newProps[k] = v
+    if k != "completed": newProps[k] = v
+  newProps["prev-recurrence"] = $baseIssue.id
 
   result = Issue(
     id: genUUID(),
